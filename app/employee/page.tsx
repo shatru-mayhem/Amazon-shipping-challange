@@ -5,6 +5,7 @@ import TopBar from "@/components/TopBar";
 import PipelineView from "@/components/PipelineView";
 import StatusBadge from "@/components/StatusBadge";
 import { pipelineByProject } from "@/lib/mock-data";
+import TeamPanel from "@/components/TeamPanel";
 import {
   reviewFolders,
   employeeQA,
@@ -103,6 +104,8 @@ export default function EmployeePortal() {
                 ))}
               </ul>
             </section>
+
+            <TeamPanel />
           </div>
 
           <div className="space-y-8">
