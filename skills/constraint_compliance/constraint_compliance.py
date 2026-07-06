@@ -133,21 +133,8 @@ def _evaluate(row):
             except (TypeError, ValueError):
                 pass  # unparseable — fall through, don't guess
 
-    if status == "can_do":
-        return ("satisfied", None, None, capability_id)
-
-    # can_do_with_conditions and not caught by an explicit exclusion or a
-    # blown numeric limit above — either it's a known-covered item with a
-    # pricing/process condition attached (satisfied, note the condition),
-    # or we genuinely can't tell and shouldn't guess.
     inclusions = _list_values(structured, _INCLUSION_KEYS)
     included_hit = _match_terms(sv_value, sv_text, inclusions) if inclusions else None
-    # No exclusion/inclusion/limit lists at all in structured_value (e.g.
-    # a flat fee-schedule dict like "Premium delivery feature") means
-    # there's nothing to be excluded from — treat as satisfied-with-note.
-    no_gap_shape = not exclusions and not inclusions and limit_key is None
-    if included_hit or no_gap_shape:
-        return ("satisfied", "low" if conditions_text else None, conditions_text, capability_id)
 
     # An enumerated_list constraint with an explicit inclusion allowlist
     # (e.g. covered_regions: [Spanish Peninsula, Balearic Islands]) is a
@@ -156,10 +143,13 @@ def _evaluate(row):
     # closed set. A stated value that matches neither is not an unknown,
     # it's an item absent from the allowlist — e.g. "France" is in
     # neither covered_regions nor not_covered, but the allowlist's mere
-    # existence means anything off it is uncovered. Only apply this to
-    # enumerated_list types — free text / numeric fields don't have a
-    # closed set to be absent from.
-    if inclusions and row.get("data_type") == "enumerated_list":
+    # existence means anything off it is uncovered. This must run before
+    # the capability_status=='can_do' shortcut below — otherwise "can_do"
+    # (Amazon covers *something* under this constraint type) gets read as
+    # "covers the stated value", silently passing a region absent from
+    # the allowlist. Only applies to enumerated_list types — free text /
+    # numeric fields don't have a closed set to be absent from.
+    if inclusions and row.get("data_type") == "enumerated_list" and not included_hit:
         return (
             "unsatisfied",
             "high",
@@ -168,6 +158,21 @@ def _evaluate(row):
             f"not just unverified, since the allowlist is exhaustive.",
             capability_id,
         )
+
+    if status == "can_do":
+        return ("satisfied", None, None, capability_id)
+
+    # can_do_with_conditions and not caught by an explicit exclusion,
+    # allowlist miss, or a blown numeric limit above — either it's a
+    # known-covered item with a pricing/process condition attached
+    # (satisfied, note the condition), or we genuinely can't tell and
+    # shouldn't guess.
+    # No exclusion/inclusion/limit lists at all in structured_value (e.g.
+    # a flat fee-schedule dict like "Premium delivery feature") means
+    # there's nothing to be excluded from — treat as satisfied-with-note.
+    no_gap_shape = not exclusions and not inclusions and limit_key is None
+    if included_hit or no_gap_shape:
+        return ("satisfied", "low" if conditions_text else None, conditions_text, capability_id)
 
     return (
         "unclear_needs_verification",

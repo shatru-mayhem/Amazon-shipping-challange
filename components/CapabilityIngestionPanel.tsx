@@ -89,6 +89,23 @@ export default function CapabilityIngestionPanel() {
     });
   }
 
+  function resetDemo() {
+    setMessage("");
+    startTransition(async () => {
+      const result = await callCapabilitySkill<{ reverted_count: number }>(["reset_demo"]);
+      if (!result) {
+        setMessage("Reset failed.");
+        return;
+      }
+      setMessage(
+        result.reverted_count > 0
+          ? `Reverted ${result.reverted_count} demo-approved capability change(s) back to baseline.`
+          : "No demo-approved changes to revert — already at baseline."
+      );
+      refreshPending();
+    });
+  }
+
   return (
     <section>
       <h2 className="mb-3 text-base font-bold">Capability Update Ingestion (Ground Truth)</h2>
@@ -98,13 +115,23 @@ export default function CapabilityIngestionPanel() {
           writes directly. Every proposal waits here for an explicit Approve/Reject.
         </p>
 
-        <button
-          onClick={runDemoIngestion}
-          disabled={isPending}
-          className="h-11 rounded-sm bg-orange px-4 text-sm font-medium text-ink hover:bg-orange-dark disabled:opacity-60"
-        >
-          {isPending ? "Working…" : "Run Demo Ingestion"}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={runDemoIngestion}
+            disabled={isPending}
+            className="h-11 rounded-sm bg-orange px-4 text-sm font-medium text-ink hover:bg-orange-dark disabled:opacity-60"
+          >
+            {isPending ? "Working…" : "Run Demo Ingestion"}
+          </button>
+          <button
+            onClick={resetDemo}
+            disabled={isPending}
+            title="Reverts amazon_capability_profile back to its pre-demo state for every demo-approved change. Never touches a real (non-demo) approval."
+            className="h-11 rounded-sm border border-border px-4 text-sm font-medium text-link hover:bg-gray-50 disabled:opacity-60"
+          >
+            Reset Demo
+          </button>
+        </div>
         {message ? <p className="mt-2 text-sm text-gray-600">{message}</p> : null}
 
         {pending.length > 0 ? (

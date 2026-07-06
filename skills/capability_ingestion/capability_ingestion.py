@@ -218,6 +218,14 @@ def approve_proposal(update_id: str, reviewer_id: str) -> dict:
     if proposal["status"] != "pending":
         return {"ok": False, "error": f"Proposal already {proposal['status']}."}
 
+    # Capture the pre-image before overwriting, so a demo approval can later
+    # be undone via reset_demo_capability_changes() without guessing what
+    # the row looked like before.
+    existing = run_sql_one(
+        "SELECT capability_status, structured_value, conditions_text FROM amazon_capability_profile WHERE constraint_type_id = %s",
+        (proposal["constraint_type_id"],),
+    )
+
     structured_value = proposal["proposed_structured_value"]
     write_sql(
         """INSERT INTO amazon_capability_profile
@@ -237,11 +245,60 @@ def approve_proposal(update_id: str, reviewer_id: str) -> dict:
     )
     write_sql(
         """UPDATE amazon_capability_update_queue
-           SET status = 'approved', reviewer_id = %s, reviewed_at = now()
+           SET status = 'approved', reviewer_id = %s, reviewed_at = now(),
+               previous_row_existed = %s, previous_capability_status = %s,
+               previous_structured_value = %s, previous_conditions_text = %s
            WHERE update_id = %s""",
-        (reviewer_id, update_id),
+        (
+            reviewer_id,
+            existing is not None,
+            existing["capability_status"] if existing else None,
+            Json(existing["structured_value"]) if existing and existing["structured_value"] is not None else None,
+            existing["conditions_text"] if existing else None,
+            update_id,
+        ),
     )
     return {"ok": True}
+
+
+def reset_demo_capability_changes() -> dict:
+    """Undoes every demo-approved capability change, restoring
+    amazon_capability_profile to what it looked like before the demo ran.
+    Only ever touches rows created by run_demo_ingestion() (is_demo=TRUE) —
+    a real, non-demo approval is never reset. Safe to call repeatedly:
+    already-reset rows are excluded by the status='approved' filter."""
+    approved_demo = run_sql(
+        """SELECT update_id, constraint_type_id, previous_row_existed,
+                  previous_capability_status, previous_structured_value, previous_conditions_text
+           FROM amazon_capability_update_queue
+           WHERE is_demo = TRUE AND status = 'approved'
+           ORDER BY reviewed_at DESC"""
+    )
+    reverted = []
+    for row in approved_demo:
+        if row["previous_row_existed"]:
+            write_sql(
+                """UPDATE amazon_capability_profile
+                   SET capability_status = %s, structured_value = %s, conditions_text = %s, last_reviewed_at = now()
+                   WHERE constraint_type_id = %s""",
+                (
+                    row["previous_capability_status"],
+                    Json(row["previous_structured_value"]) if row["previous_structured_value"] is not None else None,
+                    row["previous_conditions_text"],
+                    row["constraint_type_id"],
+                ),
+            )
+        else:
+            write_sql(
+                "DELETE FROM amazon_capability_profile WHERE constraint_type_id = %s",
+                (row["constraint_type_id"],),
+            )
+        write_sql(
+            "UPDATE amazon_capability_update_queue SET status = 'reset' WHERE update_id = %s",
+            (row["update_id"],),
+        )
+        reverted.append(str(row["update_id"]))
+    return {"ok": True, "reverted_count": len(reverted), "reverted_update_ids": reverted}
 
 
 def reject_proposal(update_id: str, reviewer_id: str) -> dict:
@@ -266,6 +323,8 @@ if __name__ == "__main__":
         print(json.dumps(approve_proposal(sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else "cli"), indent=2, default=str))
     elif action == "reject":
         print(json.dumps(reject_proposal(sys.argv[2], sys.argv[3] if len(sys.argv) > 3 else "cli"), indent=2, default=str))
+    elif action == "reset_demo":
+        print(json.dumps(reset_demo_capability_changes(), indent=2, default=str))
     else:
-        print("Usage: python capability_ingestion.py [run_demo|list_pending|approve <update_id> [reviewer]|reject <update_id> [reviewer]]")
+        print("Usage: python capability_ingestion.py [run_demo|list_pending|approve <update_id> [reviewer]|reject <update_id> [reviewer]|reset_demo]")
         sys.exit(1)

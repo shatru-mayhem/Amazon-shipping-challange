@@ -32,7 +32,7 @@ const SKILLS: Record<string, string> = {
 // capability_ingestion is the same shape: it updates Amazon's own
 // ground-truth amazon_capability_profile, not one opportunity's data.
 // Its CLI takes an action as extra_args[0] (run_demo / list_pending /
-// approve <id> [reviewer] / reject <id> [reviewer]).
+// approve <id> [reviewer] / reject <id> [reviewer] / reset_demo).
 const GLOBAL_SKILLS = new Set(["software_analytics", "capability_ingestion"]);
 
 const SKILLS_DIR = path.join(process.cwd(), "skills");

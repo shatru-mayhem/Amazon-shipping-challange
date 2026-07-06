@@ -209,10 +209,18 @@ CREATE TABLE constraints.amazon_capability_update_queue (
     confidence               NUMERIC CHECK (confidence BETWEEN 0 AND 1),
     is_demo                  BOOLEAN NOT NULL DEFAULT FALSE,
     status                   TEXT NOT NULL DEFAULT 'pending'
-                             CHECK (status IN ('pending','approved','rejected')),
+                             CHECK (status IN ('pending','approved','rejected','reset')),
     reviewer_id               TEXT,
     reviewed_at               TIMESTAMPTZ,
-    created_at                TIMESTAMPTZ NOT NULL DEFAULT now()
+    created_at                TIMESTAMPTZ NOT NULL DEFAULT now(),
+    -- Pre-image of amazon_capability_profile captured at approval time, so
+    -- a demo-approved change can be undone later without guessing what the
+    -- row looked like before (reset_demo_capability_changes(), 'reset_demo'
+    -- CLI action / "Reset Demo" button — only ever touches is_demo=TRUE rows).
+    previous_row_existed        BOOLEAN,
+    previous_capability_status  TEXT,
+    previous_structured_value   JSONB,
+    previous_conditions_text    TEXT
 );
 
 GRANT SELECT, INSERT, UPDATE ON constraints.amazon_capability_update_queue TO app_ingestion;
