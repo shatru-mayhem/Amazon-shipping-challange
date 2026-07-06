@@ -88,7 +88,7 @@ def build_commercial_strategy(opportunity_id: str) -> dict:
     pains = by_type.get("pain_point", []) + by_type.get("past_complaint", [])
     priorities = by_type.get("stated_priority", []) + by_type.get("growth_objective", [])
 
-    positioning = _positioning(ctx, priorities, strengths)
+    positioning = _positioning(ctx, priorities, strengths, capability_gaps)
     negotiation = _negotiation(ctx, objections)
 
     return {
@@ -119,10 +119,52 @@ def build_commercial_strategy(opportunity_id: str) -> dict:
     }
 
 
-def _positioning(ctx: dict, priorities: list, strengths: list) -> str:
+_STOPWORDS = {
+    "the", "and", "that", "this", "with", "from", "into", "for", "are", "was",
+    "have", "has", "not", "but", "they", "their", "them", "will", "would",
+    "can", "could", "should", "need", "needs", "want", "wants", "just", "only",
+    "also", "than", "then", "what", "when", "where", "which", "who", "whom",
+}
+
+
+def _keywords(text: str) -> set:
+    return {w for w in "".join(c.lower() if c.isalnum() else " " for c in text).split()
+            if len(w) >= 4 and w not in _STOPWORDS}
+
+
+def _conflicts_with_hard_blocker(priority: str, hard_blocker_gaps: list) -> bool:
+    """Deliberately simple keyword overlap, not NLP — same "don't guess
+    precisely, just don't stay silent" tradeoff as constraint_compliance's
+    term matching. False positives here just mean picking a different,
+    still-true priority to anchor on; false negatives are the actual
+    risk (a blocked priority slipping into client-facing positioning
+    text), so this errs toward over-flagging, not under-flagging."""
+    priority_words = _keywords(priority)
+    for gap in hard_blocker_gaps:
+        gap_words = _keywords(gap.get("gap_description") or "") | _keywords(gap.get("constraint_name") or "")
+        if priority_words & gap_words:
+            return True
+    return False
+
+
+def _positioning(ctx: dict, priorities: list, strengths: list, capability_gaps: list) -> str:
     incumbent = ctx.get("incumbent_provider")
     lead = strengths[0].replace("_", " ") if strengths else "reliability and network scale"
-    prio = priorities[0] if priorities else "their stated operational goals"
+
+    hard_blocker_gaps = [g for g in capability_gaps if is_hard_blocker(g.get("result"))]
+
+    # Never anchor client-facing positioning on a priority that overlaps a
+    # known hard capability blocker — e.g. don't position around "expand
+    # into France" when Delivery region compliance already says France
+    # isn't covered. Pick the first priority that doesn't conflict instead.
+    safe_priorities = [p for p in priorities if not _conflicts_with_hard_blocker(p, hard_blocker_gaps)]
+    prio = safe_priorities[0] if safe_priorities else "their stated operational goals"
+
+    # This string is client-facing (client_proposal.py puts it directly in
+    # sections.why_amazon_shipping.positioning) — it must never contain
+    # internal-only warnings. Those live in capability_gaps_to_flag /
+    # has_hard_blocker instead, which client_proposal.py deliberately
+    # keeps out of `sections` (see its internal_flags field).
     base = f"Position Amazon Shipping around {lead}, directly tied to {prio}."
     if incumbent:
         base += f" Frame against the incumbent ({incumbent}) on service consistency and coverage."
