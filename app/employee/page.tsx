@@ -7,6 +7,7 @@ import StatusBadge from "@/components/StatusBadge";
 import { pipelineByProject } from "@/lib/mock-data";
 import TeamPanel from "@/components/TeamPanel";
 import DeliverablesPanel from "@/components/DeliverablesPanel";
+import KnowledgePanel from "@/components/KnowledgePanel";
 import {
   reviewFolders,
   employeeQA,
@@ -109,6 +110,8 @@ export default function EmployeePortal() {
             <TeamPanel />
 
             <DeliverablesPanel />
+
+            <KnowledgePanel />
           </div>
 
           <div className="space-y-8">
