@@ -1,32 +1,20 @@
-# ASCS Portal — Landing Page & Portal Previews
 
-Dual-entrance landing page for Amazon Supply Chain Services, built from
-`landpage.md` with the Amazon corporate design system from `design.md`.
+## Backend (Supabase)
 
-## Run
+Server-side backend per `webdev.md`: Supabase (Postgres + Auth + Storage)
+accessed only through Server Actions and middleware — no keys or queries in
+the browser beyond the public anon key, with RLS enforcing access.
 
-    npm install
-    npm run dev
+- `lib/supabase/` — server / browser / admin (service-role) clients
+- `lib/db-types.ts` — TypeScript interfaces mapped 1:1 to the DB tables
+- `middleware.ts` — session refresh + role routing (Client → /client, Employee/Admin → /employee)
+- `app/actions/` — all six backend features (see `app/actions/README.md`)
 
-Open http://localhost:3000
+Setup: copy `.env.example` to `.env.local` and fill in your Supabase URL and
+anon key. `SUPABASE_SERVICE_ROLE_KEY` is optional (admin ops only, server-only).
 
-## Routes
-
-- `/` — Landing page: dual entrance (Client Portal / Amazon Employee Portal)
-  with mock code-access login + email confirmation.
-- `/client` — Client Portal preview: Digital Twin Pipeline (approval points +
-  issue flags), categorized Q&A, document upload by category, progress
-  tracker (Uploaded → Viewed → Reviewed → Answered), project switcher.
-- `/employee` — Employee Portal preview: hierarchy-based access (demo level
-  switch), restricted document review folders, filtered Q&A answer bar,
-  proposal chat surfacing Risks / Opportunities / Costs, challenge brief &
-  client evaluation checklist.
-
-## Notes
-
-- All data is mock data, labeled `// MOCK DATA - TO BE REPLACED BY DB FETCH`.
-- Auth is a UI mock; input ports are kept open for real API integration.
-- Stack: Next.js 14 (App Router), TypeScript (strict, no `any`), Tailwind
-  with Amazon semantic tokens (ink/navy/orange/link blue, 4–8px radii).
-- Per `agents.md`, a public landing page is out of PRD v1 scope; this was
-  built on explicit user instruction using `landpage.md` as the spec.
+Auth model: email OTP ("code access with email confirmation") via
+`signInWithOtp`; the `users` table row determines the portal a user lands on.
+The proposal chat is a deterministic rules engine returning typed
+Risk/Opportunity/Cost JSON — the LLM swap point is marked in
+`app/actions/proposal.ts`.
