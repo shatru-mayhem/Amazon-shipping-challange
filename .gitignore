@@ -21,3 +21,6 @@ node_modules/
 .next/
 npm-debug.log*
 tsconfig.tsbuildinfo
+
+# Generated plots from exploratory analysis scripts
+skills/exploration/*.png
