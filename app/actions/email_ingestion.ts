@@ -1,97 +1,108 @@
 "use server";
 
+import { createHash } from "crypto";
 import { revalidatePath } from "next/cache";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { ingestionQuery, ingestionQueryOne } from "@/lib/ingestion-db";
 import { logAuditEvent } from "@/app/actions/audit";
-import { validate, required } from "@/lib/validation";
+import { extractText, SUPPORTED_MIME_TYPES } from "@/lib/file-text-extraction";
+import { chunkText } from "@/lib/chunk-text";
 import type { ActionResult } from "@/app/actions/auth";
-import type { CoreEmailThread, CoreEmailMessage } from "@/lib/db-types";
+import type { CoreEmailThread, CoreEmailMessage, CoreDocument } from "@/lib/db-types";
 
 // Entry point 2 of 2 (see RETRIEVAL_REQUIREMENTS.md): email/CRM import,
-// via file upload — same shape as tender_ingestion.ts, not a manual
-// per-message form. Writes to core.email_threads / core.email_messages
-// (real live schema) via the app_ingestion Postgres role.
+// via file upload (PDF/DOCX/txt — same formats as tender_ingestion.ts).
+// Real CRM/email exports mix two kinds of content in one file:
+//   1. Actual email correspondence — From:/To:/Date:/Subject: headers
+//      followed by a body, one after another. Parsed into structured
+//      core.email_threads / core.email_messages.
+//   2. Free-form CRM notes (account overview, running log entries) that
+//      don't follow that header shape at all. Whatever doesn't parse as
+//      an email is NOT discarded — it's chunked and stored as a document
+//      (core.documents/document_chunks, source_type 'market_intel') the
+//      same way tender_ingestion.ts stores challenge docs, so
+//      client_highlights / opportunity_features retrieval can still read
+//      it. Nothing in the file is silently dropped.
 //
 // NOTE: core.email_messages.body_redacted is documented in
 // tender-analysis-schema.sql as "PII-redacted before storage". This MVP
-// does NOT perform any redaction — it stores the body as given. Real PII
-// scrubbing is a separate piece of work; the column name is not a
-// guarantee until that exists.
-//
-// Expected file format (plain text export — .txt/.csv/.md, same
-// text-only constraint as tender_ingestion.ts, for the same reason: no
-// PDF/DOCX parser wired up, so no binary formats):
-//
-//   Subject: <optional, defaults to "General correspondence">
-//   ===
-//   From: alice@client.com
-//   Date: 2026-01-05T10:00:00Z
-//   Body text for this message...
-//   ===
-//   From: bob@amazon.com
-//   Date: 2026-01-06T09:00:00Z
-//   Reply text...
-//
-// Each "===" line starts a new message block; each block needs a
-// From: line, a Date: line, then the body. Blocks missing sender/date/
-// body are skipped, not guessed at.
+// does NOT perform any redaction — it stores the body as extracted. Real
+// PII scrubbing is a separate piece of work.
 
 const BUCKET = "email_imports";
 const MAX_FILE_BYTES = 25 * 1024 * 1024; // 25 MB
-const ALLOWED_TYPES = ["text/plain", "text/csv", "text/markdown"];
+const ALLOWED_TYPES = SUPPORTED_MIME_TYPES;
+const CHUNK_MAX_CHARS = 2000;
+
+const MONTHS: Record<string, number> = {
+  january: 0, february: 1, march: 2, april: 3, may: 4, june: 5,
+  july: 6, august: 7, september: 8, october: 9, november: 10, december: 11,
+};
+
+// Handles "Wednesday, 10 June 2026, 09:14" and similar. Returns null
+// (never a guessed date) if it can't be parsed — the caller then treats
+// that block as unparseable, not as an email with a made-up timestamp.
+function parseHumanDate(input: string): string | null {
+  const cleaned = input.replace(/^\w+,\s*/, "").trim();
+  const m = cleaned.match(/(\d{1,2})\s+(\w+)\s+(\d{4}),?\s*(\d{1,2}):(\d{2})/);
+  if (!m) return null;
+  const [, day, monthName, year, hour, minute] = m;
+  const month = MONTHS[monthName.toLowerCase()];
+  if (month === undefined) return null;
+  const dt = new Date(Date.UTC(Number(year), month, Number(day), Number(hour), Number(minute)));
+  return Number.isNaN(dt.getTime()) ? null : dt.toISOString();
+}
 
 interface ParsedMessage {
   sender: string;
   sent_at: string;
-  body: string;
+  subject: string;
 }
 
-function parseEmailExport(raw: string): { subject: string | null; messages: ParsedMessage[] } {
-  const lines = raw.split(/\r?\n/);
+function parseEmailBlocks(raw: string): { subject: string | null; messages: (ParsedMessage & { body: string })[]; leftoverText: string } {
+  const normalized = raw.replace(/\r\n/g, "\n");
+  const parts = normalized.split(/\n(?=From:\s)/i);
 
-  let subject: string | null = null;
-  let startIdx = 0;
-  if (lines[0]?.trim().toLowerCase().startsWith("subject:")) {
-    subject = lines[0].split(":").slice(1).join(":").trim();
-    startIdx = 1;
+  const messages: (ParsedMessage & { body: string })[] = [];
+  const leftover: string[] = [];
+
+  for (const part of parts) {
+    if (!/^From:\s/i.test(part.trim())) {
+      leftover.push(part);
+      continue;
+    }
+
+    const lines = part.split("\n");
+    let sender = "";
+    let sentAtRaw = "";
+    let subject = "";
+    let bodyStart = lines.length;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (/^from:/i.test(line)) sender = line.replace(/^from:/i, "").trim();
+      else if (/^to:/i.test(line) || /^cc:/i.test(line)) continue;
+      else if (/^date:/i.test(line)) sentAtRaw = line.replace(/^date:/i, "").trim();
+      else if (/^subject:/i.test(line)) subject = line.replace(/^subject:/i, "").trim();
+      else if (line === "") continue;
+      else {
+        bodyStart = i;
+        break;
+      }
+    }
+
+    const body = lines.slice(bodyStart).join("\n").trim();
+    const sentAt = sentAtRaw ? parseHumanDate(sentAtRaw) : null;
+
+    if (sender && sentAt && body) {
+      messages.push({ sender, sent_at: sentAt, subject, body });
+    } else {
+      leftover.push(part);
+    }
   }
 
-  const blocks = lines
-    .slice(startIdx)
-    .join("\n")
-    .split(/^\s*===\s*$/m)
-    .map((b) => b.trim())
-    .filter(Boolean);
-
-  const messages: ParsedMessage[] = blocks
-    .map((block) => {
-      const blockLines = block.split(/\r?\n/);
-      let sender = "";
-      let sentAt = "";
-      let bodyStart = blockLines.length;
-
-      for (let i = 0; i < blockLines.length; i++) {
-        const line = blockLines[i].trim();
-        if (/^from:/i.test(line)) {
-          sender = line.split(":").slice(1).join(":").trim();
-        } else if (/^date:/i.test(line)) {
-          sentAt = line.split(":").slice(1).join(":").trim();
-        } else {
-          bodyStart = line === "" ? i + 1 : i;
-          break;
-        }
-      }
-
-      return {
-        sender,
-        sent_at: sentAt,
-        body: blockLines.slice(bodyStart).join("\n").trim(),
-      };
-    })
-    .filter((m) => m.sender && m.sent_at && m.body);
-
-  return { subject, messages };
+  const subject = messages.find((m) => m.subject)?.subject.replace(/^RE:\s*/i, "").trim() ?? null;
+  return { subject, messages, leftoverText: leftover.join("\n\n").trim() };
 }
 
 async function findOrCreateThread(
@@ -115,9 +126,10 @@ async function findOrCreateThread(
 }
 
 export interface EmailImportResult {
-  thread: CoreEmailThread;
+  thread: CoreEmailThread | null;
   messages_imported: number;
-  messages_skipped: number;
+  crm_notes_document: CoreDocument | null;
+  crm_notes_chunk_count: number;
 }
 
 export async function importEmailExportFile(
@@ -132,7 +144,7 @@ export async function importEmailExportFile(
   if (!ALLOWED_TYPES.includes(file.type)) {
     return {
       ok: false,
-      error: `File type not supported yet: ${file.type || "unknown"}. Supported: .txt, .csv, .md.`,
+      error: `File type not supported: ${file.type || "unknown"}. Supported: .txt, .csv, .md, .pdf, .docx.`,
     };
   }
 
@@ -146,15 +158,17 @@ export async function importEmailExportFile(
   );
   if (!opp) return { ok: false, error: "Opportunity not found." };
 
-  const text = await file.text();
-  const { subject, messages } = parseEmailExport(text);
-  const totalBlocks = text.split(/^\s*===\s*$/m).length;
+  let text: string;
+  try {
+    text = await extractText(file);
+  } catch (e) {
+    return { ok: false, error: `Could not extract text from file: ${e instanceof Error ? e.message : "unknown error"}` };
+  }
+  if (!text.trim()) return { ok: false, error: "File appears to be empty (or text extraction found nothing)." };
 
-  if (messages.length === 0) {
-    return {
-      ok: false,
-      error: "No valid messages found (each needs a From:, Date:, and body — see expected format in email_ingestion.ts).",
-    };
+  const { subject, messages, leftoverText } = parseEmailBlocks(text);
+  if (messages.length === 0 && !leftoverText) {
+    return { ok: false, error: "No content found after text extraction." };
   }
 
   const safeName = file.name.replace(/[^\w.\-]+/g, "_").slice(0, 120);
@@ -164,78 +178,60 @@ export async function importEmailExportFile(
     .upload(path, file, { contentType: file.type, upsert: false });
   if (storageErr) return { ok: false, error: storageErr.message };
 
-  const resolvedSubject = subject?.trim() || "General correspondence";
-  const thread = await findOrCreateThread(opportunityId, opp.customer_id, resolvedSubject, messages[0].sent_at);
-  if (!thread) return { ok: false, error: "Failed to create or find email thread." };
+  let thread: CoreEmailThread | null = null;
+  if (messages.length > 0) {
+    const resolvedSubject = subject || "General correspondence";
+    thread = await findOrCreateThread(opportunityId, opp.customer_id, resolvedSubject, messages[0].sent_at);
+    if (!thread) return { ok: false, error: "Failed to create or find email thread." };
 
-  let imported = 0;
-  for (const m of messages) {
-    await ingestionQuery(
-      `INSERT INTO email_messages (thread_id, sent_at, sender, body_redacted, resolved)
-       VALUES ($1, $2, $3, $4, false)`,
-      [thread.thread_id, m.sent_at, m.sender, m.body],
+    for (const m of messages) {
+      await ingestionQuery(
+        `INSERT INTO email_messages (thread_id, sent_at, sender, body_redacted, resolved)
+         VALUES ($1, $2, $3, $4, false)`,
+        [thread.thread_id, m.sent_at, m.sender, m.body],
+      );
+    }
+  }
+
+  let crmDoc: CoreDocument | null = null;
+  let crmChunkCount = 0;
+  if (leftoverText.length > 0) {
+    const fileHash = createHash("sha256").update(leftoverText).digest("hex");
+    crmDoc = await ingestionQueryOne<CoreDocument>(
+      `INSERT INTO documents (opportunity_id, filename, source_type, blob_url, file_hash)
+       VALUES ($1, $2, 'market_intel', $3, $4)
+       RETURNING *`,
+      [opportunityId, file.name, path, fileHash],
     );
-    imported++;
+    if (crmDoc) {
+      const chunks = chunkText(leftoverText, CHUNK_MAX_CHARS);
+      for (let i = 0; i < chunks.length; i++) {
+        await ingestionQuery(
+          `INSERT INTO document_chunks (document_id, section_heading, page_number, raw_text)
+           VALUES ($1, NULL, $2, $3)`,
+          [crmDoc.document_id, i + 1, chunks[i]],
+        );
+      }
+      crmChunkCount = chunks.length;
+    }
   }
 
   await logAuditEvent({
-    eventType: "email_thread.imported",
+    eventType: "email_crm.imported",
     opportunityId,
-    after: { thread_id: thread.thread_id, filename: file.name, messages_imported: imported },
+    after: {
+      filename: file.name,
+      thread_id: thread?.thread_id ?? null,
+      messages_imported: messages.length,
+      crm_notes_chunks: crmChunkCount,
+    },
   });
   revalidatePath("/employee");
 
   return {
     ok: true,
-    data: { thread, messages_imported: imported, messages_skipped: totalBlocks - messages.length },
+    data: { thread, messages_imported: messages.length, crm_notes_document: crmDoc, crm_notes_chunk_count: crmChunkCount },
   };
-}
-
-export async function importEmailMessage(input: {
-  opportunity_id: string;
-  subject: string;
-  sender: string;
-  sent_at: string;
-  body: string;
-}): Promise<ActionResult<{ thread: CoreEmailThread; message: CoreEmailMessage }>> {
-  const v = validate([
-    { field: "opportunity_id", value: input.opportunity_id, check: required("Opportunity") },
-    { field: "sender", value: input.sender, check: required("Sender") },
-    { field: "sent_at", value: input.sent_at, check: required("Sent at") },
-    { field: "body", value: input.body, check: required("Message body") },
-  ]);
-  if (!v.ok) return { ok: false, error: Object.values(v.errors)[0] };
-
-  const supabase = createSupabaseServer();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: "Not authenticated." };
-
-  const opp = await ingestionQueryOne<{ opportunity_id: string; customer_id: string }>(
-    "SELECT opportunity_id, customer_id FROM opportunities WHERE opportunity_id = $1",
-    [input.opportunity_id],
-  );
-  if (!opp) return { ok: false, error: "Opportunity not found." };
-
-  const subject = input.subject.trim() || "General correspondence";
-  const thread = await findOrCreateThread(input.opportunity_id, opp.customer_id, subject, input.sent_at);
-  if (!thread) return { ok: false, error: "Failed to create or find email thread." };
-
-  const message = await ingestionQueryOne<CoreEmailMessage>(
-    `INSERT INTO email_messages (thread_id, sent_at, sender, body_redacted, resolved)
-     VALUES ($1, $2, $3, $4, false)
-     RETURNING *`,
-    [thread.thread_id, input.sent_at, input.sender.trim(), input.body],
-  );
-  if (!message) return { ok: false, error: "Failed to record message." };
-
-  await logAuditEvent({
-    eventType: "email_message.imported",
-    opportunityId: input.opportunity_id,
-    after: { thread_id: thread.thread_id, message_id: message.message_id, sender: input.sender },
-  });
-  revalidatePath("/employee");
-
-  return { ok: true, data: { thread, message } };
 }
 
 export async function listEmailThreads(

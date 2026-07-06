@@ -7,6 +7,9 @@ import StatusBadge from "@/components/StatusBadge";
 import { pipelineByProject } from "@/lib/mock-data";
 import TeamPanel from "@/components/TeamPanel";
 import DeliverablesPanel from "@/components/DeliverablesPanel";
+import TenderUploadPanel from "@/components/TenderUploadPanel";
+import EmailImportPanel from "@/components/EmailImportPanel";
+import RetrievalStatusPanel from "@/components/RetrievalStatusPanel";
 import {
   reviewFolders,
   employeeQA,
@@ -105,6 +108,12 @@ export default function EmployeePortal() {
                 ))}
               </ul>
             </section>
+
+            <TenderUploadPanel />
+
+            <EmailImportPanel />
+
+            <RetrievalStatusPanel />
 
             <TeamPanel />
 

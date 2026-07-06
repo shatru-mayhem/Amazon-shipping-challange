@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import { createSupabaseServer } from "@/lib/supabase/server";
 import { ingestionQuery, ingestionQueryOne } from "@/lib/ingestion-db";
 import { logAuditEvent } from "@/app/actions/audit";
+import { extractText, SUPPORTED_MIME_TYPES } from "@/lib/file-text-extraction";
+import { chunkText } from "@/lib/chunk-text";
 import type { ActionResult } from "@/app/actions/auth";
 import type { CoreDocument } from "@/lib/db-types";
 
@@ -16,31 +18,8 @@ import type { CoreDocument } from "@/lib/db-types";
 
 const BUCKET = "tender_documents";
 const MAX_FILE_BYTES = 25 * 1024 * 1024; // 25 MB
-
-// MVP scope: only text-extractable formats. PDF/DOCX need a real parser
-// (pdf-parse / mammoth) — a separate, larger piece of work; uploading one
-// today would either fail loudly or (worse) silently store a chunk of
-// binary garbage as "raw_text", which retrieval would then feed straight
-// into an LLM prompt. Rejecting them up front is safer than that.
-const ALLOWED_TYPES = ["text/plain", "text/csv", "text/markdown"];
+const ALLOWED_TYPES = SUPPORTED_MIME_TYPES;
 const CHUNK_MAX_CHARS = 2000;
-
-function chunkText(text: string, maxChars: number): string[] {
-  const paragraphs = text.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
-  const chunks: string[] = [];
-  let current = "";
-
-  for (const para of paragraphs) {
-    if (current && (current.length + para.length + 2) > maxChars) {
-      chunks.push(current);
-      current = para;
-    } else {
-      current = current ? current + "\n\n" + para : para;
-    }
-  }
-  if (current) chunks.push(current);
-  return chunks.length > 0 ? chunks : [text.trim()].filter(Boolean);
-}
 
 export interface OpportunityOption {
   opportunity_id: string;
@@ -80,7 +59,7 @@ export async function uploadTenderDocument(
   if (!ALLOWED_TYPES.includes(file.type)) {
     return {
       ok: false,
-      error: `File type not supported yet: ${file.type || "unknown"}. Supported: .txt, .csv, .md (PDF/DOCX text extraction isn't wired up yet).`,
+      error: `File type not supported: ${file.type || "unknown"}. Supported: .txt, .csv, .md, .pdf, .docx.`,
     };
   }
 
@@ -94,8 +73,13 @@ export async function uploadTenderDocument(
   );
   if (!opp) return { ok: false, error: "Opportunity not found." };
 
-  const text = await file.text();
-  if (!text.trim()) return { ok: false, error: "File appears to be empty." };
+  let text: string;
+  try {
+    text = await extractText(file);
+  } catch (e) {
+    return { ok: false, error: `Could not extract text from file: ${e instanceof Error ? e.message : "unknown error"}` };
+  }
+  if (!text.trim()) return { ok: false, error: "File appears to be empty (or text extraction found nothing)." };
 
   const fileHash = createHash("sha256").update(text).digest("hex");
   const safeName = file.name.replace(/[^\w.\-]+/g, "_").slice(0, 120);
