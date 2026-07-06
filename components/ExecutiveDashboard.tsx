@@ -16,6 +16,7 @@ interface OpportunityScore {
   score: number;
   band: "hot" | "warm" | "cold";
   rationale: string;
+  has_hard_blocker?: boolean;
 }
 
 interface WinProbability {
@@ -30,12 +31,23 @@ interface Risk {
   severity: "low" | "medium" | "high";
   title: string;
   detail: string;
+  hard_blocker?: boolean;
 }
 
 interface RiskAssessment {
   overall_risk: "none" | "low" | "medium" | "high";
   risk_count: number;
   risks: Risk[];
+  has_hard_blocker: boolean;
+  hard_blockers: Risk[];
+}
+
+interface CapabilityGap {
+  constraint_name: string;
+  result: "unsatisfied" | "unclear_needs_verification";
+  severity: "low" | "medium" | "high";
+  gap_description: string;
+  is_hard_blocker: boolean;
 }
 
 interface CommercialStrategy {
@@ -45,6 +57,8 @@ interface CommercialStrategy {
   align_to_priorities: string[];
   objections_to_preempt: string[];
   negotiation_approach: string;
+  capability_gaps_to_flag: CapabilityGap[];
+  has_hard_blocker: boolean;
 }
 
 interface PricingScenario {
@@ -75,6 +89,7 @@ interface FollowUpAction {
   priority: "high" | "medium" | "low";
   action: string;
   detail: string;
+  type?: string;
 }
 
 interface FollowUpActions {
@@ -85,6 +100,8 @@ interface FollowUpActions {
 interface ExecutiveSummary {
   headline: string;
   decision_prompt: string;
+  has_hard_blocker?: boolean;
+  hard_blockers?: Risk[];
 }
 
 interface ClientProposal {
@@ -94,6 +111,10 @@ interface ClientProposal {
     why_amazon_shipping: { positioning: string; differentiators: string[] };
     commercial_proposal: { selected_scenario: string; scenario: PricingScenario | null };
     next_steps: { points: string[] };
+  };
+  internal_flags: {
+    has_hard_blocker: boolean;
+    hard_blockers: CapabilityGap[];
   };
 }
 
@@ -189,11 +210,15 @@ export default function ExecutiveDashboard() {
         executive_summary: (results.executive_summary as ExecutiveSummary) ?? { headline: "", decision_prompt: "" },
         opportunity_score: (results.opportunity_score as OpportunityScore) ?? { score: 0, band: "cold", rationale: "" },
         win_probability: (results.win_probability as WinProbability) ?? { win_probability: 0, base_rate: 0, top_drivers: [], rationale: "" },
-        risk_assessment: (results.risk_assessment as RiskAssessment) ?? { overall_risk: "none", risk_count: 0, risks: [] },
+        risk_assessment:
+          (results.risk_assessment as RiskAssessment) ?? {
+            overall_risk: "none", risk_count: 0, risks: [], has_hard_blocker: false, hard_blockers: [],
+          },
         commercial_strategy:
           (results.commercial_strategy as CommercialStrategy) ?? {
             positioning_statement: "", lead_with_strengths: [], address_client_pains: [],
             align_to_priorities: [], objections_to_preempt: [], negotiation_approach: "",
+            capability_gaps_to_flag: [], has_hard_blocker: false,
           },
         pricing_recommendations:
           (results.pricing_recommendations as PricingRecommendations) ?? {
@@ -209,6 +234,7 @@ export default function ExecutiveDashboard() {
               commercial_proposal: { selected_scenario: "", scenario: null },
               next_steps: { points: [] },
             },
+            internal_flags: { has_hard_blocker: false, hard_blockers: [] },
           },
         sources_used:
           (results.sources_used as SourcesUsed) ?? {
@@ -257,12 +283,28 @@ export default function ExecutiveDashboard() {
         {d ? (
           <div className="mt-5 space-y-5">
             {/* 1. Executive Summary */}
-            <div className="rounded-md border-2 border-ink bg-navy p-5 text-white">
+            <div
+              className={
+                "rounded-md border-2 p-5 text-white " +
+                (d.executive_summary.has_hard_blocker ? "border-danger bg-red-950" : "border-ink bg-navy")
+              }
+            >
               <p className="mb-2 text-xs font-bold uppercase tracking-wide text-gray-400">Executive Summary</p>
+              {d.executive_summary.has_hard_blocker ? (
+                <div className="mb-3 rounded-sm border border-danger bg-danger/20 p-2">
+                  <p className="text-xs font-bold uppercase tracking-wide text-red-200">⚠ Hard blocker — Amazon cannot change this</p>
+                  <ul className="mt-1 list-disc space-y-0.5 pl-4 text-xs text-red-100">
+                    {(d.executive_summary.hard_blockers ?? []).map((r, i) => (
+                      <li key={i}>{r.title}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
               <div className="mb-2 flex flex-wrap items-center gap-2">
                 <StatusBadge tone={bandTone[d.opportunity_score.band] ?? "neutral"} label={`${d.opportunity_score.band.toUpperCase()} · ${d.opportunity_score.score}/100`} />
                 <StatusBadge tone={severityTone[d.risk_assessment.overall_risk] ?? "neutral"} label={`${d.risk_assessment.overall_risk} risk`} />
                 <StatusBadge tone="info" label={`${Math.round(d.win_probability.win_probability * 100)}% win probability`} />
+                {d.executive_summary.has_hard_blocker ? <StatusBadge tone="danger" label="HARD BLOCKER" /> : null}
               </div>
               <p className="text-sm font-bold">{d.executive_summary.decision_prompt}</p>
               {d.executive_summary.headline ? <p className="mt-1 text-xs text-gray-300">{d.executive_summary.headline}</p> : null}
@@ -274,8 +316,11 @@ export default function ExecutiveDashboard() {
                 <div className="flex items-center gap-3">
                   <span className="text-2xl font-bold text-ink">{d.opportunity_score.score}/100</span>
                   <StatusBadge tone={bandTone[d.opportunity_score.band] ?? "neutral"} label={d.opportunity_score.band} />
+                  {d.opportunity_score.has_hard_blocker ? <StatusBadge tone="danger" label="capped: hard blocker" /> : null}
                 </div>
-                <p className="text-xs text-gray-600">{d.opportunity_score.rationale}</p>
+                <p className={"text-xs " + (d.opportunity_score.has_hard_blocker ? "font-medium text-danger" : "text-gray-600")}>
+                  {d.opportunity_score.rationale}
+                </p>
               </Section>
 
               {/* 8. Win Probability Score */}
@@ -306,9 +351,16 @@ export default function ExecutiveDashboard() {
                 ) : (
                   <ul className="space-y-1.5">
                     {d.risk_assessment.risks.map((r, i) => (
-                      <li key={i} className="flex items-start gap-2">
+                      <li
+                        key={i}
+                        className={
+                          "flex items-start gap-2 rounded-sm " +
+                          (r.hard_blocker ? "border border-danger bg-danger/10 p-1.5" : "")
+                        }
+                      >
+                        {r.hard_blocker ? <StatusBadge tone="danger" label="HARD BLOCKER" /> : null}
                         <StatusBadge tone={severityTone[r.severity] ?? "neutral"} label={r.category} />
-                        <span className="text-xs">{r.title}</span>
+                        <span className={"text-xs " + (r.hard_blocker ? "font-semibold text-danger" : "")}>{r.title}</span>
                       </li>
                     ))}
                   </ul>
@@ -321,12 +373,22 @@ export default function ExecutiveDashboard() {
                   <EmptyNote text="No open questions, meetings, or validations required — clear to proceed." />
                 ) : (
                   <ul className="space-y-1.5">
-                    {d.follow_up_actions.actions.map((a, i) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <StatusBadge tone={priorityTone[a.priority] ?? "neutral"} label={a.priority} />
-                        <span className="text-xs">{a.action}</span>
-                      </li>
-                    ))}
+                    {d.follow_up_actions.actions.map((a, i) => {
+                      const isHardBlocker = a.type === "hard_blocker_escalation";
+                      return (
+                        <li
+                          key={i}
+                          className={
+                            "flex items-start gap-2 rounded-sm " +
+                            (isHardBlocker ? "border border-danger bg-danger/10 p-1.5" : "")
+                          }
+                        >
+                          {isHardBlocker ? <StatusBadge tone="danger" label="HARD BLOCKER" /> : null}
+                          <StatusBadge tone={priorityTone[a.priority] ?? "neutral"} label={a.priority} />
+                          <span className={"text-xs " + (isHardBlocker ? "font-semibold text-danger" : "")}>{a.action}</span>
+                        </li>
+                      );
+                    })}
                   </ul>
                 )}
               </Section>
@@ -405,6 +467,26 @@ export default function ExecutiveDashboard() {
                         </ul>
                       </>
                     ) : null}
+                    {d.commercial_strategy.capability_gaps_to_flag.length > 0 ? (
+                      <>
+                        <p className="mt-2 text-xs font-bold text-danger">Capability gaps to flag with the client</p>
+                        <ul className="space-y-1">
+                          {d.commercial_strategy.capability_gaps_to_flag.map((g, i) => (
+                            <li
+                              key={i}
+                              className={
+                                "flex items-start gap-2 rounded-sm text-xs " +
+                                (g.is_hard_blocker ? "border border-danger bg-danger/10 p-1.5" : "")
+                              }
+                            >
+                              {g.is_hard_blocker ? <StatusBadge tone="danger" label="HARD BLOCKER" /> : null}
+                              <StatusBadge tone={severityTone[g.severity] ?? "neutral"} label={g.constraint_name} />
+                              <span className={g.is_hard_blocker ? "font-medium text-danger" : "text-gray-600"}>{g.gap_description}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </>
+                    ) : null}
                     {d.commercial_strategy.negotiation_approach ? (
                       <p className="mt-2 border-t border-border pt-2 text-xs text-gray-600">
                         <span className="font-medium">Negotiation approach: </span>{d.commercial_strategy.negotiation_approach}
@@ -422,6 +504,18 @@ export default function ExecutiveDashboard() {
               <p className="mb-3 text-xs font-bold uppercase tracking-wide text-orange-dark">Client Proposal / Pitch Deck</p>
               <p className="mb-1 text-base font-bold text-ink">{d.client_proposal.sections.cover.title}</p>
               <p className="mb-3 text-xs text-gray-500">{d.client_proposal.sections.cover.subtitle}</p>
+              {d.client_proposal.internal_flags.has_hard_blocker ? (
+                <div className="mb-3 rounded-sm border border-danger bg-danger/10 p-2">
+                  <p className="text-xs font-bold uppercase tracking-wide text-danger">
+                    ⚠ Internal only — do not promise these in the deck
+                  </p>
+                  <ul className="mt-1 list-disc space-y-0.5 pl-4 text-xs text-danger">
+                    {d.client_proposal.internal_flags.hard_blockers.map((g, i) => (
+                      <li key={i}>{g.constraint_name}: {g.gap_description}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
               <div className="grid gap-3 md:grid-cols-2">
                 <div>
                   <p className="text-xs font-bold text-gray-500">What we heard from you</p>

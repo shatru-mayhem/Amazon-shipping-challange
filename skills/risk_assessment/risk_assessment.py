@@ -10,8 +10,11 @@ import os
 import sys
 import json
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+_SKILLS_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, _SKILLS_DIR)
+sys.path.insert(0, os.path.join(_SKILLS_DIR, "constraint_compliance"))
 from _db import run_sql, run_sql_one  # noqa: E402
+from constraint_compliance import is_hard_blocker  # noqa: E402
 
 # A requested discount above this is treated as a margin risk worth flagging.
 DISCOUNT_RISK_THRESHOLD_PCT = 15
@@ -33,12 +36,16 @@ def assess_risk(opportunity_id: str) -> dict:
         (opportunity_id,),
     )
     for c in compliance:
+        # is_hard_blocker applies uniformly to every constraint type here —
+        # geography, weight, product category, whatever — never just the
+        # one that happens to be in the data today.
         risks.append({
             "category": "operational" if c["result"] == "unsatisfied" else "verification",
             "severity": c["severity"] or "medium",
             "title": (c["constraint_name"] or "Constraint") + (
                 " cannot be satisfied" if c["result"] == "unsatisfied" else " needs verification"),
             "detail": c["gap_description"] or "",
+            "hard_blocker": is_hard_blocker(c["result"]),
         })
 
     # 2. Commercial risk: loss signals that are actually present.
@@ -100,11 +107,21 @@ def assess_risk(opportunity_id: str) -> dict:
         counts[r["severity"]] = counts.get(r["severity"], 0) + 1
     overall = "high" if counts["high"] else "medium" if counts["medium"] else "low" if counts["low"] else "none"
 
+    # Hard blockers (capability gaps Amazon cannot change) always force
+    # overall_risk to "high" even if severity_counts alone wouldn't — a
+    # blocker isn't just "a high-severity risk among others", it's a
+    # separate, non-negotiable signal every downstream skill must see.
+    hard_blockers = [r for r in risks if r.get("hard_blocker")]
+    if hard_blockers:
+        overall = "high"
+
     return {
         "opportunity_id": opportunity_id,
         "overall_risk": overall,
         "risk_count": len(risks),
         "severity_counts": counts,
+        "has_hard_blocker": bool(hard_blockers),
+        "hard_blockers": hard_blockers,
         "risks": risks,
     }
 

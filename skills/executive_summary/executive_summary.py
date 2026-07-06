@@ -50,6 +50,8 @@ def build_executive_summary(opportunity_id: str) -> dict:
         None,
     )
     top_risks = [r["title"] for r in risk.get("risks", [])[:3]]
+    has_hard_blocker = risk.get("has_hard_blocker", False)
+    hard_blockers = risk.get("hard_blockers", [])
 
     headline = (
         f"{opp.get('customer_name', 'Opportunity')} — {score['band'].upper()} "
@@ -58,6 +60,12 @@ def build_executive_summary(opportunity_id: str) -> dict:
     )
     if recommended:
         headline += f"Recommend {recommended['name']} pricing (~{recommended['target_margin_pct']}% margin)."
+    if has_hard_blocker:
+        # Prepend, don't bury — a hard blocker changes the read of everything
+        # else in the headline (score/win probability/pricing), so it needs
+        # to be the first thing anyone sees, not folded into "risks".
+        blocker_names = ", ".join(r["title"] for r in hard_blockers)
+        headline = f"⚠ HARD BLOCKER — {blocker_names}. " + headline
 
     summary = {
         "opportunity_id": opportunity_id,
@@ -71,6 +79,8 @@ def build_executive_summary(opportunity_id: str) -> dict:
         "win_probability_rationale": wp["rationale"],
         "overall_risk": risk["overall_risk"],
         "top_risks": top_risks,
+        "has_hard_blocker": has_hard_blocker,
+        "hard_blockers": hard_blockers,
         "positioning": strategy.get("positioning_statement"),
         "recommended_pricing": recommended,
         "open_follow_ups": follow_ups["open_action_count"],
@@ -80,6 +90,15 @@ def build_executive_summary(opportunity_id: str) -> dict:
 
 
 def _decision_prompt(score: dict, risk: dict, follow_ups: dict) -> str:
+    if risk.get("has_hard_blocker"):
+        # Overrides every other read of score/risk below — a hard blocker
+        # means the deal cannot proceed as scoped, independent of how
+        # otherwise attractive it looks.
+        blocker_names = ", ".join(r["title"] for r in risk.get("hard_blockers", []))
+        return (
+            f"Do not proceed as scoped — hard capability blocker ({blocker_names}) must be resolved "
+            f"or the deal rescoped before this can be committed to."
+        )
     if score["band"] == "hot" and risk["overall_risk"] != "high":
         base = "Recommend pursuing — strong score with manageable risk."
     elif score["band"] == "cold":

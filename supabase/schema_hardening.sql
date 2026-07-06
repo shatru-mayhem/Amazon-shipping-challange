@@ -131,3 +131,57 @@ CREATE POLICY "app_ingestion_rw" ON core.opportunity_features FOR ALL TO app_ing
 CREATE POLICY "app_ingestion_rw" ON constraints.tender_constraints FOR ALL TO app_ingestion USING (true) WITH CHECK (true);
 CREATE POLICY "app_ingestion_rw" ON knowledge.client_highlights FOR ALL TO app_ingestion USING (true) WITH CHECK (true);
 CREATE POLICY "app_ingestion_select" ON constraints.constraint_catalog FOR SELECT TO app_ingestion USING (true);
+
+-- ---------------------------------------------------------------------
+-- 5. Extend app_ingestion so skills/constraint_compliance/constraint_compliance.py
+--    can write the constraint_compliance_check step's verdicts (was
+--    missing entirely — risk_assessment.py and commercial_strategy.py
+--    were reading from an always-empty table). Same delete-then-insert
+--    idempotency as §4, so DELETE is needed alongside SELECT/INSERT;
+--    amazon_capability_profile is read-only reference data, SELECT only.
+-- ---------------------------------------------------------------------
+
+GRANT SELECT, INSERT, DELETE ON constraints.constraint_compliance_results TO app_ingestion;
+GRANT SELECT ON constraints.amazon_capability_profile TO app_ingestion;
+
+CREATE POLICY "app_ingestion_rw" ON constraints.constraint_compliance_results FOR ALL TO app_ingestion USING (true) WITH CHECK (true);
+CREATE POLICY "app_ingestion_select" ON constraints.amazon_capability_profile FOR SELECT TO app_ingestion USING (true);
+
+-- ---------------------------------------------------------------------
+-- 6. Extend app_ingestion so skills/win_loss_signals/win_loss_signals.py
+--    can persist signal_check_results (win_loss_signal_catalog was
+--    empty, so win_probability.py always just returned the raw
+--    historical base rate — no signal ever adjusted it). nl_query_readonly
+--    already had SELECT on both these tables from the original DB setup;
+--    only app_ingestion (write side) was missing.
+--
+--    Also seeds the one signal validated by
+--    skills/exploration/historical_archetypes.py's PCA/clustering pass
+--    over the real historical_tenders data (see
+--    supabase/migrate_historical_data.sql): opportunities requiring
+--    delivery to a region Amazon doesn't cover win 35.3% of the time vs.
+--    61.8% otherwise, and the dominant loss reason for that segment is
+--    specifically "Geographic gap" (47/74), not generic competitive loss
+--    ("Lost to competitor" was only 5/74) — evidence of a real
+--    capability-driven loss pattern, not noise. strength (0.73) is a
+--    log-odds delta: logit(0.618) - logit(0.353).
+-- ---------------------------------------------------------------------
+
+GRANT SELECT, INSERT, UPDATE ON knowledge.win_loss_signal_catalog TO app_ingestion;
+GRANT SELECT, INSERT, DELETE ON knowledge.signal_check_results TO app_ingestion;
+CREATE POLICY "app_ingestion_rw" ON knowledge.win_loss_signal_catalog FOR ALL TO app_ingestion USING (true) WITH CHECK (true);
+CREATE POLICY "app_ingestion_rw" ON knowledge.signal_check_results FOR ALL TO app_ingestion USING (true) WITH CHECK (true);
+
+INSERT INTO knowledge.win_loss_signal_catalog (factor_name, direction, strength, maps_to_feature, model_version)
+VALUES (
+  'Requires delivery to a region outside Amazon''s covered network',
+  'loss',
+  0.73,
+  'geography',
+  'historical_tenders_v1_2026'
+)
+ON CONFLICT (factor_name) DO UPDATE SET
+  strength = EXCLUDED.strength,
+  maps_to_feature = EXCLUDED.maps_to_feature,
+  model_version = EXCLUDED.model_version,
+  refreshed_at = now();

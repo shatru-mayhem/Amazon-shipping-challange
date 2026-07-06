@@ -1,6 +1,6 @@
 """commercial_strategy — recommend positioning and a negotiation approach
-for an opportunity from client highlights, win/loss signals and the
-competitive context. Pure read: no writes, no Gemini.
+for an opportunity from client highlights, win/loss signals, competitive
+context, and known capability gaps. Pure read: no writes, no Gemini.
 
     from commercial_strategy import build_commercial_strategy
     result = build_commercial_strategy(opportunity_id)
@@ -10,8 +10,11 @@ import os
 import sys
 import json
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+_SKILLS_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, _SKILLS_DIR)
+sys.path.insert(0, os.path.join(_SKILLS_DIR, "constraint_compliance"))
 from _db import run_sql, run_sql_one  # noqa: E402
+from constraint_compliance import is_hard_blocker  # noqa: E402
 
 
 def build_commercial_strategy(opportunity_id: str) -> dict:
@@ -53,6 +56,25 @@ def build_commercial_strategy(opportunity_id: str) -> dict:
         (opportunity_id,),
     )
 
+    # Client priorities are echoed as-is (never suppress stated client
+    # intent), but a priority can silently conflict with a known
+    # capability gap (e.g. "expand into France" vs. Delivery region
+    # not_covered). Fuzzy-matching priority text against constraint
+    # names is guessing; instead just surface every unsatisfied/unclear
+    # constraint alongside the priorities so the contradiction is
+    # visible in the output rather than staying silent about it.
+    capability_gaps = run_sql(
+        """
+        SELECT cc.name AS constraint_name, ccr.result, ccr.severity, ccr.gap_description
+        FROM constraint_compliance_results ccr
+        JOIN tender_constraints tc ON tc.tender_constraint_id = ccr.tender_constraint_id
+        LEFT JOIN constraint_catalog cc ON cc.constraint_type_id = tc.constraint_type_id
+        WHERE ccr.opportunity_id = %s
+          AND ccr.result IN ('unsatisfied', 'unclear_needs_verification')
+        """,
+        (opportunity_id,),
+    )
+
     ctx = run_sql_one(
         """
         SELECT of.incumbent_provider, of.requested_discount_pct, o.title
@@ -77,6 +99,20 @@ def build_commercial_strategy(opportunity_id: str) -> dict:
         "proof_points": [p["constraint_name"] for p in proof_points],
         "address_client_pains": pains[:5],
         "align_to_priorities": priorities[:5],
+        "capability_gaps_to_flag": [
+            {
+                "constraint_name": g["constraint_name"],
+                "result": g["result"],
+                "severity": g["severity"],
+                "gap_description": g["gap_description"],
+                # unsatisfied == a hard rule Amazon cannot change (not just
+                # unverified) — same is_hard_blocker used by risk_assessment,
+                # applied identically regardless of which constraint type.
+                "is_hard_blocker": is_hard_blocker(g["result"]),
+            }
+            for g in capability_gaps
+        ],
+        "has_hard_blocker": any(is_hard_blocker(g["result"]) for g in capability_gaps),
         "objections_to_preempt": objections[:5],
         "negotiation_approach": negotiation,
         "incumbent_provider": ctx.get("incumbent_provider"),

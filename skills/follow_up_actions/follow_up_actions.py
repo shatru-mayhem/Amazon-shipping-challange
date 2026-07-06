@@ -12,8 +12,11 @@ import os
 import sys
 import json
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+_SKILLS_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, _SKILLS_DIR)
+sys.path.insert(0, os.path.join(_SKILLS_DIR, "constraint_compliance"))
 from _db import run_sql  # noqa: E402
+from constraint_compliance import is_hard_blocker  # noqa: E402
 
 
 def get_follow_up_actions(opportunity_id: str) -> dict:
@@ -40,25 +43,40 @@ def get_follow_up_actions(opportunity_id: str) -> dict:
             "detail": snippet[:280],
         })
 
-    # 2. Constraints whose compliance is unclear → need internal verification.
-    unclear = run_sql(
+    # 2. Constraint compliance results — split into hard blockers (Amazon
+    # cannot meet this, full stop) vs. genuinely unclear (needs internal
+    # verification). Same is_hard_blocker used everywhere else so a gap in
+    # ANY constraint type (geography, weight, product category, ...)
+    # generates an escalation, not just the ones seen in testing so far.
+    compliance = run_sql(
         """
-        SELECT cc.name AS constraint_name, ccr.gap_description
+        SELECT cc.name AS constraint_name, ccr.gap_description, ccr.result
         FROM constraint_compliance_results ccr
         JOIN tender_constraints tc ON tc.tender_constraint_id = ccr.tender_constraint_id
         LEFT JOIN constraint_catalog cc ON cc.constraint_type_id = tc.constraint_type_id
-        WHERE ccr.opportunity_id = %s AND ccr.result = 'unclear_needs_verification'
+        WHERE ccr.opportunity_id = %s
+          AND ccr.result IN ('unsatisfied', 'unclear_needs_verification')
         """,
         (opportunity_id,),
     )
-    for u in unclear:
-        actions.append({
-            "type": "internal_verification",
-            "priority": "medium",
-            "source": "constraint check",
-            "action": f"Verify capability for: {u['constraint_name'] or 'constraint'}",
-            "detail": u["gap_description"] or "",
-        })
+    for c in compliance:
+        if is_hard_blocker(c["result"]):
+            actions.append({
+                "type": "hard_blocker_escalation",
+                "priority": "high",
+                "source": "constraint check",
+                "action": f"Escalate hard capability blocker: {c['constraint_name'] or 'constraint'} "
+                          f"(Amazon cannot currently meet this — do not commit to it in the proposal)",
+                "detail": c["gap_description"] or "",
+            })
+        else:
+            actions.append({
+                "type": "internal_verification",
+                "priority": "medium",
+                "source": "constraint check",
+                "action": f"Verify capability for: {c['constraint_name'] or 'constraint'}",
+                "detail": c["gap_description"] or "",
+            })
 
     # 3. Open pipeline flags for this opportunity (missing inputs, low confidence).
     flags = run_sql(

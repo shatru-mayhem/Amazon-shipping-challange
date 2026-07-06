@@ -49,13 +49,31 @@ def score_opportunity(opportunity_id: str) -> dict:
             value_bonus, value_tier = 2, "small"
 
     score = max(0, min(100, round(base - penalty + value_bonus)))
+
+    # A hard blocker (a constraint Amazon literally cannot meet, from
+    # risk_assessment's is_hard_blocker) isn't just "one more high-severity
+    # risk" already covered by RISK_PENALTY — it means the deal cannot
+    # proceed as currently scoped at all, so cap the score into "cold"
+    # regardless of how good win probability/value otherwise look.
+    has_hard_blocker = risk.get("has_hard_blocker", False)
+    if has_hard_blocker:
+        score = min(score, 30)
     band = "hot" if score >= 70 else "warm" if score >= 45 else "cold"
+
+    rationale = (
+        f"{band.upper()} ({score}/100): {round(wp['win_probability']*100)}% win probability, "
+        f"{risk['risk_count']} risk(s) [{risk['overall_risk']}], {value_tier} deal value."
+    )
+    if has_hard_blocker:
+        blocker_names = ", ".join(r["title"] for r in risk.get("hard_blockers", []))
+        rationale = f"HARD BLOCKER ({blocker_names}) — score capped. " + rationale
 
     return {
         "opportunity_id": opportunity_id,
         "title": opp.get("title"),
         "score": score,
         "band": band,
+        "has_hard_blocker": has_hard_blocker,
         "components": {
             "win_probability": wp["win_probability"],
             "risk_penalty": penalty,
@@ -63,10 +81,7 @@ def score_opportunity(opportunity_id: str) -> dict:
             "value_tier": value_tier,
             "value_bonus": value_bonus,
         },
-        "rationale": (
-            f"{band.upper()} ({score}/100): {round(wp['win_probability']*100)}% win probability, "
-            f"{risk['risk_count']} risk(s) [{risk['overall_risk']}], {value_tier} deal value."
-        ),
+        "rationale": rationale,
     }
 
 

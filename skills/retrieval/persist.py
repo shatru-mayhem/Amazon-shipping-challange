@@ -30,10 +30,14 @@ from psycopg2.extras import Json
 _SKILLS_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _SKILLS_DIR not in sys.path:
     sys.path.insert(0, _SKILLS_DIR)
+sys.path.insert(0, os.path.join(_SKILLS_DIR, "constraint_compliance"))
+sys.path.insert(0, os.path.join(_SKILLS_DIR, "win_loss_signals"))
 
 from _db import run_sql  # noqa: E402
 from _ingestion_db import write_sql  # noqa: E402
 from retrieval import retrieve, OPPORTUNITY_FEATURE_SPECS  # noqa: E402
+from constraint_compliance import persist_compliance  # noqa: E402
+from win_loss_signals import persist_signals  # noqa: E402
 
 
 def _num(v):
@@ -106,6 +110,11 @@ def _persist_opportunity_features(opportunity_id: str) -> dict:
 
 def _persist_tender_constraints(opportunity_id: str) -> dict:
     result = retrieve(opportunity_id, "tender_constraints")
+    # constraint_compliance_results FK-references tender_constraints and is
+    # always rebuilt wholesale right after this step anyway, so clear it
+    # first — otherwise a re-run's delete below hits a FK violation from
+    # the previous run's compliance rows still pointing at these ids.
+    write_sql("DELETE FROM constraint_compliance_results WHERE opportunity_id = %s", (opportunity_id,))
     write_sql("DELETE FROM tender_constraints WHERE opportunity_id = %s", (opportunity_id,))
     if result["status"] != "found":
         return {"rows_written": 0}
@@ -116,7 +125,7 @@ def _persist_tender_constraints(opportunity_id: str) -> dict:
 
     chunk_ids = {cid for m in matched for cid in m["source_chunk_ids"]}
     chunk_rows = run_sql(
-        "SELECT chunk_id, document_id FROM document_chunks WHERE chunk_id = ANY(%s)",
+        "SELECT chunk_id, document_id FROM document_chunks WHERE chunk_id = ANY(%s::uuid[])",
         (list(chunk_ids),),
     )
     chunk_to_doc = {str(r["chunk_id"]): str(r["document_id"]) for r in chunk_rows}
@@ -181,11 +190,25 @@ def _persist_email_resolutions(opportunity_id: str) -> dict:
     return {"rows_updated": len(resolutions)}
 
 
+def _persist_constraint_compliance(opportunity_id: str) -> dict:
+    return persist_compliance(opportunity_id)
+
+
+def _persist_win_loss_signals(opportunity_id: str) -> dict:
+    return persist_signals(opportunity_id)
+
+
 def persist_opportunity(opportunity_id: str) -> dict:
+    tender_constraints = _persist_tender_constraints(opportunity_id)
+    constraint_compliance = _persist_constraint_compliance(opportunity_id)
     return {
         "opportunity_id": opportunity_id,
         "opportunity_features": _persist_opportunity_features(opportunity_id),
-        "tender_constraints": _persist_tender_constraints(opportunity_id),
+        "tender_constraints": tender_constraints,
+        # depends on tender_constraints already being written this run
+        "constraint_compliance": constraint_compliance,
+        # depends on constraint_compliance already being written this run
+        "win_loss_signals": _persist_win_loss_signals(opportunity_id),
         "client_highlights": _persist_client_highlights(opportunity_id),
         "email_messages": _persist_email_resolutions(opportunity_id),
     }

@@ -37,5 +37,15 @@ python skills/commercial_strategy/commercial_strategy.py <opportunity_id>
 
 ## Output
 `positioning_statement`, `lead_with_strengths`, `proof_points`,
-`address_client_pains`, `align_to_priorities`, `objections_to_preempt`,
-`negotiation_approach`.
+`address_client_pains`, `align_to_priorities`, `capability_gaps_to_flag`,
+`objections_to_preempt`, `negotiation_approach`.
+
+`align_to_priorities` is the client's stated priorities/growth
+objectives, echoed as-is — client intent is never suppressed.
+`capability_gaps_to_flag` is every unsatisfied/unclear
+`constraint_compliance_results` row for the opportunity (constraint
+name, result, severity, gap_description), surfaced separately so a
+priority that actually conflicts with a known capability gap (e.g.
+"expand into France" vs. a Delivery region gap) isn't silently
+recommended without the contradiction being visible. No text-matching
+between the two lists is attempted — that would be guessing.

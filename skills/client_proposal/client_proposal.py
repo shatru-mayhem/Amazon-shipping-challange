@@ -82,11 +82,21 @@ def build_client_proposal(opportunity_id: str, selected_scenario: str = None) ->
         },
     }
 
+    # Not a slide — an internal flag for whoever assembles the deck, so a
+    # hard capability blocker (from commercial_strategy's is_hard_blocker,
+    # same signal as risk_assessment) never gets silently promised to the
+    # client in "why_amazon_shipping" or "next_steps".
+    hard_blockers = [g for g in strategy.get("capability_gaps_to_flag", []) if g.get("is_hard_blocker")]
+
     return {
         "opportunity_id": opportunity_id,
         "customer": opp.get("customer_name"),
         "selected_scenario": chosen,
         "sections": sections,
+        "internal_flags": {
+            "has_hard_blocker": bool(hard_blockers),
+            "hard_blockers": hard_blockers,
+        },
     }
 
 
