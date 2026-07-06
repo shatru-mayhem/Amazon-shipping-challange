@@ -34,6 +34,7 @@ export async function requestLoginCode(email: string): Promise<ActionResult> {
 export async function verifyLoginCode(
   email: string,
   code: string,
+  expectedPortal?: "client" | "employee",
 ): Promise<ActionResult<{ destination: string }>> {
   const v = validate([
     { field: "code", value: code, check: required("Access code") },
@@ -47,7 +48,7 @@ export async function verifyLoginCode(
     type: "email",
   });
   if (error) return { ok: false, error: error.message };
-  return { ok: true, data: { destination: await destinationForRole() } };
+  return finishSignIn(expectedPortal);
 }
 
 // ---------------------------------------------------------------------------
@@ -59,6 +60,7 @@ export async function verifyLoginCode(
 export async function signInWithAccessCode(
   email: string,
   accessCode: string,
+  expectedPortal?: "client" | "employee",
 ): Promise<ActionResult<{ destination: string }>> {
   const v = validate([
     { field: "email", value: email, check: isEmail("Email") },
@@ -78,7 +80,7 @@ export async function signInWithAccessCode(
         "Invalid email or access code. Employees without a standing code can use “Email me a code” instead.",
     };
   }
-  return { ok: true, data: { destination: await destinationForRole() } };
+  return finishSignIn(expectedPortal);
 }
 
 export async function signOut(): Promise<void> {
@@ -102,9 +104,37 @@ export async function getCurrentProfile(): Promise<DbUser | null> {
   return (data as DbUser) ?? null;
 }
 
-async function destinationForRole(): Promise<string> {
+// Post-auth: resolve role, enforce the portal the user chose, route.
+// Employee entrance is STRICT: Client-role accounts are signed out with a
+// clear error instead of being silently dropped into the client portal.
+async function finishSignIn(
+  expectedPortal?: "client" | "employee",
+): Promise<ActionResult<{ destination: string }>> {
+  const supabase = createSupabaseServer();
   const profile = await getCurrentProfile();
-  return profile?.role === "Employee" || profile?.role === "Admin"
-    ? "/employee"
-    : "/client";
+
+  if (!profile) {
+    await supabase.auth.signOut();
+    return {
+      ok: false,
+      error:
+        "Signed in, but no profile row was found in the users table. Run supabase/setup.sql and supabase/fix_login.sql, then try again.",
+    };
+  }
+
+  const isEmployee = profile.role === "Employee" || profile.role === "Admin";
+
+  if (expectedPortal === "employee" && !isEmployee) {
+    await supabase.auth.signOut();
+    return {
+      ok: false,
+      error:
+        "This account is not registered as an Amazon employee. Ask the head account to add you in Team Management, then sign in again.",
+    };
+  }
+
+  return {
+    ok: true,
+    data: { destination: isEmployee ? "/employee" : "/client" },
+  };
 }

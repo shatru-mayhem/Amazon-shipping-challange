@@ -42,7 +42,7 @@ export default function LoginModal({ portal, onClose }: LoginModalProps) {
   function verifyEmailed(e: React.FormEvent) {
     e.preventDefault();
     startTransition(async () => {
-      const res = await verifyLoginCode(email, code);
+      const res = await verifyLoginCode(email, code, portal);
       if (!res.ok || !res.data) return setError(res.error ?? "Invalid code.");
       router.push(res.data.destination);
     });
@@ -51,7 +51,7 @@ export default function LoginModal({ portal, onClose }: LoginModalProps) {
   function standingCode(e: React.FormEvent) {
     e.preventDefault();
     startTransition(async () => {
-      const res = await signInWithAccessCode(email, code);
+      const res = await signInWithAccessCode(email, code, portal);
       if (!res.ok || !res.data) return setError(res.error ?? "Sign-in failed.");
       router.push(res.data.destination);
     });
