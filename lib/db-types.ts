@@ -87,3 +87,69 @@ export interface QnaThread {
   employee_id: string | null;
   status: QnaStatus;
 }
+
+// ---------------------------------------------------------------------
+// Live schema (core/constraints schemas — see tender-analysis-schema.sql).
+// The interfaces above (Opportunity, EvidenceDocument, IntakeProfile, ...)
+// were written against a design that was never deployed; these mirror
+// what's actually in the database and what tender_ingestion.ts /
+// email_ingestion.ts / retrieval.py read and write. Prefixed Core* to
+// avoid colliding with the legacy names above (different id conventions:
+// opportunity_id vs id, customer_id vs owner_id).
+// ---------------------------------------------------------------------
+
+export type DocumentSourceType = "challenge_doc" | "market_intel" | "benchmark" | "internal_policy";
+
+export interface CoreCustomer {
+  customer_id: string;
+  name: string;
+  industry: string | null;
+  region: string | null;
+  crm_external_id: string | null;
+  created_at: string;
+}
+
+export interface CoreOpportunity {
+  opportunity_id: string;
+  customer_id: string;
+  title: string;
+  status: string;
+  estimated_value: number | null;
+  created_at: string;
+}
+
+export interface CoreDocument {
+  document_id: string;
+  opportunity_id: string | null;
+  filename: string;
+  source_type: DocumentSourceType;
+  blob_url: string;
+  file_hash: string;
+  ingested_at: string;
+}
+
+export interface CoreDocumentChunk {
+  chunk_id: string;
+  document_id: string;
+  section_heading: string | null;
+  page_number: number | null;
+  raw_text: string;
+  created_at: string;
+}
+
+export interface CoreEmailThread {
+  thread_id: string;
+  customer_id: string;
+  opportunity_id: string | null;
+  subject: string | null;
+  started_at: string | null;
+}
+
+export interface CoreEmailMessage {
+  message_id: string;
+  thread_id: string;
+  sent_at: string;
+  sender: string;
+  body_redacted: string;
+  resolved: boolean;
+}

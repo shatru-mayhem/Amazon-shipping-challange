@@ -11,9 +11,25 @@ Vercel → your project → **Settings → Environment Variables**, add:
 |---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | `https://iehzlcsdzbrbeupdufcu.supabase.co` |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | your anon key (Supabase → Settings → API) |
+| `APP_INGESTION_DB_URL` | connection string for the `app_ingestion` role — see `supabase/schema_hardening.sql` §2 |
 
 Then **redeploy**. The middleware is now also defensive: if env vars are
 missing it logs an error instead of crashing the site.
+
+Locally, `.env` already has `SUPABASE_URL`/`SUPABASE_API_KEY` (used by the
+Python skills) aliased to `NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_ANON_KEY`
+for the frontend — keep both pairs in sync if the key is ever rotated.
+
+### Schema note
+
+The tables this app actually reads/writes today (`core.opportunities`,
+`core.documents`, `core.email_threads`, etc. — see `tender-analysis-schema.sql`)
+are **not** the same tables some of the original server actions
+(`app/actions/documents.ts`, `opportunities.ts`, `qna.ts`, `audit.ts`) were
+written against (`evidence_documents`, `intake_profiles`, `qna_threads`,
+`audit_events` — none of which exist in the live database). Those legacy
+actions are left as-is for now; `app/actions/tender_ingestion.ts` and
+`email_ingestion.ts` are the ones written against the real, live schema.
 
 ## 2. Create the head account (one time, ~1 min)
 
