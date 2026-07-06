@@ -24,6 +24,7 @@ Cloud setup (optional, for generate_json):
 """
 
 import os
+import time
 import json
 import urllib.request
 import urllib.error
@@ -53,13 +54,23 @@ OLLAMA_LOCAL_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
 OLLAMA_CLOUD_HOST = "https://ollama.com"
 OLLAMA_API_KEY = os.environ.get("OLLAMA_API_KEY")
 
+# Cloud is the default. Measured on this machine: local llama3.2 runs at
+# 100% CPU with no GPU — fine for tiny prompts (5-9s) but scales badly
+# with real ~4000-char batched prompts (a full tender_constraints run
+# took ~5 minutes, worse than cloud). Cloud is network-bound, not
+# CPU-bound, so it actually benefits from concurrency; local doesn't,
+# since concurrent local calls just fight over the same CPU. Set
+# OLLAMA_USE_CLOUD=false to force local (e.g. no network, or a machine
+# with a real GPU where local would actually win).
+OLLAMA_USE_CLOUD = os.environ.get("OLLAMA_USE_CLOUD", "true").lower() == "true"
+
 EMBED_MODEL = os.environ.get("OLLAMA_EMBED_MODEL", "nomic-embed-text")
 GENERATE_MODEL = os.environ.get(
-    "OLLAMA_GENERATE_MODEL", "gpt-oss:20b-cloud" if OLLAMA_API_KEY else "llama3.2"
+    "OLLAMA_GENERATE_MODEL", "gpt-oss:20b-cloud" if OLLAMA_USE_CLOUD else "llama3.2"
 )
 
 
-def _post(host: str, path: str, payload: dict, timeout: int = 60, use_auth: bool = False) -> dict:
+def _post(host: str, path: str, payload: dict, timeout: int = 60, use_auth: bool = False, retries: int = 1) -> dict:
     headers = {"Content-Type": "application/json"}
     if use_auth:
         if not OLLAMA_API_KEY:
@@ -72,14 +83,26 @@ def _post(host: str, path: str, payload: dict, timeout: int = 60, use_auth: bool
         headers=headers,
         method="POST",
     )
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            return json.loads(resp.read().decode("utf-8"))
-    except urllib.error.HTTPError as e:
-        raise RuntimeError(f"{host}{path} returned {e.code}: {e.read().decode(errors='replace')}") from e
-    except urllib.error.URLError as e:
-        hint = "is `ollama serve` running?" if host == OLLAMA_LOCAL_HOST else "check your network/API key."
-        raise RuntimeError(f"Could not reach {host}{path} — {hint} ({e})") from e
+    attempt = 0
+    while True:
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            raise RuntimeError(f"{host}{path} returned {e.code}: {e.read().decode(errors='replace')}") from e
+        except (urllib.error.URLError, TimeoutError) as e:
+            # Transient (connect timeout via URLError, or a read timeout
+            # once connected — raised as a bare TimeoutError, NOT a
+            # URLError, so it must be caught explicitly here too). Cloud
+            # calls occasionally run long under concurrent load; retry
+            # once before giving up rather than failing the whole
+            # retrieval call on one slow request.
+            if attempt < retries:
+                attempt += 1
+                time.sleep(1)
+                continue
+            hint = "is `ollama serve` running?" if host == OLLAMA_LOCAL_HOST else "check your network/API key."
+            raise RuntimeError(f"Could not reach {host}{path} — {hint} ({e})") from e
 
 
 def embed(text: str) -> list:
@@ -106,10 +129,11 @@ def cosine_similarity(a: list, b: list) -> float:
 
 
 def generate_json(prompt: str, system: str = None) -> dict:
-    """Ask GENERATE_MODEL for a JSON object back. Uses ollama.com's cloud
-    API when OLLAMA_API_KEY is set (default model gpt-oss:20b-cloud),
-    otherwise falls back to the local server (default llama3.2). Raises if
-    the model's response isn't valid JSON — callers decide how to handle
+    """Ask GENERATE_MODEL for a JSON object back. Local (llama3.2) by
+    default — measured 5-9s vs. up to 108s for the cloud model under
+    real load. Set OLLAMA_USE_CLOUD=true to use ollama.com's cloud API
+    instead (e.g. no local Ollama server reachable). Raises if the
+    model's response isn't valid JSON — callers decide how to handle
     that (retry, flag as low-confidence extraction, etc.), this function
     doesn't guess."""
     payload = {
@@ -121,9 +145,11 @@ def generate_json(prompt: str, system: str = None) -> dict:
     if system:
         payload["system"] = system
 
-    use_cloud = bool(OLLAMA_API_KEY)
-    host = OLLAMA_CLOUD_HOST if use_cloud else OLLAMA_LOCAL_HOST
-    result = _post(host, "/api/generate", payload, use_auth=use_cloud)
+    host = OLLAMA_CLOUD_HOST if OLLAMA_USE_CLOUD else OLLAMA_LOCAL_HOST
+    # Cloud generation can run long under concurrent load (see
+    # skills/retrieval/retrieval.py's ThreadPoolExecutor usage) — a wider
+    # timeout than the default avoids failing a slow-but-fine call.
+    result = _post(host, "/api/generate", payload, timeout=150, use_auth=OLLAMA_USE_CLOUD)
     text = result["response"].strip()
 
     # Cloud models don't always honor format="json" as strictly as local

@@ -34,6 +34,7 @@ llama3.2 fallback — see _llm.py) for extraction/classification prompts.
 import os
 import sys
 import json
+from concurrent.futures import ThreadPoolExecutor
 
 _SKILLS_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _SKILLS_DIR not in sys.path:
@@ -41,10 +42,57 @@ if _SKILLS_DIR not in sys.path:
 
 from _db import run_sql  # noqa: E402
 from _llm import embed, generate_json, cosine_similarity  # noqa: E402
+from vector_store import VectorStore  # noqa: E402
 
 CHUNK_TEXT_CAP = 8000          # chars of source text handed to one prompt
-CONSTRAINT_SIM_THRESHOLD = 0.60  # nomic-embed cosine sim to accept a catalog match
 EMAIL_SIM_THRESHOLD = 0.65       # cosine sim to accept a reply as "resolves this question"
+
+# tender_constraints: how many of a document's chunks to retrieve per
+# catalog type, and the minimum FAISS cosine similarity a catalog type's
+# best-matching chunk needs before bothering to call the LLM about it at
+# all. Below this, that catalog type just isn't discussed in this
+# document — skip the call entirely rather than force a guess.
+CONSTRAINT_RETRIEVAL_K = 3
+CONSTRAINT_RELEVANCE_THRESHOLD = 0.35
+
+# tender_constraints/client_highlights each did one generate_json call per
+# document_chunks row. A single tender doc can be a dozen-plus chunks, and
+# each call is a network round-trip — so batch several chunks into one
+# prompt (up to this many combined chars) before extracting, cutting the
+# call count roughly (BATCH_TEXT_CHARS / average chunk size)-fold.
+BATCH_TEXT_CHARS = 4000
+
+# Both extraction loops are independent I/O (one call per batch/snippet),
+# so running them concurrently cuts wall-clock time roughly WORKERS-fold
+# instead of paying for every call serially — this only helps against the
+# cloud model (network-bound); a local model on a CPU-only machine has no
+# spare capacity to parallelize into, since every worker fights over the
+# same CPU. Kept modest to avoid tripping cloud-account contention (a
+# too-high value is what produced a 108s single-call stall in testing).
+LLM_CALL_WORKERS = 3
+
+
+def _batch_by_char_budget(items, text_key, id_key, max_chars=BATCH_TEXT_CHARS):
+    """Groups a list of {text_key: str, id_key: ...} dicts into batches
+    whose combined text stays under max_chars. Returns a list of
+    {"text": combined_text, "ids": [id, ...]}. A single oversized item
+    still gets its own batch rather than being split mid-content."""
+    batches = []
+    current_texts, current_ids, current_len = [], [], 0
+
+    for item in items:
+        text = item[text_key]
+        if current_texts and current_len + len(text) > max_chars:
+            batches.append({"text": "\n\n---\n\n".join(current_texts), "ids": current_ids})
+            current_texts, current_ids, current_len = [], [], 0
+        current_texts.append(text)
+        current_ids.append(item[id_key])
+        current_len += len(text)
+
+    if current_texts:
+        batches.append({"text": "\n\n---\n\n".join(current_texts), "ids": current_ids})
+    return batches
+
 
 HIGHLIGHT_TYPES = ["growth_objective", "pain_point", "stated_priority", "past_complaint"]
 
@@ -120,7 +168,14 @@ Respond with JSON: {{"found": true/false, "value": <value matching the described
 Set "found" to false and "value" to null if this field is not stated anywhere in the source text above — never guess or invent a value."""
 
     result = generate_json(prompt)
-    if not result.get("found") or result.get("value") in (None, "", []):
+    # Trust value over the found flag — see tender_constraints for why:
+    # smaller local models have been observed returning found=false while
+    # still filling in a real value. Also treat a literal "null" string
+    # (another small-model quirk) the same as an actual null.
+    value = result.get("value")
+    if isinstance(value, str) and value.strip().lower() == "null":
+        value = None
+    if value in (None, "", []):
         return _not_found(
             opportunity_id, "opportunity_features", field,
             "field not stated in ingested source text",
@@ -128,15 +183,20 @@ Set "found" to false and "value" to null if this field is not stated anywhere in
 
     return _found(
         opportunity_id, "opportunity_features", field,
-        value=result["value"],
+        value=value,
         confidence=result.get("confidence"),
         source={"chunk_ids": [c["chunk_id"] for c in chunks]},
     )
 
 
 # ---------------------------------------------------------------------
-# tender_constraints — extract stated constraints, classify against
-# constraint_catalog by embedding similarity
+# tender_constraints — the catalog is small and known in advance, so
+# there's no need to (1) ask the model to find arbitrary constraints
+# then (2) separately embed+classify each one against the catalog.
+# Just ask directly, per batch of source text: "which of these specific,
+# named requirement types does this text state a value for?" One call
+# per batch instead of two, and matches are exact (a name the model
+# picked from the list) instead of a similarity-threshold guess.
 # ---------------------------------------------------------------------
 
 def _retrieve_tender_constraints(opportunity_id, field=None):
@@ -150,59 +210,75 @@ def _retrieve_tender_constraints(opportunity_id, field=None):
     catalog = run_sql(
         "SELECT constraint_type_id, name, description FROM constraint_catalog WHERE active = TRUE"
     )
-    if not catalog:
-        return _not_found(opportunity_id, "tender_constraints", field, "constraint_catalog is empty")
-
-    catalog_embeddings = {
-        row["constraint_type_id"]: embed(f"{row['name']}: {row['description'] or ''}")
-        for row in catalog
-    }
-
-    extracted = []
-    for c in chunks:
-        prompt = f"""Source text:
----
-{c['raw_text'][:CHUNK_TEXT_CAP]}
----
-List every distinct requirement/constraint stated in this text (e.g. geography coverage, weight/size limits, SLA, insurance, legal terms, financial terms). Respond with JSON: {{"constraints": [{{"stated_text": "...", "stated_value": "... or null"}}]}}. Respond with {{"constraints": []}} if none are stated."""
-        result = generate_json(prompt)
-        for item in result.get("constraints", []):
-            if not isinstance(item, dict) or not item.get("stated_text"):
-                continue
-            extracted.append({**item, "source_chunk_id": c["chunk_id"]})
-
-    if not extracted:
-        return _not_found(
-            opportunity_id, "tender_constraints", field,
-            "no constraint statements found in source text",
-        )
-
-    matched = []
-    for item in extracted:
-        vec = embed(item["stated_text"])
-        best_id, best_score = None, -1.0
-        for cid, cvec in catalog_embeddings.items():
-            score = cosine_similarity(vec, cvec)
-            if score > best_score:
-                best_id, best_score = cid, score
-
-        catalog_hit = best_score >= CONSTRAINT_SIM_THRESHOLD
-        matched.append({
-            **item,
-            "matched_constraint_type_id": best_id if catalog_hit else None,
-            "matched_constraint_name": (
-                next(r["name"] for r in catalog if r["constraint_type_id"] == best_id) if catalog_hit else None
-            ),
-            "similarity": round(best_score, 3),
-        })
-
     if field:
-        matched = [m for m in matched if m["matched_constraint_name"] == field]
-        if not matched:
-            return _not_found(
-                opportunity_id, "tender_constraints", field,
-                f"no constraint statement matched to catalog entry '{field}'",
-            )
+        catalog = [row for row in catalog if row["name"] == field]
+    if not catalog:
+        reason = f"'{field}' is not an active constraint_catalog entry" if field else "constraint_catalog is empty"
+        return _not_found(opportunity_id, "tender_constraints", field, reason)
+
+    # FAISS similarity search over this document's chunks, queried once
+    # per catalog type — only chunks actually relevant to a given type
+    # (e.g. "Delivery speed") ever reach the LLM for it, instead of every
+    # catalog type seeing the whole document (which is what let a company
+    # address get force-matched onto an unrelated constraint before).
+    store = VectorStore(chunks, text_key="raw_text", id_key="chunk_id")
+
+    def _check_one_constraint(row):
+        query = f"{row['name']}: {row['description'] or ''}"
+        hits = store.search(query, k=CONSTRAINT_RETRIEVAL_K)
+        if not hits or hits[0]["score"] < CONSTRAINT_RELEVANCE_THRESHOLD:
+            return []  # not discussed in this document at all — no LLM call
+
+        # Dedup in case the same chunk_id appears twice across hits.
+        seen_ids = set()
+        relevant_text = []
+        for hit in hits:
+            if hit["item"]["chunk_id"] in seen_ids:
+                continue
+            seen_ids.add(hit["item"]["chunk_id"])
+            relevant_text.append(hit["item"]["raw_text"])
+
+        prompt = f"""Source text (already filtered to what's relevant to this one requirement):
+---
+{chr(10).join(relevant_text)[:CHUNK_TEXT_CAP]}
+---
+Requirement type: {row['name']} — {row['description'] or ''}
+
+Does this text state a value for this specific requirement? Respond with JSON:
+{{"found": true/false, "stated_text": "... or null", "stated_value": "... or null"}}
+Set "found" to false if this requirement type genuinely isn't addressed — never force a match onto unrelated text."""
+        result = generate_json(prompt)
+
+        # Trust stated_text over the found flag — smaller local models
+        # have been observed returning found=false while still filling in
+        # a real stated_text (self-contradictory), so the boolean isn't
+        # reliable on its own. Also normalize the literal string "null"
+        # (another small-model quirk seen in testing) to real None.
+        def _clean(v):
+            return None if isinstance(v, str) and v.strip().lower() == "null" else v
+
+        stated_text = _clean(result.get("stated_text"))
+        if not stated_text:
+            return []
+
+        return [{
+            "stated_text": stated_text,
+            "stated_value": _clean(result.get("stated_value")),
+            "source_chunk_ids": sorted(seen_ids),
+            "matched_constraint_type_id": str(row["constraint_type_id"]),
+            "matched_constraint_name": row["name"],
+            "relevance_score": round(hits[0]["score"], 3),
+        }]
+
+    with ThreadPoolExecutor(max_workers=LLM_CALL_WORKERS) as pool:
+        matched = [item for items in pool.map(_check_one_constraint, catalog) for item in items]
+
+    if not matched:
+        reason = (
+            f"no constraint statement found for '{field}'" if field
+            else "no constraint statements found in source text"
+        )
+        return _not_found(opportunity_id, "tender_constraints", field, reason)
 
     return _found(
         opportunity_id, "tender_constraints", field,
@@ -242,21 +318,40 @@ def _retrieve_client_highlights(opportunity_id, field=None):
             "no documents or emails ingested for this opportunity",
         )
 
-    highlights = []
+    # Batch per source_type (not mixed) so highlights keep at least
+    # type-level provenance — batching documents and emails together
+    # would lose which type a given highlight actually came from.
+    by_type = {}
     for s in snippets:
-        prompt = f"""Source text ({s['source_type']}):
+        by_type.setdefault(s["source_type"], []).append(s)
+
+    batches = [
+        {**b, "source_type": source_type}
+        for source_type, items in by_type.items()
+        for b in _batch_by_char_budget(items, text_key="text", id_key="source_id")
+    ]
+
+    def _extract_from_batch(batch):
+        prompt = f"""Source text ({batch['source_type']}):
 ---
-{s['text'][:CHUNK_TEXT_CAP]}
+{batch['text'][:CHUNK_TEXT_CAP]}
 ---
 Identify any client growth objectives, pain points, stated priorities, or past complaints in this text. Respond with JSON: {{"highlights": [{{"highlight_type": one of {HIGHLIGHT_TYPES}, "text": "..."}}]}}. Respond with {{"highlights": []}} if none are present."""
         result = generate_json(prompt)
+        found = []
         for h in result.get("highlights", []):
             # generate_json's response shape isn't schema-enforced — a model
             # can return a bare string instead of {"highlight_type":...,
             # "text":...}. Skip anything malformed rather than crash.
             if not isinstance(h, dict) or h.get("highlight_type") not in HIGHLIGHT_TYPES:
                 continue
-            highlights.append({**h, "source_type": s["source_type"], "source_id": s["source_id"]})
+            found.append({**h, "source_type": batch["source_type"], "source_ids": batch["ids"]})
+        return found
+
+    # One generate_json call per batch — independent network I/O, run
+    # concurrently rather than serially (see LLM_CALL_WORKERS).
+    with ThreadPoolExecutor(max_workers=LLM_CALL_WORKERS) as pool:
+        highlights = [h for batch_result in pool.map(_extract_from_batch, batches) for h in batch_result]
 
     if field:
         highlights = [h for h in highlights if h["highlight_type"] == field]
@@ -301,6 +396,14 @@ def _retrieve_email_resolution(opportunity_id, field=None):
     if not unresolved:
         return _not_found(opportunity_id, "email_messages", field, "no unresolved messages for this opportunity")
 
+    # Embed every message body exactly once (in parallel), instead of
+    # re-embedding the same candidate repeatedly across comparisons —
+    # both faster (one round-trip per message, not per pair) and avoids
+    # redundant network calls entirely.
+    with ThreadPoolExecutor(max_workers=LLM_CALL_WORKERS) as pool:
+        vecs = list(pool.map(lambda m: embed(m["body_redacted"]), messages))
+    body_vecs = {m["message_id"]: v for m, v in zip(messages, vecs)}
+
     resolutions = []
     for msg in unresolved:
         candidates = [
@@ -310,10 +413,10 @@ def _retrieve_email_resolution(opportunity_id, field=None):
         if not candidates:
             continue
 
-        msg_vec = embed(msg["body_redacted"])
+        msg_vec = body_vecs[msg["message_id"]]
         best_msg, best_score = None, -1.0
         for cand in candidates:
-            score = cosine_similarity(msg_vec, embed(cand["body_redacted"]))
+            score = cosine_similarity(msg_vec, body_vecs[cand["message_id"]])
             if score > best_score:
                 best_msg, best_score = cand, score
 

@@ -22,8 +22,10 @@ export default function LoginModal({ portal, onClose }: LoginModalProps) {
   const isEmployee = portal === "employee";
   const [step, setStep] = useState<"email" | "verify">("email");
   const [useEmailedCode, setUseEmailedCode] = useState(!isEmployee);
-  const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
+  // Hardcoded to the head account (SETUP.md) for local demo convenience —
+  // not for a real deployment.
+  const [email, setEmail] = useState(isEmployee ? "singhshatrughna.singh22@gmail.com" : "");
+  const [code, setCode] = useState(isEmployee ? "654321" : "");
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
 

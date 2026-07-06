@@ -47,13 +47,23 @@ pure SQL computation over these 4 — no retrieval involved, see
 | table | field | method |
 |---|---|---|
 | `opportunity_features` | one of `volume`, `lanes`, `geography`, `industry_vertical`, `contract_length_months`, `required_sla_hours`, `incumbent_provider`, `requested_discount_pct` | structured extraction (`generate_json`) over `challenge_doc` chunks |
-| `tender_constraints` | optional: a `constraint_catalog.name` to filter to | extract constraint statements, then classify each against `constraint_catalog` by embedding cosine similarity (threshold `CONSTRAINT_SIM_THRESHOLD = 0.60`) |
-| `client_highlights` | optional: one of `growth_objective`, `pain_point`, `stated_priority`, `past_complaint` | classify snippets from **both** documents and emails (two separate source systems) |
+| `tender_constraints` | optional: a `constraint_catalog.name` to filter to | FAISS similarity search (`vector_store.VectorStore`) over the document's chunks, queried once per catalog type — a type only gets an LLM call at all if its best-matching chunk clears `CONSTRAINT_RELEVANCE_THRESHOLD = 0.35`; the LLM then confirms/extracts against just that retrieved text, not the whole document |
+| `client_highlights` | optional: one of `growth_objective`, `pain_point`, `stated_priority`, `past_complaint` | classify snippets from **both** documents and emails (two separate source systems), batched per source type |
 | `email_messages` | optional: a specific `message_id` | semantic match of an unresolved message against later same-thread replies (threshold `EMAIL_SIM_THRESHOLD = 0.65`) |
 
+`tender_constraints` used to (1) ask the model to find arbitrary
+constraints in the whole document, then (2) separately embed and
+classify each one against the catalog — which let irrelevant text (a
+company address, a disclaimer) get force-matched onto an unrelated
+constraint type. Retrieving only genuinely relevant chunks per catalog
+type *before* calling the LLM fixed that at the source, and cut wall-clock
+time roughly in half in testing (3m10s → 1m40s on a 14-chunk real RFQ,
+local model).
+
 ## Models
-- **Embedding** (always local — no cloud embedding models exist): `nomic-embed-text` via `_llm.embed()`.
-- **Generation/classification**: `_llm.generate_json()` — cloud `gpt-oss:20b-cloud` when `OLLAMA_API_KEY` is set, local `llama3.2` otherwise.
+- **Embedding** (always local — no cloud embedding models exist): `nomic-embed-text` via `_llm.embed()`, and via `vector_store.VectorStore` for FAISS similarity search.
+- **Generation/classification**: `_llm.generate_json()` — local `llama3.2` by default, cloud `gpt-oss:20b-cloud` if `OLLAMA_USE_CLOUD=true`. Measured on real content: local is CPU-bound and scales worse with prompt size (worth it for accuracy — see below); cloud is faster per call but has occasional multi-minute stalls and rate-limit contention under concurrent load. Neither is reliably "fast" — see `_llm.py`'s module docstring for current numbers.
+- **A known model-quality issue, worked around defensively**: smaller local models have been observed returning a `"found": false` flag while *still* filling in a real `stated_text`/`value` — self-contradictory output. `tender_constraints` and `opportunity_features` both now trust the text/value field over the boolean flag, and normalize a literal `"null"` string to real `None`, rather than discarding a correct answer because of an unreliable flag.
 
 ## Usage
 ```python
