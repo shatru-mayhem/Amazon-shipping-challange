@@ -160,6 +160,14 @@ def generate_json(prompt: str, system: str = None) -> dict:
             text = text[4:]
         text = text.strip()
 
+    # Some models (seen with gpt-oss:20b-cloud) escape single quotes with
+    # a backslash inside a JSON string ("\'") — not a valid JSON escape
+    # (JSON only knows \" for quotes), which makes an otherwise
+    # well-formed response fail to parse. Safe to strip unconditionally:
+    # a literal backslash immediately before a single quote is never
+    # something valid JSON needs.
+    text = text.replace("\\'", "'")
+
     try:
         return json.loads(text)
     except json.JSONDecodeError as e:

@@ -47,7 +47,10 @@ GRANT USAGE ON SCHEMA core, constraints TO app_ingestion;
 
 GRANT SELECT ON core.opportunities, core.customers TO app_ingestion;
 GRANT SELECT, INSERT ON core.documents, core.document_chunks TO app_ingestion;
-GRANT SELECT, INSERT ON core.email_threads, core.email_messages TO app_ingestion;
+GRANT SELECT, INSERT ON core.email_threads TO app_ingestion;
+-- UPDATE needed too: persist.py flips email_messages.resolved after
+-- retrieve() finds which messages a later reply resolves.
+GRANT SELECT, INSERT, UPDATE ON core.email_messages TO app_ingestion;
 
 CREATE POLICY "app_ingestion_select" ON core.opportunities FOR SELECT TO app_ingestion USING (true);
 CREATE POLICY "app_ingestion_select" ON core.customers FOR SELECT TO app_ingestion USING (true);
@@ -88,3 +91,28 @@ CREATE POLICY "authenticated_upload_email_imports" ON storage.objects
 CREATE POLICY "authenticated_read_email_imports" ON storage.objects
   FOR SELECT TO authenticated
   USING (bucket_id = 'email_imports');
+
+-- ---------------------------------------------------------------------
+-- 4. Extend app_ingestion so skills/retrieval/persist.py can write
+--    retrieve()'s answers into the 3 remaining structured tables it
+--    didn't already have access to. Same role, same least-privilege
+--    reasoning as §2 — this is the one piece that turns retrieval.py
+--    from "answers a question on demand" into "the 8 downstream skills
+--    (risk_assessment, commercial_strategy, ...) have real data to read,
+--    permanently, without re-running extraction every time."
+-- ---------------------------------------------------------------------
+
+GRANT USAGE ON SCHEMA knowledge TO app_ingestion;
+
+GRANT SELECT, INSERT, UPDATE ON core.opportunity_features TO app_ingestion;
+-- DELETE needed too: persist.py replaces tender_constraints/client_highlights
+-- wholesale on each run (delete-then-insert) so re-running after new
+-- documents arrive doesn't leave stale rows from the previous extraction.
+GRANT SELECT, INSERT, DELETE ON constraints.tender_constraints TO app_ingestion;
+GRANT SELECT, INSERT, DELETE ON knowledge.client_highlights TO app_ingestion;
+GRANT SELECT ON constraints.constraint_catalog TO app_ingestion;
+
+CREATE POLICY "app_ingestion_rw" ON core.opportunity_features FOR ALL TO app_ingestion USING (true) WITH CHECK (true);
+CREATE POLICY "app_ingestion_rw" ON constraints.tender_constraints FOR ALL TO app_ingestion USING (true) WITH CHECK (true);
+CREATE POLICY "app_ingestion_rw" ON knowledge.client_highlights FOR ALL TO app_ingestion USING (true) WITH CHECK (true);
+CREATE POLICY "app_ingestion_select" ON constraints.constraint_catalog FOR SELECT TO app_ingestion USING (true);
