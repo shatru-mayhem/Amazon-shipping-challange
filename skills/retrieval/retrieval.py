@@ -223,11 +223,21 @@ def _retrieve_tender_constraints(opportunity_id, field=None):
     # address get force-matched onto an unrelated constraint before).
     store = VectorStore(chunks, text_key="raw_text", id_key="chunk_id")
 
+    def _unmatched(row, reason):
+        return {
+            "status": "unmatched",
+            "constraint_name": row["name"],
+            "constraint_type_id": str(row["constraint_type_id"]),
+            "reason": reason,
+        }
+
     def _check_one_constraint(row):
         query = f"{row['name']}: {row['description'] or ''}"
         hits = store.search(query, k=CONSTRAINT_RETRIEVAL_K)
         if not hits or hits[0]["score"] < CONSTRAINT_RELEVANCE_THRESHOLD:
-            return []  # not discussed in this document at all — no LLM call
+            # No LLM call at all — nothing in the document is even
+            # topically close to this constraint type.
+            return _unmatched(row, "not discussed anywhere in the ingested document")
 
         # Dedup in case the same chunk_id appears twice across hits.
         seen_ids = set()
@@ -259,30 +269,31 @@ Set "found" to false if this requirement type genuinely isn't addressed — neve
 
         stated_text = _clean(result.get("stated_text"))
         if not stated_text:
-            return []
+            return _unmatched(row, "related text was found, but no specific value was stated for it")
 
-        return [{
+        return {
+            "status": "matched",
             "stated_text": stated_text,
             "stated_value": _clean(result.get("stated_value")),
             "source_chunk_ids": sorted(seen_ids),
             "matched_constraint_type_id": str(row["constraint_type_id"]),
             "matched_constraint_name": row["name"],
             "relevance_score": round(hits[0]["score"], 3),
-        }]
+        }
 
     with ThreadPoolExecutor(max_workers=LLM_CALL_WORKERS) as pool:
-        matched = [item for items in pool.map(_check_one_constraint, catalog) for item in items]
+        results = list(pool.map(_check_one_constraint, catalog))
 
-    if not matched:
-        reason = (
-            f"no constraint statement found for '{field}'" if field
-            else "no constraint statements found in source text"
-        )
-        return _not_found(opportunity_id, "tender_constraints", field, reason)
+    matched = [r for r in results if r["status"] == "matched"]
+    unmatched = [r for r in results if r["status"] == "unmatched"]
 
+    # Every catalog constraint gets a verdict — matched with a value, or
+    # unmatched with a specific reason — never silently dropped. Only
+    # not_found (the top-level retrieve() contract) when nothing could be
+    # checked at all, which the two early returns above already cover.
     return _found(
         opportunity_id, "tender_constraints", field,
-        value=matched,
+        value={"matched": matched, "unmatched": unmatched},
         source={"chunk_ids": [c["chunk_id"] for c in chunks]},
     )
 

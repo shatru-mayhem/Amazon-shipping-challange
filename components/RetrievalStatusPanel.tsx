@@ -27,6 +27,29 @@ interface RetrievalResult {
   reason?: string;
 }
 
+interface TenderConstraintMatch {
+  stated_text: string;
+  stated_value: string | null;
+  matched_constraint_name: string;
+  relevance_score: number;
+}
+
+interface TenderConstraintUnmatched {
+  constraint_name: string;
+  reason: string;
+}
+
+function isTenderConstraintsValue(
+  value: unknown,
+): value is { matched: TenderConstraintMatch[]; unmatched: TenderConstraintUnmatched[] } {
+  return (
+    !!value &&
+    typeof value === "object" &&
+    Array.isArray((value as { matched?: unknown }).matched) &&
+    Array.isArray((value as { unmatched?: unknown }).unmatched)
+  );
+}
+
 async function callRetrieve(opportunityId: string, table: string, field?: string): Promise<RetrievalResult> {
   try {
     const res = await fetch("/api/retrieve", {
@@ -129,7 +152,33 @@ export default function RetrievalStatusPanel() {
                     label={r.status}
                   />
                 </div>
-                {r.status === "found" ? (
+                {r.status === "found" && r.table === "tender_constraints" && isTenderConstraintsValue(r.value) ? (
+                  <div className="mt-2 space-y-2">
+                    {r.value.matched.length > 0 ? (
+                      <ul className="space-y-1">
+                        {r.value.matched.map((m, j) => (
+                          <li key={j} className="flex items-start gap-2 text-xs">
+                            <StatusBadge tone="success" label={m.matched_constraint_name} />
+                            <span className="text-gray-700">
+                              {m.stated_text}
+                              {m.stated_value ? ` — ${m.stated_value}` : ""}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                    {r.value.unmatched.length > 0 ? (
+                      <ul className="space-y-1 border-t border-border pt-2">
+                        {r.value.unmatched.map((u, j) => (
+                          <li key={j} className="flex items-start gap-2 text-xs">
+                            <StatusBadge tone="warning" label={u.constraint_name} />
+                            <span className="text-gray-500">{u.reason}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </div>
+                ) : r.status === "found" ? (
                   <pre className="mt-1 overflow-x-auto text-xs text-gray-600">
                     {JSON.stringify(r.value, null, 2)}
                   </pre>
