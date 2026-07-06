@@ -167,6 +167,8 @@ def _retrieve_tender_constraints(opportunity_id, field=None):
 List every distinct requirement/constraint stated in this text (e.g. geography coverage, weight/size limits, SLA, insurance, legal terms, financial terms). Respond with JSON: {{"constraints": [{{"stated_text": "...", "stated_value": "... or null"}}]}}. Respond with {{"constraints": []}} if none are stated."""
         result = generate_json(prompt)
         for item in result.get("constraints", []):
+            if not isinstance(item, dict) or not item.get("stated_text"):
+                continue
             extracted.append({**item, "source_chunk_id": c["chunk_id"]})
 
     if not extracted:
@@ -249,7 +251,10 @@ def _retrieve_client_highlights(opportunity_id, field=None):
 Identify any client growth objectives, pain points, stated priorities, or past complaints in this text. Respond with JSON: {{"highlights": [{{"highlight_type": one of {HIGHLIGHT_TYPES}, "text": "..."}}]}}. Respond with {{"highlights": []}} if none are present."""
         result = generate_json(prompt)
         for h in result.get("highlights", []):
-            if h.get("highlight_type") not in HIGHLIGHT_TYPES:
+            # generate_json's response shape isn't schema-enforced — a model
+            # can return a bare string instead of {"highlight_type":...,
+            # "text":...}. Skip anything malformed rather than crash.
+            if not isinstance(h, dict) or h.get("highlight_type") not in HIGHLIGHT_TYPES:
                 continue
             highlights.append({**h, "source_type": s["source_type"], "source_id": s["source_id"]})
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import TopBar from "@/components/TopBar";
 import PipelineView from "@/components/PipelineView";
 import StatusBadge from "@/components/StatusBadge";
@@ -35,6 +36,12 @@ export default function EmployeePortal() {
       <div className="mx-auto max-w-7xl px-4 py-6">
         <div className="mb-6 flex flex-wrap items-center gap-3">
           <h1 className="text-lg font-bold">Operations Dashboard</h1>
+          <Link
+            href="/employee/dashboard"
+            className="rounded-sm bg-orange px-3 py-1.5 text-sm font-medium text-ink hover:bg-orange-dark"
+          >
+            Executive Dashboard →
+          </Link>
           <label htmlFor="level" className="ml-auto text-sm text-gray-600">
             Hierarchy level (demo switch):
           </label>
