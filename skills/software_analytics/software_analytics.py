@@ -18,6 +18,10 @@ from _db import run_sql, run_sql_one  # noqa: E402
 RECENT_CALLS_LIMIT = 50
 
 
+def _float_or_none(v):
+    return float(v) if v is not None else None
+
+
 def _percentile(sorted_vals, pct):
     if not sorted_vals:
         return None
@@ -101,6 +105,21 @@ def get_software_analytics() -> dict:
         LIMIT 500
         """
     )
+
+    # NUMERIC columns come back from psycopg2 as Decimal, which
+    # json.dumps(default=str) silently turns into a string rather than a
+    # JSON number — the frontend then gets e.g. "1234.5" instead of 1234.5,
+    # so Number-only methods like .toFixed() break (Math.round() masked
+    # this for a while since it coerces strings). Cast explicitly instead
+    # of relying on default=str for anything the UI treats as a number.
+    for row in by_skill:
+        row["avg_latency_ms"] = _float_or_none(row["avg_latency_ms"])
+    for row in by_model:
+        row["avg_latency_ms"] = _float_or_none(row["avg_latency_ms"])
+    for row in recent:
+        row["total_duration_ms"] = _float_or_none(row["total_duration_ms"])
+    for row in timeline:
+        row["total_duration_ms"] = _float_or_none(row["total_duration_ms"])
 
     total_calls = overall.get("total_calls") or 0
     success_rate = round((overall.get("successful_calls") or 0) / total_calls, 3) if total_calls else None
