@@ -1,5 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // pdf-parse (via pdfjs-dist) crashes when webpack bundles it into any
+  // server-side chunk: "TypeError: Object.defineProperty called on
+  // non-object" in pdfjs-dist's legacy ESM build's __esModule interop.
+  // Excluding it from bundling makes Next require it natively at
+  // runtime instead, which works fine (confirmed directly under plain
+  // Node.js) — the failure is specifically a webpack/ESM bundling
+  // incompatibility, not a runtime one.
+  experimental: {
+    serverComponentsExternalPackages: ["pdf-parse", "pdfjs-dist"],
+  },
   webpack: (config, { isServer, webpack }) => {
     if (!isServer) {
       // pptxgenjs (client-side .pptx export) imports Node built-ins via the

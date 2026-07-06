@@ -4,7 +4,6 @@ import { useEffect, useState, useTransition } from "react";
 import StatusBadge from "@/components/StatusBadge";
 import {
   listOpportunitiesForIngestion,
-  uploadTenderDocument,
   listTenderDocuments,
   type OpportunityOption,
 } from "@/app/actions/tender_ingestion";
@@ -48,7 +47,8 @@ export default function TenderUploadPanel() {
       formData.append("file", file);
       formData.append("opportunity_id", opportunityId);
 
-      const res = await uploadTenderDocument(formData);
+      const httpRes = await fetch("/api/tender-upload", { method: "POST", body: formData });
+      const res = await httpRes.json();
       if (!res.ok || !res.data) {
         setError(res.error ?? "Upload failed.");
         return;

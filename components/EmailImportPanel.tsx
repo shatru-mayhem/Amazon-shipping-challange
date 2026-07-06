@@ -3,7 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import StatusBadge from "@/components/StatusBadge";
 import { listOpportunitiesForIngestion, type OpportunityOption } from "@/app/actions/tender_ingestion";
-import { importEmailExportFile, listEmailThreads } from "@/app/actions/email_ingestion";
+import { listEmailThreads } from "@/app/actions/email_ingestion";
 import type { CoreEmailThread } from "@/lib/db-types";
 
 // Entry point 2 of 2: email/CRM import, via file upload. Writes to
@@ -44,7 +44,8 @@ export default function EmailImportPanel() {
       formData.append("file", file);
       formData.append("opportunity_id", opportunityId);
 
-      const res = await importEmailExportFile(formData);
+      const httpRes = await fetch("/api/email-import", { method: "POST", body: formData });
+      const res = await httpRes.json();
       if (!res.ok || !res.data) {
         setError(res.error ?? "Import failed.");
         return;
