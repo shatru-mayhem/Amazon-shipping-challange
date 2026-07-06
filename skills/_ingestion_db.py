@@ -32,7 +32,7 @@ def _load_dotenv_best_effort():
 
 _load_dotenv_best_effort()
 
-DB_SCHEMAS = "core, constraints, knowledge, public"
+DB_SCHEMAS = "core, constraints, knowledge, observability, public"
 
 
 def write_sql(sql: str, params=None) -> list:

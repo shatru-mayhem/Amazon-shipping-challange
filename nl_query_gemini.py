@@ -512,7 +512,7 @@ def validate_sql(sql: str) -> None:
 # use unqualified table names (opportunities, cost_matrix, ...) and still
 # resolve. Table names are unique across these schemas, so there's no
 # ambiguity. Schema-qualified names keep working regardless.
-DB_SCHEMAS = "core, constraints, pricing, knowledge, orchestration, public"
+DB_SCHEMAS = "core, constraints, pricing, knowledge, orchestration, observability, public"
 
 
 def execute_sql(conn, sql: str, params=None) -> list:

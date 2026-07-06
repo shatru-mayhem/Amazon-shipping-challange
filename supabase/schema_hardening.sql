@@ -185,3 +185,49 @@ ON CONFLICT (factor_name) DO UPDATE SET
   maps_to_feature = EXCLUDED.maps_to_feature,
   model_version = EXCLUDED.model_version,
   refreshed_at = now();
+
+-- ---------------------------------------------------------------------
+-- 7. amazon_capability_update_queue — ground-truth capability updates
+--    (skills/capability_ingestion/) are a fundamentally different kind
+--    of ingestion from tender_constraints: a wrong extraction here
+--    silently corrupts every future opportunity's compliance/risk/
+--    pricing checked against that constraint type, not just one
+--    opportunity. So proposals always land here first; nothing writes
+--    to amazon_capability_profile without an explicit human approval.
+-- ---------------------------------------------------------------------
+
+CREATE TABLE constraints.amazon_capability_update_queue (
+    update_id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    constraint_type_id       UUID NOT NULL REFERENCES constraints.constraint_catalog(constraint_type_id),
+    proposed_capability_status TEXT NOT NULL
+                             CHECK (proposed_capability_status IN ('can_do','cannot_do','can_do_with_conditions')),
+    proposed_structured_value JSONB,
+    proposed_conditions_text TEXT,
+    source_document_id      UUID REFERENCES core.documents(document_id),
+    source_chunk_id         UUID REFERENCES core.document_chunks(chunk_id),
+    raw_text                TEXT NOT NULL,
+    confidence               NUMERIC CHECK (confidence BETWEEN 0 AND 1),
+    is_demo                  BOOLEAN NOT NULL DEFAULT FALSE,
+    status                   TEXT NOT NULL DEFAULT 'pending'
+                             CHECK (status IN ('pending','approved','rejected')),
+    reviewer_id               TEXT,
+    reviewed_at               TIMESTAMPTZ,
+    created_at                TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+GRANT SELECT, INSERT, UPDATE ON constraints.amazon_capability_update_queue TO app_ingestion;
+CREATE POLICY "app_ingestion_rw" ON constraints.amazon_capability_update_queue FOR ALL TO app_ingestion USING (true) WITH CHECK (true);
+
+GRANT SELECT ON constraints.amazon_capability_update_queue TO nl_query_readonly;
+CREATE POLICY "nl_query_readonly_select" ON constraints.amazon_capability_update_queue FOR SELECT TO nl_query_readonly USING (true);
+
+-- app_ingestion previously only had SELECT on amazon_capability_profile
+-- (read-only reference data for every other pipeline) — approval writes
+-- here now, as a true upsert (INSERT ... ON CONFLICT (constraint_type_id)),
+-- since a constraint type might not have an existing row yet. FOR ALL,
+-- not just UPDATE: INSERT ... ON CONFLICT DO UPDATE still needs INSERT
+-- permission evaluated up front even when every row in practice already
+-- exists and resolves via the conflict path (an UPDATE-only policy hit
+-- "new row violates row-level security policy" in testing).
+GRANT INSERT, UPDATE ON constraints.amazon_capability_profile TO app_ingestion;
+CREATE POLICY "app_ingestion_rw" ON constraints.amazon_capability_profile FOR ALL TO app_ingestion USING (true) WITH CHECK (true);

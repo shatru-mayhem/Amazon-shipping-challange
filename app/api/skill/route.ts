@@ -23,7 +23,17 @@ const SKILLS: Record<string, string> = {
   follow_up_actions: "follow_up_actions/follow_up_actions.py",
   executive_summary: "executive_summary/executive_summary.py",
   sources_used: "sources_used/sources_used.py",
+  software_analytics: "software_analytics/software_analytics.py",
+  capability_ingestion: "capability_ingestion/capability_ingestion.py",
 };
+
+// software_analytics reports on the pipeline's own LLM usage, not one
+// opportunity's data — it takes no opportunity_id argument at all.
+// capability_ingestion is the same shape: it updates Amazon's own
+// ground-truth amazon_capability_profile, not one opportunity's data.
+// Its CLI takes an action as extra_args[0] (run_demo / list_pending /
+// approve <id> [reviewer] / reject <id> [reviewer]).
+const GLOBAL_SKILLS = new Set(["software_analytics", "capability_ingestion"]);
 
 const SKILLS_DIR = path.join(process.cwd(), "skills");
 const TIMEOUT_MS = 120_000;
@@ -46,12 +56,17 @@ export async function POST(request: NextRequest) {
   if (!skill || !SKILLS[skill]) {
     return NextResponse.json({ ok: false, error: `skill must be one of: ${Object.keys(SKILLS).join(", ")}` }, { status: 400 });
   }
-  if (!opportunity_id || typeof opportunity_id !== "string") {
+  const isGlobal = GLOBAL_SKILLS.has(skill);
+  if (!isGlobal && (!opportunity_id || typeof opportunity_id !== "string")) {
     return NextResponse.json({ ok: false, error: "opportunity_id is required." }, { status: 400 });
   }
 
   const scriptPath = path.join(SKILLS_DIR, SKILLS[skill]);
-  const args = [scriptPath, opportunity_id, ...(Array.isArray(extra_args) ? extra_args.map(String) : [])];
+  const args = [
+    scriptPath,
+    ...(isGlobal ? [] : [opportunity_id as string]),
+    ...(Array.isArray(extra_args) ? extra_args.map(String) : []),
+  ];
 
   try {
     const stdout = await runPython(args);

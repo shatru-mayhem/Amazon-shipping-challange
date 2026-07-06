@@ -105,18 +105,72 @@ def _post(host: str, path: str, payload: dict, timeout: int = 60, use_auth: bool
             raise RuntimeError(f"Could not reach {host}{path} — {hint} ({e})") from e
 
 
-def embed(text: str) -> list:
+def _log_call(**fields):
+    """Best-effort write to observability.llm_call_log — every embed()/
+    generate_json() call, real token counts and latency where Ollama's
+    response provides them. Logging failure must never break the actual
+    LLM call it's describing, so any error here is swallowed, not raised.
+    Imported lazily to keep _llm.py usable standalone (e.g. its own
+    __main__ smoke test) even if _ingestion_db's env isn't configured."""
+    try:
+        import os
+        import sys
+        _skills_dir = os.path.dirname(os.path.abspath(__file__))
+        if _skills_dir not in sys.path:
+            sys.path.insert(0, _skills_dir)
+        from _ingestion_db import write_sql
+
+        write_sql(
+            """INSERT INTO llm_call_log
+                 (opportunity_id, skill, call_type, model, is_cloud,
+                  prompt_tokens, completion_tokens, total_tokens,
+                  total_duration_ms, load_duration_ms, eval_duration_ms,
+                  success, error_message)
+               VALUES (%(opportunity_id)s, %(skill)s, %(call_type)s, %(model)s, %(is_cloud)s,
+                       %(prompt_tokens)s, %(completion_tokens)s, %(total_tokens)s,
+                       %(total_duration_ms)s, %(load_duration_ms)s, %(eval_duration_ms)s,
+                       %(success)s, %(error_message)s)""",
+            fields,
+        )
+    except Exception:
+        pass
+
+
+def embed(text: str, *, opportunity_id: str = None, skill: str = None) -> list:
     """Embed a single string with EMBED_MODEL. Always local — Ollama's
-    cloud API has no embedding models. Returns a list[float]."""
-    result = _post(OLLAMA_LOCAL_HOST, "/api/embeddings", {"model": EMBED_MODEL, "prompt": text})
+    cloud API has no embedding models. Returns a list[float].
+
+    opportunity_id/skill are optional attribution labels for the
+    observability log (which opportunity and which retrieval.py function
+    triggered this call) — purely for analytics, never required."""
+    start = time.perf_counter()
+    try:
+        result = _post(OLLAMA_LOCAL_HOST, "/api/embeddings", {"model": EMBED_MODEL, "prompt": text})
+    except Exception as e:
+        _log_call(
+            opportunity_id=opportunity_id, skill=skill, call_type="embed", model=EMBED_MODEL,
+            is_cloud=False, prompt_tokens=None, completion_tokens=None, total_tokens=None,
+            total_duration_ms=round((time.perf_counter() - start) * 1000, 1),
+            load_duration_ms=None, eval_duration_ms=None, success=False, error_message=str(e)[:2000],
+        )
+        raise
+    # Ollama's legacy /api/embeddings endpoint returns just {"embedding": [...]}
+    # — no token counts or server-side timing, unlike /api/generate. Wall-clock
+    # duration is still real and worth recording.
+    _log_call(
+        opportunity_id=opportunity_id, skill=skill, call_type="embed", model=EMBED_MODEL,
+        is_cloud=False, prompt_tokens=None, completion_tokens=None, total_tokens=None,
+        total_duration_ms=round((time.perf_counter() - start) * 1000, 1),
+        load_duration_ms=None, eval_duration_ms=None, success=True, error_message=None,
+    )
     return result["embedding"]
 
 
-def embed_batch(texts: list) -> list:
+def embed_batch(texts: list, *, opportunity_id: str = None, skill: str = None) -> list:
     """Embed multiple strings. Ollama's embeddings endpoint is single-prompt,
     so this just loops — fine at retrieval-engine volumes (per-tender,
     per-email), not a hot request path."""
-    return [embed(t) for t in texts]
+    return [embed(t, opportunity_id=opportunity_id, skill=skill) for t in texts]
 
 
 def cosine_similarity(a: list, b: list) -> float:
@@ -128,14 +182,17 @@ def cosine_similarity(a: list, b: list) -> float:
     return dot / (norm_a * norm_b)
 
 
-def generate_json(prompt: str, system: str = None) -> dict:
+def generate_json(prompt: str, system: str = None, *, opportunity_id: str = None, skill: str = None) -> dict:
     """Ask GENERATE_MODEL for a JSON object back. Local (llama3.2) by
     default — measured 5-9s vs. up to 108s for the cloud model under
     real load. Set OLLAMA_USE_CLOUD=true to use ollama.com's cloud API
     instead (e.g. no local Ollama server reachable). Raises if the
     model's response isn't valid JSON — callers decide how to handle
     that (retry, flag as low-confidence extraction, etc.), this function
-    doesn't guess."""
+    doesn't guess.
+
+    opportunity_id/skill are optional attribution labels for the
+    observability log, same as embed() — purely for analytics."""
     payload = {
         "model": GENERATE_MODEL,
         "prompt": prompt,
@@ -146,10 +203,39 @@ def generate_json(prompt: str, system: str = None) -> dict:
         payload["system"] = system
 
     host = OLLAMA_CLOUD_HOST if OLLAMA_USE_CLOUD else OLLAMA_LOCAL_HOST
+    start = time.perf_counter()
     # Cloud generation can run long under concurrent load (see
     # skills/retrieval/retrieval.py's ThreadPoolExecutor usage) — a wider
     # timeout than the default avoids failing a slow-but-fine call.
-    result = _post(host, "/api/generate", payload, timeout=150, use_auth=OLLAMA_USE_CLOUD)
+    try:
+        result = _post(host, "/api/generate", payload, timeout=150, use_auth=OLLAMA_USE_CLOUD)
+    except Exception as e:
+        _log_call(
+            opportunity_id=opportunity_id, skill=skill, call_type="generate_json", model=GENERATE_MODEL,
+            is_cloud=OLLAMA_USE_CLOUD, prompt_tokens=None, completion_tokens=None, total_tokens=None,
+            total_duration_ms=round((time.perf_counter() - start) * 1000, 1),
+            load_duration_ms=None, eval_duration_ms=None, success=False, error_message=str(e)[:2000],
+        )
+        raise
+
+    # /api/generate (non-streaming) returns real token counts and
+    # nanosecond-precision server-side timing — the actual tokenomics
+    # numbers, not an estimate. Convert ns -> ms for the log.
+    prompt_tokens = result.get("prompt_eval_count")
+    completion_tokens = result.get("eval_count")
+    total_tokens = (
+        (prompt_tokens or 0) + (completion_tokens or 0)
+        if prompt_tokens is not None or completion_tokens is not None else None
+    )
+    _log_call(
+        opportunity_id=opportunity_id, skill=skill, call_type="generate_json", model=GENERATE_MODEL,
+        is_cloud=OLLAMA_USE_CLOUD, prompt_tokens=prompt_tokens, completion_tokens=completion_tokens,
+        total_tokens=total_tokens,
+        total_duration_ms=round(result["total_duration"] / 1e6, 1) if result.get("total_duration") else None,
+        load_duration_ms=round(result["load_duration"] / 1e6, 1) if result.get("load_duration") else None,
+        eval_duration_ms=round(result["eval_duration"] / 1e6, 1) if result.get("eval_duration") else None,
+        success=True, error_message=None,
+    )
     text = result["response"].strip()
 
     # Cloud models don't always honor format="json" as strictly as local

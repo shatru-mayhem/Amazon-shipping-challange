@@ -167,7 +167,7 @@ Extract this field: {field} — {OPPORTUNITY_FEATURE_SPECS[field]}
 Respond with JSON: {{"found": true/false, "value": <value matching the described type, or null>, "confidence": <0-1 float>}}.
 Set "found" to false and "value" to null if this field is not stated anywhere in the source text above — never guess or invent a value."""
 
-    result = generate_json(prompt)
+    result = generate_json(prompt, opportunity_id=opportunity_id, skill="opportunity_features")
     # Trust value over the found flag — see tender_constraints for why:
     # smaller local models have been observed returning found=false while
     # still filling in a real value. Also treat a literal "null" string
@@ -257,7 +257,7 @@ Requirement type: {row['name']} — {row['description'] or ''}
 Does this text state a value for this specific requirement? Respond with JSON:
 {{"found": true/false, "stated_text": "... or null", "stated_value": "... or null"}}
 Set "found" to false if this requirement type genuinely isn't addressed — never force a match onto unrelated text."""
-        result = generate_json(prompt)
+        result = generate_json(prompt, opportunity_id=opportunity_id, skill="tender_constraints")
 
         # Trust stated_text over the found flag — smaller local models
         # have been observed returning found=false while still filling in
@@ -348,7 +348,7 @@ def _retrieve_client_highlights(opportunity_id, field=None):
 {batch['text'][:CHUNK_TEXT_CAP]}
 ---
 Identify any client growth objectives, pain points, stated priorities, or past complaints in this text. Respond with JSON: {{"highlights": [{{"highlight_type": one of {HIGHLIGHT_TYPES}, "text": "..."}}]}}. Respond with {{"highlights": []}} if none are present."""
-        result = generate_json(prompt)
+        result = generate_json(prompt, opportunity_id=opportunity_id, skill="client_highlights")
         found = []
         for h in result.get("highlights", []):
             # generate_json's response shape isn't schema-enforced — a model
@@ -412,7 +412,10 @@ def _retrieve_email_resolution(opportunity_id, field=None):
     # both faster (one round-trip per message, not per pair) and avoids
     # redundant network calls entirely.
     with ThreadPoolExecutor(max_workers=LLM_CALL_WORKERS) as pool:
-        vecs = list(pool.map(lambda m: embed(m["body_redacted"]), messages))
+        vecs = list(pool.map(
+            lambda m: embed(m["body_redacted"], opportunity_id=opportunity_id, skill="email_messages"),
+            messages,
+        ))
     body_vecs = {m["message_id"]: v for m, v in zip(messages, vecs)}
 
     resolutions = []

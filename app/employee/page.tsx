@@ -11,6 +11,7 @@ import DeliverablesPanel from "@/components/DeliverablesPanel";
 import TenderUploadPanel from "@/components/TenderUploadPanel";
 import EmailImportPanel from "@/components/EmailImportPanel";
 import RetrievalStatusPanel from "@/components/RetrievalStatusPanel";
+import CapabilityIngestionPanel from "@/components/CapabilityIngestionPanel";
 import KnowledgePanel from "@/components/KnowledgePanel";
 import {
   reviewFolders,
@@ -41,6 +42,12 @@ export default function EmployeePortal() {
             className="rounded-sm bg-orange px-3 py-1.5 text-sm font-medium text-ink hover:bg-orange-dark"
           >
             Executive Dashboard →
+          </Link>
+          <Link
+            href="/analytics"
+            className="rounded-sm border border-border bg-surface px-3 py-1.5 text-sm font-medium text-ink hover:bg-canvas"
+          >
+            Software Analytics →
           </Link>
           <label htmlFor="level" className="ml-auto text-sm text-gray-600">
             Hierarchy level (demo switch):
@@ -122,6 +129,8 @@ export default function EmployeePortal() {
             <EmailImportPanel />
 
             <RetrievalStatusPanel />
+
+            <CapabilityIngestionPanel />
 
             <TeamPanel />
 
