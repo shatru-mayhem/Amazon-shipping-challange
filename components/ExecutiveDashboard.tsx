@@ -137,12 +137,12 @@ interface Dashboard {
   sources_used: SourcesUsed;
 }
 
-async function callSkill<T>(skill: string, opportunityId: string): Promise<T | null> {
+async function callSkill<T>(skill: string, opportunityId: string, extraArgs?: string[]): Promise<T | null> {
   try {
     const res = await fetch("/api/skill", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ skill, opportunity_id: opportunityId }),
+      body: JSON.stringify({ skill, opportunity_id: opportunityId, extra_args: extraArgs }),
     });
     const json = await res.json();
     return json.ok ? (json.data as T) : null;
@@ -185,6 +185,8 @@ export default function ExecutiveDashboard() {
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
   const [progress, setProgress] = useState("");
   const [pending, startTransition] = useTransition();
+  const [draftMessage, setDraftMessage] = useState("");
+  const [draftPending, startDraftTransition] = useTransition();
 
   useEffect(() => {
     listOpportunitiesForIngestion().then((res) => {
@@ -243,6 +245,23 @@ export default function ExecutiveDashboard() {
             internal_reference_data: {},
           },
       });
+    });
+  }
+
+  function sendFollowUpDraft() {
+    if (!opportunityId) return;
+    setDraftMessage("");
+    startDraftTransition(async () => {
+      const result = await callSkill<{ ok: boolean; to?: string; open_action_count?: number; error?: string }>(
+        "follow_up_actions",
+        opportunityId,
+        ["send_draft"]
+      );
+      if (!result || !result.ok) {
+        setDraftMessage(`Failed to send draft: ${result?.error ?? "unknown error"}`);
+        return;
+      }
+      setDraftMessage(`Draft sent to Zapier for ${result.to} (${result.open_action_count} open action(s)) — check Gmail drafts.`);
     });
   }
 
@@ -391,6 +410,18 @@ export default function ExecutiveDashboard() {
                     })}
                   </ul>
                 )}
+                {d.follow_up_actions.actions.length > 0 ? (
+                  <div className="mt-3 border-t border-border pt-3">
+                    <button
+                      onClick={sendFollowUpDraft}
+                      disabled={draftPending}
+                      className="h-9 rounded-sm bg-orange px-3 text-xs font-medium text-ink hover:bg-orange-dark disabled:opacity-60"
+                    >
+                      {draftPending ? "Sending…" : "Send Draft Email (via Zapier)"}
+                    </button>
+                    {draftMessage ? <p className="mt-2 text-xs text-gray-600">{draftMessage}</p> : null}
+                  </div>
+                ) : null}
               </Section>
             </div>
 

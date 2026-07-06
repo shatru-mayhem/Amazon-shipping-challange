@@ -33,6 +33,11 @@ const SKILLS: Record<string, string> = {
 // ground-truth amazon_capability_profile, not one opportunity's data.
 // Its CLI takes an action as extra_args[0] (run_demo / list_pending /
 // approve <id> [reviewer] / reject <id> [reviewer] / reset_demo).
+//
+// follow_up_actions optionally takes extra_args ["send_draft", to_email?]
+// to push its open actions to the Zapier webhook (skills/follow_up_actions/
+// follow_up_actions.py's send_followup_draft()), which creates a Gmail
+// draft — never auto-sent.
 const GLOBAL_SKILLS = new Set(["software_analytics", "capability_ingestion"]);
 
 const SKILLS_DIR = path.join(process.cwd(), "skills");
