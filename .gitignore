@@ -20,3 +20,4 @@ __pycache__/
 node_modules/
 .next/
 npm-debug.log*
+tsconfig.tsbuildinfo

@@ -75,3 +75,16 @@ CREATE POLICY "authenticated_upload_tender_documents" ON storage.objects
 CREATE POLICY "authenticated_read_tender_documents" ON storage.objects
   FOR SELECT TO authenticated
   USING (bucket_id = 'tender_documents');
+
+-- Same, for email/CRM export uploads (email_ingestion.ts).
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('email_imports', 'email_imports', false)
+ON CONFLICT (id) DO NOTHING;
+
+CREATE POLICY "authenticated_upload_email_imports" ON storage.objects
+  FOR INSERT TO authenticated
+  WITH CHECK (bucket_id = 'email_imports');
+
+CREATE POLICY "authenticated_read_email_imports" ON storage.objects
+  FOR SELECT TO authenticated
+  USING (bucket_id = 'email_imports');
