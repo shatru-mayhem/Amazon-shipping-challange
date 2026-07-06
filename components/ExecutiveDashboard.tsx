@@ -3,6 +3,23 @@
 import { useEffect, useState, useTransition } from "react";
 import StatusBadge, { type StatusTone } from "@/components/StatusBadge";
 import { listOpportunitiesForIngestion, type OpportunityOption } from "@/app/actions/tender_ingestion";
+import PitchDeckPanel from "@/components/PitchDeckPanel";
+import type {
+  Dashboard,
+  ExecutiveSummary,
+  OpportunityScore,
+  WinProbability,
+  Risk,
+  RiskAssessment,
+  CapabilityGap,
+  CommercialStrategy,
+  PricingScenario,
+  PricingRecommendations,
+  FollowUpAction,
+  FollowUpActions,
+  ClientProposal,
+  SourcesUsed,
+} from "@/lib/dashboard-types";
 
 // Executive dashboard, structured around the 9 required outputs (not an
 // arbitrary set of business questions): Executive Summary, Opportunity
@@ -11,138 +28,6 @@ import { listOpportunitiesForIngestion, type OpportunityOption } from "@/app/act
 // Probability Score, Sources Used. Each still runs exactly once via the
 // existing /api/skill + /api/retrieve bridges (skills/*.py); this
 // renders their real, already-tested output instead of a JSON dump.
-
-interface OpportunityScore {
-  score: number;
-  band: "hot" | "warm" | "cold";
-  rationale: string;
-  has_hard_blocker?: boolean;
-}
-
-interface WinProbability {
-  win_probability: number;
-  base_rate: number;
-  top_drivers: { factor: string; effect: number }[];
-  rationale: string;
-}
-
-interface Risk {
-  category: string;
-  severity: "low" | "medium" | "high";
-  title: string;
-  detail: string;
-  hard_blocker?: boolean;
-}
-
-interface RiskAssessment {
-  overall_risk: "none" | "low" | "medium" | "high";
-  risk_count: number;
-  risks: Risk[];
-  has_hard_blocker: boolean;
-  hard_blockers: Risk[];
-}
-
-interface CapabilityGap {
-  constraint_name: string;
-  result: "unsatisfied" | "unclear_needs_verification";
-  severity: "low" | "medium" | "high";
-  gap_description: string;
-  is_hard_blocker: boolean;
-}
-
-interface CommercialStrategy {
-  positioning_statement: string;
-  lead_with_strengths: string[];
-  address_client_pains: string[];
-  align_to_priorities: string[];
-  objections_to_preempt: string[];
-  negotiation_approach: string;
-  capability_gaps_to_flag: CapabilityGap[];
-  has_hard_blocker: boolean;
-}
-
-interface PricingScenario {
-  name: "aggressive" | "balanced" | "premium";
-  target_margin_pct: number;
-  price_per_package_eur: number;
-  discount_pct_vs_list: number;
-  daily_revenue_eur: number;
-  contract_value_eur: number | null;
-  rationale: string;
-  tradeoffs: string;
-  negotiation_strategy: string;
-  guardrail_result?: string;
-}
-
-interface PricingRecommendations {
-  recommended_scenario: string;
-  scenarios: PricingScenario[];
-  guardrails: string[];
-  volume_packages_per_day: number | null;
-  total_cost_per_package_eur?: number;
-  region_multiplier_applied?: number;
-  regions_priced?: string[];
-  regions_without_cost_data?: string[];
-  error?: string;
-  financial_guardrails: {
-    min_contribution_margin_pct: number;
-    target_contribution_margin_pct: number;
-    vp_approval_required_below_pct: number;
-    auto_no_go_below_pct: number;
-  } | null;
-}
-
-interface FollowUpAction {
-  priority: "high" | "medium" | "low";
-  action: string;
-  detail: string;
-  type?: string;
-}
-
-interface FollowUpActions {
-  open_action_count: number;
-  actions: FollowUpAction[];
-}
-
-interface ExecutiveSummary {
-  headline: string;
-  decision_prompt: string;
-  has_hard_blocker?: boolean;
-  hard_blockers?: Risk[];
-}
-
-interface ClientProposal {
-  sections: {
-    cover: { title: string; subtitle: string };
-    understanding_your_needs: { points: string[] };
-    why_amazon_shipping: { positioning: string; differentiators: string[] };
-    commercial_proposal: { selected_scenario: string; scenario: PricingScenario | null };
-    next_steps: { points: string[] };
-  };
-  internal_flags: {
-    has_hard_blocker: boolean;
-    hard_blockers: CapabilityGap[];
-  };
-}
-
-interface SourcesUsed {
-  challenge_documents: { filename: string; source_type: string }[];
-  email_correspondence: { threads: number; messages: number };
-  extracted_evidence: { tender_constraints_extracted: number; client_highlights_by_source: Record<string, number> };
-  internal_reference_data: Record<string, { total: number; used_by: string[] } | string | null>;
-}
-
-interface Dashboard {
-  executive_summary: ExecutiveSummary;
-  opportunity_score: OpportunityScore;
-  win_probability: WinProbability;
-  risk_assessment: RiskAssessment;
-  commercial_strategy: CommercialStrategy;
-  pricing_recommendations: PricingRecommendations;
-  follow_up_actions: FollowUpActions;
-  client_proposal: ClientProposal;
-  sources_used: SourcesUsed;
-}
 
 async function callSkill<T>(skill: string, opportunityId: string, extraArgs?: string[]): Promise<T | null> {
   try {
@@ -194,13 +79,20 @@ export default function ExecutiveDashboard() {
   const [pending, startTransition] = useTransition();
   const [draftMessage, setDraftMessage] = useState("");
   const [draftPending, startDraftTransition] = useTransition();
+  const [oppsError, setOppsError] = useState<string | null>(null);
 
   useEffect(() => {
     listOpportunitiesForIngestion().then((res) => {
       if (res.ok && res.data && res.data.length > 0) {
         setOpps(res.data);
         setOpportunityId(res.data[0].opportunity_id);
+        return;
       }
+      // Surface the real reason instead of a bare "No opportunities found" —
+      // on a fresh deploy this is almost always APP_INGESTION_DB_URL (or
+      // another server-only env var) missing from the hosting platform's
+      // env settings, since .env is gitignored and never ships with the repo.
+      setOppsError(!res.ok ? (res.error ?? "unknown error") : "No opportunities found in the database.");
     });
   }, []);
 
@@ -239,7 +131,7 @@ export default function ExecutiveDashboard() {
             sections: {
               cover: { title: "", subtitle: "" },
               understanding_your_needs: { points: [] },
-              why_amazon_shipping: { positioning: "", differentiators: [] },
+              why_amazon_shipping: { positioning: "", differentiators: [], proof_points: [] },
               commercial_proposal: { selected_scenario: "", scenario: null },
               next_steps: { points: [] },
             },
@@ -330,7 +222,17 @@ export default function ExecutiveDashboard() {
       <h2 className="mb-3 text-base font-bold">Executive Dashboard</h2>
       <div className="rounded-md border border-border bg-surface p-4">
         {opps.length === 0 ? (
-          <p className="mb-3 text-sm text-gray-500">No opportunities found.</p>
+          <div className="mb-3 rounded-sm border border-warning/40 bg-amber-50 p-3">
+            <p className="text-sm text-gray-700">No opportunities found.</p>
+            {oppsError ? (
+              <p className="mt-1 text-xs text-gray-600">
+                Reason: {oppsError}
+                {oppsError.toLowerCase().includes("not set") || oppsError.toLowerCase().includes("app_ingestion")
+                  ? " — if this is a fresh deployment, add this env var to the hosting platform's project settings (it's gitignored, so .env never ships with the repo)."
+                  : ""}
+              </p>
+            ) : null}
+          </div>
         ) : (
           <div className="mb-3">
             <label htmlFor="dash-opp" className="mb-1 block text-sm font-medium">Opportunity</label>
@@ -693,6 +595,14 @@ export default function ExecutiveDashboard() {
                 </div>
               </div>
             </Section>
+
+            {/* Client-facing pitch deck: preview + .pptx export, built from
+                the same real skill output rendered above. */}
+            <PitchDeckPanel
+              dashboard={d}
+              customerName={opps.find((o) => o.opportunity_id === opportunityId)?.customer_name ?? "Client"}
+              opportunityTitle={opps.find((o) => o.opportunity_id === opportunityId)?.title ?? d.client_proposal.sections.cover.subtitle}
+            />
           </div>
         ) : null}
       </div>

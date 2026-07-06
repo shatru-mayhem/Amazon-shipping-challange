@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { execFile } from "child_process";
-import path from "path";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { callRetrieve } from "@/lib/skills-bridge";
 
 // Bridge between the frontend and the Python retrieval engine
 // (skills/retrieval/retrieval.py). This is the "downstream process asks
@@ -20,9 +19,6 @@ export const runtime = "nodejs";
 // checked here too so a bad request 400s immediately instead of paying
 // for a Python process spin-up first.
 const VALID_TABLES = ["opportunity_features", "tender_constraints", "client_highlights", "email_messages"];
-
-const RETRIEVAL_SCRIPT = path.join(process.cwd(), "skills", "retrieval", "retrieval.py");
-const TIMEOUT_MS = 120_000; // generous: a call can involve several sequential Ollama round-trips
 
 export async function POST(request: NextRequest) {
   const supabase = createSupabaseServer();
@@ -49,27 +45,11 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const args = [RETRIEVAL_SCRIPT, opportunity_id, table];
-  if (field) args.push(String(field));
-
   try {
-    const { stdout } = await runPython(args);
-    const result = JSON.parse(stdout);
+    const result = await callRetrieve(opportunity_id, table, field ? String(field) : undefined);
     return NextResponse.json({ ok: true, data: result });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Retrieval failed.";
     return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
-}
-
-function runPython(args: string[]): Promise<{ stdout: string; stderr: string }> {
-  return new Promise((resolve, reject) => {
-    execFile("python", args, { timeout: TIMEOUT_MS, cwd: process.cwd() }, (err, stdout, stderr) => {
-      if (err) {
-        reject(new Error(stderr.trim() || err.message));
-        return;
-      }
-      resolve({ stdout, stderr });
-    });
-  });
 }

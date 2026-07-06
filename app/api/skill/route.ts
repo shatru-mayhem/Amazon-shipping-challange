@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { execFile } from "child_process";
-import path from "path";
 import { createSupabaseServer } from "@/lib/supabase/server";
+import { callSkillByName } from "@/lib/skills-bridge";
 
 // Generic bridge from Next.js to the Python skills (skills/<name>/<name>.py)
 // that make up the flow in flow.jpeg / RETRIEVAL_REQUIREMENTS.md. Same
@@ -40,9 +39,6 @@ const SKILLS: Record<string, string> = {
 // draft — never auto-sent.
 const GLOBAL_SKILLS = new Set(["software_analytics", "capability_ingestion"]);
 
-const SKILLS_DIR = path.join(process.cwd(), "skills");
-const TIMEOUT_MS = 120_000;
-
 export async function POST(request: NextRequest) {
   const supabase = createSupabaseServer();
   const { data: { user } } = await supabase.auth.getUser();
@@ -66,31 +62,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false, error: "opportunity_id is required." }, { status: 400 });
   }
 
-  const scriptPath = path.join(SKILLS_DIR, SKILLS[skill]);
-  const args = [
-    scriptPath,
-    ...(isGlobal ? [] : [opportunity_id as string]),
-    ...(Array.isArray(extra_args) ? extra_args.map(String) : []),
-  ];
-
   try {
-    const stdout = await runPython(args);
-    const result = JSON.parse(stdout);
+    const result = await callSkillByName(
+      skill,
+      SKILLS[skill],
+      isGlobal ? undefined : (opportunity_id as string),
+      Array.isArray(extra_args) ? extra_args.map(String) : undefined,
+    );
     return NextResponse.json({ ok: true, data: result });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Skill call failed.";
     return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
-}
-
-function runPython(args: string[]): Promise<string> {
-  return new Promise((resolve, reject) => {
-    execFile("python", args, { timeout: TIMEOUT_MS, cwd: process.cwd() }, (err, stdout, stderr) => {
-      if (err) {
-        reject(new Error(stderr.trim() || err.message));
-        return;
-      }
-      resolve(stdout);
-    });
-  });
 }
