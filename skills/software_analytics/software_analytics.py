@@ -121,6 +121,81 @@ def get_software_analytics() -> dict:
     for row in timeline:
         row["total_duration_ms"] = _float_or_none(row["total_duration_ms"])
 
+    # Per-run view: one run_id = one skill-script subprocess invocation
+    # (skills/_llm.py generates run_id once per process). A single
+    # retrieval.py run fans out across several `skill` labels
+    # (opportunity_features, tender_constraints, ...) that all share one
+    # run_id, which is what lets the UI expand a run and see which script
+    # consumed how much, instead of only ever showing lifetime totals.
+    run_summaries = run_sql(
+        """
+        SELECT
+            run_id,
+            min(created_at)                                        AS started_at,
+            max(created_at)                                         AS ended_at,
+            count(*)                                                AS call_count,
+            coalesce(sum(total_tokens), 0)                          AS total_tokens,
+            coalesce(sum(total_duration_ms), 0)                     AS total_duration_ms,
+            count(*) FILTER (WHERE NOT success)                     AS failed_calls,
+            (array_agg(opportunity_id) FILTER (WHERE opportunity_id IS NOT NULL))[1] AS opportunity_id
+        FROM llm_call_log
+        GROUP BY run_id
+        ORDER BY started_at DESC
+        LIMIT 100
+        """
+    )
+
+    run_skill_rows = run_sql(
+        """
+        SELECT
+            run_id,
+            coalesce(skill, 'unattributed')                         AS skill,
+            count(*)                                                AS call_count,
+            coalesce(sum(total_tokens), 0)                          AS total_tokens,
+            coalesce(sum(total_duration_ms), 0)                     AS total_duration_ms,
+            round(avg(total_duration_ms), 1)                        AS avg_latency_ms,
+            count(*) FILTER (WHERE NOT success)                     AS failed_calls
+        FROM llm_call_log
+        WHERE run_id IN (SELECT run_id FROM llm_call_log GROUP BY run_id ORDER BY min(created_at) DESC LIMIT 100)
+        GROUP BY run_id, skill
+        ORDER BY total_duration_ms DESC
+        """
+    )
+    skills_by_run: dict = {}
+    for row in run_skill_rows:
+        row["total_tokens"] = int(row["total_tokens"])
+        row["total_duration_ms"] = _float_or_none(row["total_duration_ms"])
+        row["avg_latency_ms"] = _float_or_none(row["avg_latency_ms"])
+        skills_by_run.setdefault(str(row["run_id"]), []).append(row)
+
+    opp_ids = [r["opportunity_id"] for r in run_summaries if r.get("opportunity_id")]
+    opp_labels = {}
+    if opp_ids:
+        opp_rows = run_sql(
+            """SELECT o.opportunity_id, o.title, c.name AS customer_name
+               FROM opportunities o LEFT JOIN customers c ON c.customer_id = o.customer_id
+               WHERE o.opportunity_id = ANY(%s::uuid[])""",
+            (opp_ids,),
+        )
+        opp_labels = {str(r["opportunity_id"]): r for r in opp_rows}
+
+    by_run = []
+    for r in run_summaries:
+        run_id = str(r["run_id"])
+        opp = opp_labels.get(str(r["opportunity_id"])) if r.get("opportunity_id") else None
+        by_run.append({
+            "run_id": run_id,
+            "started_at": r["started_at"],
+            "ended_at": r["ended_at"],
+            "call_count": r["call_count"],
+            "total_tokens": int(r["total_tokens"]),
+            "total_duration_ms": _float_or_none(r["total_duration_ms"]),
+            "failed_calls": r["failed_calls"],
+            "opportunity_title": opp["title"] if opp else None,
+            "customer_name": opp["customer_name"] if opp else None,
+            "skills": skills_by_run.get(run_id, []),
+        })
+
     total_calls = overall.get("total_calls") or 0
     success_rate = round((overall.get("successful_calls") or 0) / total_calls, 3) if total_calls else None
 
@@ -140,6 +215,7 @@ def get_software_analytics() -> dict:
         "by_model": by_model,
         "recent_calls": recent,
         "latency_timeline": timeline,
+        "by_run": by_run,
         # Ollama's cloud API is subscription/API-key based, not a published
         # per-token rate — token counts are the real, verifiable tokenomics
         # signal here; a $ figure would be invented, so it's deliberately

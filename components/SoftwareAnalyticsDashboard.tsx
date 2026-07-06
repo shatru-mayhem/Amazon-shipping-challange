@@ -57,6 +57,28 @@ interface TimelinePoint {
   success: boolean;
 }
 
+interface RunSkillBreakdown {
+  skill: string;
+  call_count: number;
+  total_tokens: number;
+  total_duration_ms: number | null;
+  avg_latency_ms: number | null;
+  failed_calls: number;
+}
+
+interface RunSummary {
+  run_id: string;
+  started_at: string;
+  ended_at: string;
+  call_count: number;
+  total_tokens: number;
+  total_duration_ms: number | null;
+  failed_calls: number;
+  opportunity_title: string | null;
+  customer_name: string | null;
+  skills: RunSkillBreakdown[];
+}
+
 interface SoftwareAnalytics {
   total_calls: number;
   success_rate: number | null;
@@ -73,6 +95,7 @@ interface SoftwareAnalytics {
   by_model: ByModel[];
   recent_calls: RecentCall[];
   latency_timeline: TimelinePoint[];
+  by_run: RunSummary[];
   cost_note: string;
 }
 
@@ -237,6 +260,85 @@ function EmptyNote({ text }: { text: string }) {
   return <p className="text-xs text-gray-500">{text}</p>;
 }
 
+function RunsList({ runs }: { runs: RunSummary[] }) {
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  function toggle(runId: string) {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(runId)) next.delete(runId);
+      else next.add(runId);
+      return next;
+    });
+  }
+
+  if (runs.length === 0) {
+    return <EmptyNote text="No runs logged yet — each run is one skill-script invocation (e.g. persist.py for one opportunity, or a capability_ingestion demo run)." />;
+  }
+
+  return (
+    <ul className="space-y-2">
+      {runs.map((r) => {
+        const isOpen = expanded.has(r.run_id);
+        const label = r.opportunity_title
+          ? r.opportunity_title + (r.customer_name ? ` (${r.customer_name})` : "")
+          : "Global run (no single opportunity)";
+        return (
+          <li key={r.run_id} className="rounded-sm border border-border">
+            <button
+              onClick={() => toggle(r.run_id)}
+              className="flex w-full flex-wrap items-center justify-between gap-2 p-3 text-left hover:bg-canvas"
+            >
+              <div>
+                <p className="text-sm font-medium text-ink">{label}</p>
+                <p className="text-xs text-gray-500">{new Date(r.started_at).toLocaleString()}</p>
+              </div>
+              <div className="flex items-center gap-2 text-xs text-gray-600">
+                <span>{r.call_count} calls</span>
+                <span>{r.total_tokens.toLocaleString()} tokens</span>
+                <span>{r.total_duration_ms !== null ? `${Math.round(r.total_duration_ms)} ms` : "—"}</span>
+                {r.failed_calls > 0 ? <StatusBadge tone="danger" label={`${r.failed_calls} failed`} /> : null}
+                <span className="text-gray-400">{isOpen ? "▲" : "▼"}</span>
+              </div>
+            </button>
+            {isOpen ? (
+              <div className="overflow-x-auto border-t border-border">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="text-left text-gray-500">
+                      <th className="px-3 py-1.5">Script / skill</th>
+                      <th className="px-3 py-1.5">Calls</th>
+                      <th className="px-3 py-1.5">Tokens</th>
+                      <th className="px-3 py-1.5">Total time</th>
+                      <th className="px-3 py-1.5">Avg latency</th>
+                      <th className="px-3 py-1.5">Failed</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {r.skills.map((s) => (
+                      <tr key={s.skill} className="border-t border-border">
+                        <td className="px-3 py-1.5">
+                          <span className="inline-block h-2 w-2 rounded-full align-middle" style={{ backgroundColor: skillColor(s.skill) }} />
+                          <span className="ml-2 align-middle">{skillLabel(s.skill)}</span>
+                        </td>
+                        <td className="px-3 py-1.5">{s.call_count}</td>
+                        <td className="px-3 py-1.5">{s.total_tokens.toLocaleString()}</td>
+                        <td className="px-3 py-1.5">{s.total_duration_ms !== null ? `${Math.round(s.total_duration_ms)} ms` : "—"}</td>
+                        <td className="px-3 py-1.5">{s.avg_latency_ms !== null ? `${Math.round(s.avg_latency_ms)} ms` : "—"}</td>
+                        <td className="px-3 py-1.5">{s.failed_calls > 0 ? <StatusBadge tone="danger" label={String(s.failed_calls)} /> : "0"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : null}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 export default function SoftwareAnalyticsDashboard() {
   const [data, setData] = useState<SoftwareAnalytics | null>(null);
   const [loading, setLoading] = useState(false);
@@ -297,6 +399,10 @@ export default function SoftwareAnalyticsDashboard() {
             <StatTile label="P95 latency" value={data.p95_latency_ms !== null ? `${Math.round(data.p95_latency_ms)} ms` : "—"} sub={data.p50_latency_ms !== null ? `p50 ${Math.round(data.p50_latency_ms)} ms` : undefined} />
             <StatTile label="Cloud / local" value={`${data.cloud_calls} / ${data.local_calls}`} sub="calls" />
           </div>
+
+          <Section title="Runs">
+            <RunsList runs={data.by_run} />
+          </Section>
 
           <div className="grid gap-4 lg:grid-cols-2">
             <Section title="Calls by skill">

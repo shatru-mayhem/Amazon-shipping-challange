@@ -26,8 +26,20 @@ Cloud setup (optional, for generate_json):
 import os
 import time
 import json
+import uuid
 import urllib.request
 import urllib.error
+
+# Every skill script that calls embed()/generate_json() runs as its own
+# fresh subprocess (Next.js execFile's `python <script>.py ...` per call —
+# see app/api/skill/route.ts, app/api/retrieve/route.ts), so one run_id
+# generated at import time naturally scopes to exactly one script
+# invocation. A single retrieve() call fans out across several distinct
+# `skill` labels (opportunity_features, tender_constraints,
+# client_highlights, email_messages) that all share this run_id — that's
+# what lets software_analytics.py group "which script consumed how much"
+# under one run instead of only ever showing lifetime totals.
+_RUN_ID = str(uuid.uuid4())
 
 
 def _load_dotenv_best_effort():
@@ -120,13 +132,14 @@ def _log_call(**fields):
             sys.path.insert(0, _skills_dir)
         from _ingestion_db import write_sql
 
+        fields.setdefault("run_id", _RUN_ID)
         write_sql(
             """INSERT INTO llm_call_log
-                 (opportunity_id, skill, call_type, model, is_cloud,
+                 (run_id, opportunity_id, skill, call_type, model, is_cloud,
                   prompt_tokens, completion_tokens, total_tokens,
                   total_duration_ms, load_duration_ms, eval_duration_ms,
                   success, error_message)
-               VALUES (%(opportunity_id)s, %(skill)s, %(call_type)s, %(model)s, %(is_cloud)s,
+               VALUES (%(run_id)s, %(opportunity_id)s, %(skill)s, %(call_type)s, %(model)s, %(is_cloud)s,
                        %(prompt_tokens)s, %(completion_tokens)s, %(total_tokens)s,
                        %(total_duration_ms)s, %(load_duration_ms)s, %(eval_duration_ms)s,
                        %(success)s, %(error_message)s)""",
