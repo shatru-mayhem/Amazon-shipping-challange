@@ -64,19 +64,26 @@ interface CommercialStrategy {
 interface PricingScenario {
   name: "aggressive" | "balanced" | "premium";
   target_margin_pct: number;
-  implied_price_eur: number | null;
+  price_per_package_eur: number;
+  discount_pct_vs_list: number;
+  daily_revenue_eur: number;
+  contract_value_eur: number | null;
   rationale: string;
   tradeoffs: string;
   negotiation_strategy: string;
   guardrail_result?: string;
-  floor_applied?: boolean;
-  floor_note?: string;
 }
 
 interface PricingRecommendations {
   recommended_scenario: string;
   scenarios: PricingScenario[];
   guardrails: string[];
+  volume_packages_per_day: number | null;
+  total_cost_per_package_eur?: number;
+  region_multiplier_applied?: number;
+  regions_priced?: string[];
+  regions_without_cost_data?: string[];
+  error?: string;
   financial_guardrails: {
     min_contribution_margin_pct: number;
     target_contribution_margin_pct: number;
@@ -258,10 +265,27 @@ export default function ExecutiveDashboard() {
         ["send_draft"]
       );
       if (!result || !result.ok) {
-        setDraftMessage(`Failed to send draft: ${result?.error ?? "unknown error"}`);
+        setDraftMessage(`Failed to send internal summary: ${result?.error ?? "unknown error"}`);
         return;
       }
-      setDraftMessage(`Draft sent to Zapier for ${result.to} (${result.open_action_count} open action(s)) — check Gmail drafts.`);
+      setDraftMessage(`Internal summary sent to Zapier for ${result.to} (${result.open_action_count} open action(s)) — check Gmail drafts.`);
+    });
+  }
+
+  function sendClientReplyDraft() {
+    if (!opportunityId) return;
+    setDraftMessage("");
+    startDraftTransition(async () => {
+      const result = await callSkill<{ ok: boolean; to?: string; subject?: string; error?: string }>(
+        "follow_up_actions",
+        opportunityId,
+        ["send_client_reply"]
+      );
+      if (!result || !result.ok) {
+        setDraftMessage(`Failed to send client reply: ${result?.error ?? "unknown error"}`);
+        return;
+      }
+      setDraftMessage(`Client reply draft ("${result.subject}") sent to Zapier for ${result.to} — check Gmail drafts.`);
     });
   }
 
@@ -411,17 +435,26 @@ export default function ExecutiveDashboard() {
                   </ul>
                 )}
                 {d.follow_up_actions.actions.length > 0 ? (
-                  <div className="mt-3 border-t border-border pt-3">
+                  <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3">
+                    <button
+                      onClick={sendClientReplyDraft}
+                      disabled={draftPending}
+                      title="Client-facing reply — only uses vetted, hard-blocker-safe content. Never includes internal escalation text."
+                      className="h-9 rounded-sm bg-orange px-3 text-xs font-medium text-ink hover:bg-orange-dark disabled:opacity-60"
+                    >
+                      {draftPending ? "Sending…" : "Send Client Reply Draft (via Zapier)"}
+                    </button>
                     <button
                       onClick={sendFollowUpDraft}
                       disabled={draftPending}
-                      className="h-9 rounded-sm bg-orange px-3 text-xs font-medium text-ink hover:bg-orange-dark disabled:opacity-60"
+                      title="Internal-only summary, includes hard-blocker escalations verbatim. Not for the client."
+                      className="h-9 rounded-sm border border-border px-3 text-xs font-medium text-link hover:bg-gray-50 disabled:opacity-60"
                     >
-                      {draftPending ? "Sending…" : "Send Draft Email (via Zapier)"}
+                      Send Internal Summary (via Zapier)
                     </button>
-                    {draftMessage ? <p className="mt-2 text-xs text-gray-600">{draftMessage}</p> : null}
                   </div>
                 ) : null}
+                {draftMessage ? <p className="mt-2 text-xs text-gray-600">{draftMessage}</p> : null}
               </Section>
             </div>
 
@@ -435,31 +468,48 @@ export default function ExecutiveDashboard() {
                   {d.pricing_recommendations.financial_guardrails.auto_no_go_below_pct}%
                 </p>
               ) : null}
-              {d.pricing_recommendations.scenarios.length === 0 ? (
+              {d.pricing_recommendations.error ? (
+                <EmptyNote text={d.pricing_recommendations.error} />
+              ) : d.pricing_recommendations.scenarios.length === 0 ? (
                 <EmptyNote text="Not enough data to price this opportunity yet." />
               ) : (
-                <div className="grid gap-3 md:grid-cols-3">
-                  {d.pricing_recommendations.scenarios.map((s) => (
-                    <div
-                      key={s.name}
-                      className={
-                        "rounded-sm border p-3 " +
-                        (s.name === d.pricing_recommendations.recommended_scenario ? "border-orange bg-orange/10" : "border-border")
-                      }
-                    >
-                      <div className="mb-1 flex items-center justify-between">
-                        <p className="text-xs font-bold uppercase text-gray-600">{s.name}</p>
-                        {s.guardrail_result ? <StatusBadge tone={guardrailTone[s.guardrail_result] ?? "neutral"} label={s.guardrail_result.replace(/_/g, " ")} /> : null}
+                <>
+                  {d.pricing_recommendations.total_cost_per_package_eur !== undefined ? (
+                    <p className="text-xs text-gray-500">
+                      Cost basis: €{d.pricing_recommendations.total_cost_per_package_eur}/package
+                      {d.pricing_recommendations.region_multiplier_applied !== undefined
+                        ? ` (×${d.pricing_recommendations.region_multiplier_applied} region multiplier)` : ""}
+                      {d.pricing_recommendations.volume_packages_per_day !== null
+                        ? ` at ${d.pricing_recommendations.volume_packages_per_day}/day` : ""}
+                      {d.pricing_recommendations.regions_priced?.length
+                        ? ` — priced for ${d.pricing_recommendations.regions_priced.join(", ")}` : ""}
+                    </p>
+                  ) : null}
+                  <div className="grid gap-3 md:grid-cols-3">
+                    {d.pricing_recommendations.scenarios.map((s) => (
+                      <div
+                        key={s.name}
+                        className={
+                          "rounded-sm border p-3 " +
+                          (s.name === d.pricing_recommendations.recommended_scenario ? "border-orange bg-orange/10" : "border-border")
+                        }
+                      >
+                        <div className="mb-1 flex items-center justify-between">
+                          <p className="text-xs font-bold uppercase text-gray-600">{s.name}</p>
+                          {s.guardrail_result ? <StatusBadge tone={guardrailTone[s.guardrail_result] ?? "neutral"} label={s.guardrail_result.replace(/_/g, " ")} /> : null}
+                        </div>
+                        <p className="mb-1 text-lg font-bold">{s.target_margin_pct}% margin</p>
+                        <p className="mb-1 text-xs text-gray-700">€{s.price_per_package_eur.toLocaleString()}/package</p>
+                        <p className="mb-2 text-xs text-gray-500">
+                          {s.discount_pct_vs_list > 0 ? `${s.discount_pct_vs_list}% off list` : "list price"} · €{s.daily_revenue_eur.toLocaleString()}/day
+                        </p>
+                        <p className="text-xs text-gray-700">{s.rationale}</p>
+                        <p className="mt-1 text-xs text-gray-500"><span className="font-medium">Trade-off: </span>{s.tradeoffs}</p>
+                        <p className="mt-1 text-xs text-link"><span className="font-medium">Negotiation: </span>{s.negotiation_strategy}</p>
                       </div>
-                      <p className="mb-1 text-lg font-bold">{s.target_margin_pct}%</p>
-                      {s.implied_price_eur ? <p className="mb-2 text-xs text-gray-500">€{s.implied_price_eur.toLocaleString()}</p> : null}
-                      <p className="text-xs text-gray-700">{s.rationale}</p>
-                      <p className="mt-1 text-xs text-gray-500"><span className="font-medium">Trade-off: </span>{s.tradeoffs}</p>
-                      <p className="mt-1 text-xs text-link"><span className="font-medium">Negotiation: </span>{s.negotiation_strategy}</p>
-                      {s.floor_note ? <p className="mt-1 text-xs text-warning">{s.floor_note}</p> : null}
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                </>
               )}
               {d.pricing_recommendations.guardrails.map((g, i) => (
                 <p key={i} className="text-xs text-warning">{g}</p>

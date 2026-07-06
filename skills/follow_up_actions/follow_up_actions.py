@@ -163,24 +163,10 @@ def _build_email_draft(opportunity_id: str, follow_up: dict) -> dict:
     return {"subject": subject, "body": body}
 
 
-def send_followup_draft(opportunity_id: str, to_email: str = DEFAULT_FOLLOWUP_RECIPIENT) -> dict:
-    """Sends the current open follow-up actions to the Zapier webhook,
-    which turns them into a Gmail draft (never auto-sent — a human still
-    reviews and hits send). Never silently swallows a failed POST: if
-    Zapier is unreachable or rejects the payload, that's reported back,
-    not hidden behind a generic 'done'."""
-    follow_up = get_follow_up_actions(opportunity_id)
-    draft = _build_email_draft(opportunity_id, follow_up)
-
-    payload = {
-        "to": to_email,
-        "subject": draft["subject"],
-        "body": draft["body"],
-        "opportunity_id": opportunity_id,
-        "open_action_count": follow_up["open_action_count"],
-        "issues": follow_up["actions"],
-    }
-
+def _post_to_zapier(payload: dict) -> dict:
+    """Shared POST to the Zapier Catch Hook. Never silently swallows a
+    failed request: if Zapier is unreachable or rejects the payload,
+    that's reported back, not hidden behind a generic 'done'."""
     req = urllib.request.Request(
         ZAPIER_WEBHOOK_URL,
         data=json.dumps(payload).encode(),
@@ -189,31 +175,157 @@ def send_followup_draft(opportunity_id: str, to_email: str = DEFAULT_FOLLOWUP_RE
     )
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
-            status = resp.status
-            resp_body = resp.read().decode(errors="replace")
+            return {"ok": True, "zapier_status": resp.status, "zapier_response": resp.read().decode(errors="replace")}
     except urllib.error.HTTPError as e:
         return {"ok": False, "error": f"Zapier returned HTTP {e.code}: {e.read().decode(errors='replace')}", "payload": payload}
     except (urllib.error.URLError, TimeoutError) as e:
         return {"ok": False, "error": f"Could not reach Zapier webhook: {e}", "payload": payload}
 
+
+def send_followup_draft(opportunity_id: str, to_email: str = DEFAULT_FOLLOWUP_RECIPIENT) -> dict:
+    """Sends the current open follow-up actions (internal BD summary,
+    including hard-blocker escalations verbatim) to the Zapier webhook,
+    which turns them into a Gmail draft (never auto-sent — a human still
+    reviews and hits send). Internal-only — see send_client_reply_draft()
+    for the client-facing version, which never includes this raw text."""
+    follow_up = get_follow_up_actions(opportunity_id)
+    draft = _build_email_draft(opportunity_id, follow_up)
+
+    result = _post_to_zapier({
+        "to": to_email,
+        "subject": draft["subject"],
+        "body": draft["body"],
+        "opportunity_id": opportunity_id,
+        "open_action_count": follow_up["open_action_count"],
+        "issues": follow_up["actions"],
+    })
+    if not result["ok"]:
+        return result
     return {
         "ok": True,
-        "zapier_status": status,
-        "zapier_response": resp_body,
+        "zapier_status": result["zapier_status"],
+        "zapier_response": result["zapier_response"],
         "to": to_email,
         "subject": draft["subject"],
         "open_action_count": follow_up["open_action_count"],
     }
 
 
+def _client_contact(opportunity_id: str):
+    """Most recent inbound message from the client themselves (not
+    Amazon's own side of the thread), so the reply can be addressed to a
+    real name. sender is stored as "Name <email>"."""
+    row = run_sql_one(
+        """SELECT em.sender
+           FROM email_messages em
+           JOIN email_threads et ON et.thread_id = em.thread_id
+           WHERE et.opportunity_id = %s AND em.sender NOT ILIKE %s
+           ORDER BY em.sent_at DESC LIMIT 1""",
+        (opportunity_id, "%amazonshipping%"),
+    )
+    if not row:
+        return None
+    sender = row["sender"]
+    first_name = sender.split("<")[0].strip().split(" ")[0] or None
+    return first_name
+
+
+def _build_client_reply_draft(opportunity_id: str) -> dict:
+    """Client-facing reply draft — deliberately built from ONLY the parts
+    of commercial_strategy that are already vetted client-safe content
+    (positioning_statement/address_client_pains/align_to_priorities have
+    already been filtered against capability_gaps_to_flag by
+    commercial_strategy.py's _conflicts_with_hard_blocker(), the same fix
+    that stopped the pitch deck promising France coverage). Never touches
+    capability_gaps_to_flag or the internal hard-blocker escalation text
+    directly — those exist so a human decides how/whether to address them,
+    not so an auto-draft can improvise around them. Acknowledges the
+    client's own open questions by quoting them back, but doesn't attempt
+    to answer them (that's still a human's job) — it reinforces why
+    Amazon Shipping is the right fit and confirms the team is on it."""
+    _COMMERCIAL_DIR = os.path.join(_SKILLS_DIR, "commercial_strategy")
+    if _COMMERCIAL_DIR not in sys.path:
+        sys.path.insert(0, _COMMERCIAL_DIR)
+    from commercial_strategy import build_commercial_strategy  # noqa: E402
+
+    opp = run_sql_one(
+        """SELECT o.title, c.name AS customer_name
+           FROM opportunities o LEFT JOIN customers c ON c.customer_id = o.customer_id
+           WHERE o.opportunity_id = %s""",
+        (opportunity_id,),
+    )
+    title = opp["title"] if opp else opportunity_id
+    customer = opp["customer_name"] if opp and opp["customer_name"] else "there"
+    contact_first_name = _client_contact(opportunity_id) or customer
+
+    strategy = build_commercial_strategy(opportunity_id)
+
+    # How many of the client's own messages are still awaiting a reply —
+    # count only. positioning_statement and the raw client email body are
+    # deliberately NOT quoted here: positioning_statement is internal BD
+    # phrasing ("Position Amazon Shipping around X, directly tied to Y"),
+    # not natural prose to send verbatim, and the email body is an
+    # already-redacted, arbitrarily-truncated internal transcript — not
+    # something to echo back into an outbound client email.
+    open_question_count = sum(
+        1 for a in get_follow_up_actions(opportunity_id)["actions"] if a["type"] == "email_reply_needed"
+    )
+
+    lines = [f"Hi {contact_first_name},", ""]
+    lines.append(f"Thank you for the continued conversation on {title}.")
+    if strategy.get("address_client_pains"):
+        lines += ["", "A few things we specifically want to make sure we're solving for you:"]
+        for p in strategy["address_client_pains"][:3]:
+            lines.append(f"- {p}")
+    if open_question_count:
+        plural = "s" if open_question_count != 1 else ""
+        lines += [
+            "",
+            f"We also want to make sure we directly address the {open_question_count} open question{plural} "
+            "from your last message(s) — our team is confirming the details and will follow up shortly with a direct answer.",
+        ]
+    lines += ["", "Happy to jump on a call if that's easier — let us know what works.", "", "Best,", "The Amazon Shipping Team"]
+
+    subject = f"Re: {title}"
+    return {"subject": subject, "body": "\n".join(lines)}
+
+
+def send_client_reply_draft(opportunity_id: str, to_email: str = DEFAULT_FOLLOWUP_RECIPIENT) -> dict:
+    """Client-facing reply draft, sent to the Zapier webhook to become a
+    Gmail draft — never auto-sent, since this is client communication and
+    a human must review it before it goes out. Demo recipient is the same
+    harshithadivakar23@gmail.com placeholder (no real client inbox in the
+    demo); swap to the actual client contact's email once this is live."""
+    draft = _build_client_reply_draft(opportunity_id)
+    result = _post_to_zapier({
+        "to": to_email,
+        "subject": draft["subject"],
+        "body": draft["body"],
+        "opportunity_id": opportunity_id,
+        "kind": "client_reply",
+    })
+    if not result["ok"]:
+        return result
+    return {
+        "ok": True,
+        "zapier_status": result["zapier_status"],
+        "zapier_response": result["zapier_response"],
+        "to": to_email,
+        "subject": draft["subject"],
+    }
+
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python follow_up_actions.py <opportunity_id> [send_draft [to_email]]")
+        print("Usage: python follow_up_actions.py <opportunity_id> [send_draft|send_client_reply [to_email]]")
         sys.exit(1)
 
     opportunity_id = sys.argv[1]
     if len(sys.argv) > 2 and sys.argv[2] == "send_draft":
         to_email = sys.argv[3] if len(sys.argv) > 3 else DEFAULT_FOLLOWUP_RECIPIENT
         print(json.dumps(send_followup_draft(opportunity_id, to_email), indent=2, default=str))
+    elif len(sys.argv) > 2 and sys.argv[2] == "send_client_reply":
+        to_email = sys.argv[3] if len(sys.argv) > 3 else DEFAULT_FOLLOWUP_RECIPIENT
+        print(json.dumps(send_client_reply_draft(opportunity_id, to_email), indent=2, default=str))
     else:
         print(json.dumps(get_follow_up_actions(opportunity_id), indent=2, default=str))
