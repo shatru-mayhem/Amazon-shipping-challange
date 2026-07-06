@@ -1,0 +1,361 @@
+opportunity_id,company_name,industry,year,source,incumbent_carrier,daily_volume_total,geo_fit_pct,daily_volume_serviceable,avg_weight_kg,oversized_pct,requires_intl,intl_volume_share,requires_pudo,requires_b2b,weekend_need,annual_revenue_potential_eur,main_pain_point,pain_severity,price_vs_incumbent_pct,competitive_intensity,sales_cycle_touches,decision_time_days,contract_length_months,outcome,lost_reason,final_margin_pct
+OPP-2024-1002,Jara Market,Health & Pharma,2024,Outbound,NationalExpress Iberia,875,0.748,647,0.39,0.02,True,0.222,False,False,False,1056222,Lack of weekend delivery,4,10.5,3,7,70,24,Won,,15.5
+OPP-2024-1005,Faro Club,Beauty & Cosmetics,2024,Outbound,MRW,3988,0.922,3676,0.95,0.0,False,0.0,False,True,True,5571437,International expansion,5,1.9,3,11,78,24,Lost,Service gap,
+OPP-2024-1007,Solca & Co.,Consumer Electronics,2024,Inbound,UPS,4487,0.953,3869,3.14,0.19,False,0.0,False,False,False,4216665,Price / cost,4,14.7,3,3,42,12,Lost,Price,
+OPP-2024-1008,Uva Iberia,Toys & Baby,2024,Inbound,Seur,1796,0.986,1746,2.08,0.027,False,0.0,False,False,False,1757862,Peak collapse,2,1.0,4,6,71,24,Lost,Lost to competitor,
+OPP-2024-1011,Coral Store,Office & Stationery,2024,Inbound,DHL,2473,0.956,2305,3.24,0.05,False,0.0,False,False,True,3543597,Poor customer service,2,13.9,1,7,89,12,Won,,27.1
+OPP-2024-1014,Duna Retail,Beauty & Cosmetics,2024,Outbound,Correos,1861,0.945,1752,0.3,0.007,False,0.0,False,False,True,2475840,Low delivery quality,3,4.3,3,5,74,24,Won,,24.0
+OPP-2024-1016,Quartz Club,Fashion & Apparel,2024,Referral,NationalExpress Iberia,3353,0.961,3222,1.48,0.0,False,0.0,True,False,True,3914637,Slow claims,4,2.6,4,1,69,36,Won,,28.0
+OPP-2024-1020,Bex & Co.,Consumer Electronics,2024,Inbound,DHL,1702,0.99,1590,2.18,0.112,False,0.0,False,False,False,2199068,Poor tracking / visibility,4,9.7,1,7,33,12,Won,,27.0
+OPP-2024-1025,Sable Brands,Health & Pharma,2024,Inbound,CTT,1225,0.703,857,1.41,0.009,True,0.295,False,True,False,811327,Slow claims,2,5.5,2,12,9,24,Won,,23.4
+OPP-2024-1029,Iris Brands,Fashion & Apparel,2024,Inbound,GLS Regional,4394,0.932,4009,1.53,0.042,False,0.0,False,False,True,4663984,Slow claims,4,11.4,4,6,74,24,Won,,24.9
+OPP-2024-1030,Vetas Trading,Consumer Electronics,2024,Inbound,Correos,1005,0.965,902,3.04,0.138,False,0.0,True,False,True,830327,Peak collapse,1,-2.3,4,1,87,36,Lost,Lost to competitor,
+OPP-2024-1036,Olmo Trading,Beauty & Cosmetics,2024,Partner,NationalExpress Iberia,617,0.69,405,0.41,0.097,True,0.301,False,False,False,619817,Price / cost,2,-7.4,2,10,70,24,Lost,Geographic gap,
+OPP-2024-1040,Risco Collective,Toys & Baby,2024,Inbound,DHL,1668,0.7,1167,0.3,0.001,True,0.283,True,False,False,1226421,International expansion,3,11.5,1,3,46,24,Lost,Service gap,
+OPP-2024-1041,Litio Retail,Consumer Electronics,2024,Outbound,NationalExpress Iberia,3458,0.585,1907,3.49,0.114,True,0.402,True,False,True,2147152,Poor customer service,1,-3.3,3,6,79,12,Lost,Geographic gap,
+OPP-2024-1047,Delta House,Sports & Outdoor,2024,Outbound,DHL,1803,0.65,1112,3.05,0.101,True,0.327,False,False,True,1571589,Peak collapse,1,2.2,2,10,42,24,Lost,Geographic gap,
+OPP-2024-1049,Fauna Brands,Sports & Outdoor,2024,Referral,DHL,7844,0.952,6944,3.81,0.14,False,0.0,False,True,True,6268035,International expansion,3,6.5,1,7,88,36,Won,,16.8
+OPP-2024-1050,Cresta Brands,Sports & Outdoor,2024,Referral,NationalExpress Iberia,1655,0.593,954,2.43,0.055,True,0.401,True,False,True,909590,Poor customer service,3,18.3,3,4,7,24,Lost,Geographic gap,
+OPP-2024-1051,Brisa Co.,Office & Stationery,2024,Outbound,Seur,490,0.752,364,1.94,0.024,True,0.234,False,False,True,453177,International expansion,4,6.5,1,5,67,24,Lost,Geographic gap,
+OPP-2024-1053,Nimbo Labs,Health & Pharma,2024,Outbound,Seur,3304,0.977,3140,1.9,0.054,False,0.0,False,False,True,4042188,Slow claims,3,7.0,2,14,42,12,Won,,18.9
+OPP-2024-1055,Zafiro Collective,Food & Gourmet,2024,Inbound,NationalExpress Iberia,3081,0.951,2910,2.98,0.013,False,0.0,True,False,False,4564832,Price / cost,3,3.4,3,3,75,24,Lost,Service gap,
+OPP-2024-1056,Wabi Collective,Sports & Outdoor,2024,Partner,CorreosExpress,244,0.961,227,3.6,0.061,False,0.0,False,False,True,245200,Poor tracking / visibility,3,10.9,4,5,53,24,Won,,22.9
+OPP-2024-1057,Sienna & Co.,Fashion & Apparel,2024,Outbound,CTT,1174,0.764,880,1.02,0.037,True,0.218,True,True,False,1129328,International expansion,5,17.5,2,4,7,12,Won,,22.5
+OPP-2024-1063,Dms & Co.,Jewellery & Accessories,2024,Outbound,Correos,1824,0.518,925,0.3,0.041,True,0.447,False,True,False,1064115,Peak collapse,3,15.7,3,6,73,36,Lost,Geographic gap,
+OPP-2024-1064,Duna Goods,Food & Gourmet,2024,Inbound,NationalExpress Iberia,2592,0.714,1807,3.6,0.047,True,0.258,False,False,False,2481958,International expansion,2,7.6,2,7,83,12,Lost,Geographic gap,
+OPP-2024-1082,Wabi Studio,Jewellery & Accessories,2024,Outbound,Seur,623,0.969,603,0.6,0.0,False,0.0,False,False,True,1011960,Low delivery quality,3,8.0,1,2,16,12,Won,,19.9
+OPP-2024-1084,Quila Collective,Beauty & Cosmetics,2024,Outbound,MRW,862,0.954,812,0.78,0.024,False,0.0,False,False,True,1086464,Low delivery quality,4,10.3,1,9,47,24,Won,,18.3
+OPP-2024-1089,Umbra Store,Consumer Electronics,2024,Outbound,GLS Regional,2767,0.957,2499,3.53,0.112,False,0.0,False,False,True,2579464,Low delivery quality,4,10.3,2,9,48,24,Won,,27.7
+OPP-2024-1092,Mirto Studio,Books & Media,2024,Inbound,DHL,1922,0.587,1128,0.64,0.0,True,0.4,False,False,False,1377622,Price / cost,3,7.2,2,6,79,12,Lost,Geographic gap,
+OPP-2024-1093,Hielo Market,Consumer Electronics,2024,Inbound,MRW,8490,0.919,7505,2.59,0.076,False,0.0,False,False,False,8499069,Slow claims,4,8.2,3,9,9,12,Won,,18.1
+OPP-2024-1099,Pampa Goods,Sports & Outdoor,2024,Outbound,GLS Regional,3004,0.919,2679,4.41,0.059,False,0.0,False,False,True,4453824,Peak collapse,5,12.5,3,2,55,12,Won,,25.3
+OPP-2024-1100,Mora Store,Sports & Outdoor,2024,Inbound,NationalExpress Iberia,1748,0.923,1494,2.98,0.148,False,0.0,False,True,False,2406596,Poor tracking / visibility,3,-3.1,3,1,38,12,Won,,19.8
+OPP-2024-1106,Coral Studio,Health & Pharma,2024,Outbound,NationalExpress Iberia,1984,0.945,1874,0.8,0.0,False,0.0,True,True,True,3140352,Low delivery quality,4,17.5,3,5,8,12,Won,,22.9
+OPP-2024-1108,Faro Studio,Food & Gourmet,2024,Outbound,Correos,966,0.949,868,2.1,0.106,False,0.0,False,False,False,808210,Lack of weekend delivery,3,15.0,3,7,63,12,Lost,Price,
+OPP-2024-1113,Wabi Store,Home & Living,2024,Outbound,DHL,1649,0.99,1497,5.77,0.166,False,0.0,False,False,True,1503976,Poor tracking / visibility,4,9.5,1,3,41,12,Won,,21.8
+OPP-2024-1114,Trino Labs,Consumer Electronics,2024,Inbound,In-house fleet,1247,0.962,1194,3.09,0.009,False,0.0,False,True,True,1490938,Peak collapse,4,9.6,4,11,75,24,Won,,18.7
+OPP-2024-1117,Lumen House,Food & Gourmet,2024,Inbound,In-house fleet,819,0.954,780,0.72,0.001,False,0.0,False,False,True,1067492,Peak collapse,4,17.0,2,2,39,24,Won,,19.0
+OPP-2024-1118,Jara Studio,Beauty & Cosmetics,2024,Inbound,DHL,1318,0.946,1246,0.57,0.0,False,0.0,False,False,False,1391096,Lack of weekend delivery,3,18.4,2,9,54,24,Won,,16.2
+OPP-2024-1124,Pampa Trading,Beauty & Cosmetics,2024,Outbound,Seur,1568,0.77,1207,1.63,0.0,True,0.212,True,False,True,1781635,Poor tracking / visibility,3,17.3,5,6,62,24,Lost,Price,
+OPP-2024-1125,Xara House,Toys & Baby,2024,Referral,Seur,1921,0.927,1740,2.41,0.045,False,0.0,True,False,True,1561860,International expansion,4,18.7,1,6,72,12,Won,,15.5
+OPP-2024-1127,Nova Retail,Fashion & Apparel,2024,Inbound,UPS,1526,0.615,938,1.44,0.0,True,0.375,True,True,False,1455509,Price / cost,3,10.7,3,6,94,12,Lost,Service gap,
+OPP-2024-1129,Wabi Co.,Toys & Baby,2024,Inbound,UPS,2254,0.98,2127,1.21,0.074,False,0.0,False,False,True,3087250,Poor tracking / visibility,4,27.3,1,10,7,12,Won,,21.1
+OPP-2024-1134,Mora & Co.,Health & Pharma,2024,Inbound,GLS Regional,508,0.589,288,1.21,0.071,True,0.391,True,False,True,438299,Poor tracking / visibility,1,11.7,3,6,86,24,Lost,Geographic gap,
+OPP-2024-1145,Aurora Brands,Beauty & Cosmetics,2024,Inbound,GLS Regional,2775,0.972,2646,1.06,0.038,False,0.0,False,False,True,3391335,International expansion,2,6.2,4,9,29,12,Lost,Lost to competitor,
+OPP-2024-1147,Yedra Goods,Fashion & Apparel,2024,Partner,CorreosExpress,1412,0.948,1305,1.93,0.049,False,0.0,False,False,False,2006463,Slow claims,2,-1.7,2,7,110,12,Won,,21.5
+OPP-2024-1148,Kelp Labs,Office & Stationery,2024,Inbound,CorreosExpress,3820,0.966,3625,1.98,0.035,False,0.0,False,False,False,4926394,International expansion,4,9.3,3,5,77,12,Lost,Lost to competitor,
+OPP-2024-1152,Duna Market,Health & Pharma,2024,Referral,Correos,1788,0.983,1644,0.91,0.129,False,0.0,False,False,True,2155734,Poor tracking / visibility,3,-1.9,3,8,38,12,Lost,Price,
+OPP-2024-1156,Arce & Co.,Toys & Baby,2024,Outbound,CorreosExpress,2260,0.565,1239,1.66,0.058,True,0.399,True,False,False,1853242,Price / cost,4,2.0,4,10,79,12,Lost,Geographic gap,
+OPP-2024-1166,Mirto Store,Jewellery & Accessories,2024,Referral,NationalExpress Iberia,1907,0.988,1837,0.65,0.049,False,0.0,False,True,False,1675738,Price / cost,3,15.9,3,2,75,24,Lost,Price,
+OPP-2024-1169,Kuna Iberia,Sports & Outdoor,2024,Referral,In-house fleet,4530,0.936,4051,2.93,0.089,False,0.0,False,False,True,5629556,International expansion,2,-1.1,4,8,89,36,Won,,24.3
+OPP-2024-1170,Faro House,Home & Living,2024,Inbound,CTT,1297,0.952,1193,5.06,0.067,False,0.0,True,True,True,1480888,Price / cost,1,6.6,2,7,59,24,Lost,Price,
+OPP-2024-1171,Bahia Iberia,Food & Gourmet,2024,Outbound,CTT,771,0.934,720,2.89,0.0,False,0.0,False,True,False,1023124,Price / cost,3,7.3,3,2,37,36,Won,,14.1
+OPP-2024-1173,Nimbo Brands,Sports & Outdoor,2024,Referral,GLS Regional,14000,0.957,12507,4.2,0.133,False,0.0,False,False,False,17889369,Peak collapse,2,13.7,2,12,30,12,Lost,Service gap,
+OPP-2024-1181,Sable Goods,Jewellery & Accessories,2024,Outbound,In-house fleet,2893,0.947,2693,0.41,0.034,False,0.0,False,False,True,4057791,International expansion,3,28.7,5,2,47,12,Lost,Lost to competitor,
+OPP-2024-1182,Indigo Trading,Consumer Electronics,2024,Outbound,DHL,2536,0.954,2318,3.48,0.083,False,0.0,False,False,False,2868209,Price / cost,3,7.4,4,11,45,12,Won,,24.3
+OPP-2024-1188,Roble Collective,Food & Gourmet,2024,Referral,Seur,1685,0.565,921,1.91,0.064,True,0.4,False,False,False,809275,Slow claims,4,19.7,4,7,85,12,Lost,Price,
+OPP-2024-1192,Lava Market,Pet Care,2024,Outbound,CTT,315,0.614,178,4.54,0.153,True,0.37,True,False,False,195377,Peak collapse,3,15.9,2,6,52,12,Lost,Geographic gap,
+OPP-2024-1195,Cír Store,Sports & Outdoor,2024,Outbound,In-house fleet,720,0.938,661,3.25,0.041,False,0.0,False,False,True,1017908,Slow claims,2,15.2,4,9,16,12,Won,,25.9
+OPP-2024-1202,Vela Commerce,Consumer Electronics,2024,Referral,UPS,3024,0.974,2721,2.05,0.152,False,0.0,False,False,True,3830804,Poor tracking / visibility,3,11.7,5,6,41,36,Lost,Lost to competitor,
+OPP-2024-1203,Faro Iberia,Sports & Outdoor,2024,Inbound,NationalExpress Iberia,1173,0.974,1079,3.43,0.111,False,0.0,True,False,False,1409834,Poor customer service,2,15.8,4,9,29,24,Won,,15.0
+OPP-2024-1204,Lince Club,Fashion & Apparel,2024,Inbound,UPS,7946,0.711,5522,2.12,0.045,True,0.276,False,False,True,4922946,Poor tracking / visibility,3,-3.5,3,2,88,12,Won,,24.5
+OPP-2024-1206,Hielo Co.,Pet Care,2024,Inbound,Seur,1091,0.835,844,3.43,0.146,True,0.16,True,True,True,1345082,Price / cost,3,7.8,4,12,46,36,Lost,Price,
+OPP-2024-1208,Duna Club,Fashion & Apparel,2024,Outbound,Correos,4421,0.986,4250,0.8,0.05,False,0.0,True,False,True,3787054,Lack of weekend delivery,1,15.2,1,8,7,12,Won,,20.7
+OPP-2024-1218,Pampa Collective,Office & Stationery,2024,Outbound,In-house fleet,1588,0.954,1471,2.59,0.057,False,0.0,True,True,True,2046147,Slow claims,4,7.9,2,5,44,12,Won,,18.3
+OPP-2024-1219,Lince Group,Fashion & Apparel,2024,Outbound,DHL,1385,0.585,782,1.06,0.068,True,0.377,False,False,False,756403,Peak collapse,2,-0.9,1,3,68,12,Lost,Geographic gap,
+OPP-2024-1225,Ardor Brands,Sports & Outdoor,2024,Outbound,UPS,1139,0.67,724,3.07,0.1,True,0.324,False,False,False,1031531,Low delivery quality,3,10.8,2,6,67,24,Won,,18.2
+OPP-2024-1226,Fauna Iberia,Fashion & Apparel,2024,Outbound,CorreosExpress,2069,0.985,2037,0.3,0.0,False,0.0,False,False,True,2953180,Lack of weekend delivery,3,9.1,3,3,30,12,Won,,18.7
+OPP-2024-1234,Jara Commerce,Fashion & Apparel,2024,Inbound,CTT,2502,0.953,2322,1.14,0.052,False,0.0,False,False,True,2955667,Low delivery quality,1,6.7,4,5,46,12,Lost,Lost to competitor,
+OPP-2024-1235,Umbra Works,Fashion & Apparel,2024,Referral,Correos,2718,0.956,2598,2.1,0.0,False,0.0,True,False,False,3246590,Peak collapse,3,12.2,3,12,57,12,Won,,20.9
+OPP-2024-1240,Brisa Market,Fashion & Apparel,2024,Outbound,UPS,3717,0.948,3451,1.05,0.041,False,0.0,True,False,False,4604272,Poor customer service,2,-2.5,2,10,51,36,Won,,20.2
+OPP-2024-1245,Etna Brands,Fashion & Apparel,2024,Referral,MRW,2851,0.828,2344,1.12,0.014,True,0.133,False,True,False,2486769,Poor customer service,3,5.7,3,7,51,12,Lost,Geographic gap,
+OPP-2024-1246,Haya Market,Home & Living,2024,Referral,CorreosExpress,2464,0.75,1703,4.86,0.156,True,0.234,False,True,False,2149260,International expansion,3,9.3,4,7,60,24,Lost,Geographic gap,
+OPP-2024-1247,Mirto Club,Health & Pharma,2024,Partner,GLS Regional,1959,0.942,1772,0.62,0.079,False,0.0,False,False,False,1864868,Poor tracking / visibility,2,12.9,1,6,25,24,Won,,25.3
+OPP-2024-1249,Trino Co.,Consumer Electronics,2024,Partner,UPS,823,0.549,431,3.24,0.089,True,0.428,False,False,True,573081,Slow claims,3,20.8,3,4,47,36,Won,,20.6
+OPP-2024-1255,Brisa Labs,Health & Pharma,2024,Outbound,DHL,2049,0.95,1931,1.19,0.015,False,0.0,False,False,False,3004160,Poor tracking / visibility,4,14.6,2,11,53,36,Won,,25.1
+OPP-2024-1257,Pampa Works,Sports & Outdoor,2024,Inbound,GLS Regional,1557,0.918,1365,2.1,0.09,False,0.0,True,False,True,2127228,Poor customer service,2,6.7,2,6,28,24,Won,,18.6
+OPP-2024-1258,Haya Goods,Office & Stationery,2024,Outbound,UPS,2238,0.952,2130,0.95,0.0,False,0.0,False,False,False,2480999,Peak collapse,3,17.2,2,7,56,12,Lost,Price,
+OPP-2024-1266,Umbra House,Health & Pharma,2024,Outbound,GLS Regional,1685,0.964,1585,0.92,0.048,False,0.0,False,False,False,1795363,Lack of weekend delivery,3,7.7,3,4,67,12,Won,,23.1
+OPP-2024-1267,Umbra Brands,Toys & Baby,2024,Inbound,MRW,1097,0.789,858,2.07,0.016,True,0.201,False,False,False,1139632,Low delivery quality,4,2.5,2,1,57,36,Won,,14.2
+OPP-2024-1268,Nimbo Trading,Health & Pharma,2024,Outbound,GLS Regional,788,0.705,552,1.82,0.012,True,0.272,False,False,True,789450,Lack of weekend delivery,2,14.6,3,8,80,12,Lost,Geographic gap,
+OPP-2024-1271,Zafiro House,Consumer Electronics,2024,Outbound,Correos,3109,0.941,2849,3.88,0.052,False,0.0,False,True,True,3089789,Peak collapse,1,24.8,2,8,93,12,Lost,Price,
+OPP-2024-1273,Junco Trading,Fashion & Apparel,2024,Referral,CorreosExpress,2463,0.798,1951,1.73,0.014,True,0.193,True,False,False,2539621,Slow claims,3,14.5,1,13,85,24,Won,,21.0
+OPP-2024-1275,Duna Labs,Health & Pharma,2024,Partner,GLS Regional,2309,0.987,2211,1.13,0.059,False,0.0,True,True,True,3261172,Poor customer service,3,9.1,1,5,64,24,Won,,18.4
+OPP-2024-1278,Quartz Goods,Toys & Baby,2024,Referral,DHL,3284,0.647,2070,1.74,0.051,True,0.349,False,False,False,3077667,Poor tracking / visibility,4,7.0,2,13,73,24,Lost,Geographic gap,
+OPP-2024-1279,Risco House,Health & Pharma,2024,Inbound,NationalExpress Iberia,1034,0.67,671,0.77,0.06,True,0.31,True,False,True,665719,Peak collapse,4,4.7,5,6,81,24,Won,,25.7
+OPP-2024-1283,Lince Co.,Food & Gourmet,2024,Outbound,NationalExpress Iberia,1966,0.843,1649,2.27,0.01,True,0.123,False,False,True,1650068,Poor tracking / visibility,4,11.0,2,11,12,24,Lost,Geographic gap,
+OPP-2024-1286,Lumen Retail,Consumer Electronics,2024,Outbound,Correos,1378,0.879,1169,3.23,0.069,True,0.12,False,True,False,1170088,Lack of weekend delivery,2,18.3,1,9,69,24,Lost,Price,
+OPP-2024-1289,Xara Commerce,Consumer Electronics,2024,Inbound,In-house fleet,2128,0.933,1913,3.6,0.072,False,0.0,True,False,False,2165970,Poor customer service,1,13.0,2,8,64,36,Lost,Service gap,
+OPP-2024-1296,Marfil Works,Sports & Outdoor,2024,Inbound,GLS Regional,3619,0.931,3148,4.57,0.131,False,0.0,True,False,True,3790014,Price / cost,4,6.2,4,4,46,36,Lost,Service gap,
+OPP-2024-1299,Coral Commerce,Beauty & Cosmetics,2024,Inbound,Correos,1928,0.752,1431,0.3,0.026,True,0.226,False,True,False,1393794,Poor customer service,4,5.1,2,5,37,24,Won,,18.5
+OPP-2024-1301,Jara Collective,Beauty & Cosmetics,2024,Inbound,DHL,831,0.946,778,0.3,0.02,False,0.0,True,False,False,777650,Peak collapse,3,-5.9,3,7,65,24,Lost,Service gap,
+OPP-2024-1309,Litio Goods,Consumer Electronics,2024,Inbound,NationalExpress Iberia,973,0.959,868,2.89,0.138,False,0.0,True,False,False,976078,International expansion,3,5.8,3,3,56,36,Lost,Service gap,
+OPP-2024-1325,Dms Market,Fashion & Apparel,2024,Outbound,CorreosExpress,1280,0.975,1206,0.3,0.067,False,0.0,True,False,False,1194312,Poor tracking / visibility,3,-0.4,4,6,77,24,Won,,24.4
+OPP-2024-1326,Indigo Market,Consumer Electronics,2024,Outbound,Correos,4210,0.945,3590,3.67,0.195,False,0.0,False,False,True,4205057,Low delivery quality,2,-3.6,2,1,63,12,Lost,Service gap,
+OPP-2024-1328,Sable Retail,Pet Care,2024,Referral,Correos,471,0.617,278,4.38,0.086,True,0.359,False,True,True,305625,Slow claims,3,18.0,3,6,14,24,Lost,Geographic gap,
+OPP-2024-1330,Nova Store,Sports & Outdoor,2024,Referral,CTT,2046,0.895,1672,1.72,0.173,True,0.102,False,False,True,2642507,Poor customer service,4,-0.3,4,5,52,12,Won,,20.1
+OPP-2024-1334,Indigo Studio,Fashion & Apparel,2024,Referral,CTT,2823,0.956,2588,1.22,0.082,False,0.0,False,False,True,3746893,Low delivery quality,3,17.2,2,6,68,12,Won,,23.9
+OPP-2024-1336,Quartz House,Health & Pharma,2024,Outbound,GLS Regional,803,0.96,729,0.31,0.107,False,0.0,False,False,False,872610,Slow claims,4,23.5,3,8,91,24,Won,,26.7
+OPP-2024-1338,Quartz Co.,Toys & Baby,2024,Inbound,MRW,1025,0.819,826,2.78,0.032,True,0.164,False,False,False,866687,Poor tracking / visibility,2,12.6,4,4,73,24,Lost,Lost to competitor,
+OPP-2024-1339,Galena Market,Fashion & Apparel,2024,Inbound,DHL,2303,0.625,1409,1.48,0.042,True,0.348,False,False,False,1947614,Slow claims,3,13.8,3,8,24,24,Lost,Geographic gap,
+OPP-2024-1347,Nimbo Store,Fashion & Apparel,2024,Partner,DHL,480,0.971,466,1.58,0.0,False,0.0,False,False,False,520182,Poor tracking / visibility,5,13.1,4,11,67,36,Won,,21.7
+OPP-2024-1348,Bahia Market,Consumer Electronics,2024,Referral,GLS Regional,3328,0.977,3090,4.08,0.099,False,0.0,True,False,True,3629197,International expansion,3,14.5,2,6,46,24,Won,,23.7
+OPP-2024-1349,Bex Brands,Office & Stationery,2024,Inbound,CTT,1764,0.922,1626,3.59,0.0,False,0.0,False,False,False,1782277,International expansion,3,3.4,4,6,64,24,Lost,Lost to competitor,
+OPP-2024-1353,Lumen Labs,Books & Media,2024,Outbound,MRW,1293,0.95,1190,0.3,0.062,False,0.0,False,False,True,1462912,Slow claims,3,20.7,4,5,58,12,Won,,22.7
+OPP-2024-1354,Haya Iberia,Consumer Electronics,2024,Outbound,CTT,6040,0.575,3288,3.13,0.106,True,0.424,True,False,True,3267690,Poor customer service,2,13.6,4,10,28,12,Lost,Geographic gap,
+OPP-2024-1355,Yedra Works,Sports & Outdoor,2024,Outbound,In-house fleet,2109,0.678,1301,3.26,0.179,True,0.296,False,False,True,1945685,Peak collapse,3,14.0,4,12,43,24,Lost,Geographic gap,
+OPP-2024-1357,Umbra Trading,Consumer Electronics,2024,Referral,UPS,2906,0.934,2499,2.38,0.158,False,0.0,False,True,False,2982886,Low delivery quality,4,0.1,4,7,50,12,Won,,19.7
+OPP-2025-1000,Ramo Studio,Food & Gourmet,2025,Inbound,CorreosExpress,862,0.775,667,2.7,0.003,True,0.199,False,False,False,700118,Price / cost,2,14.5,3,10,23,24,Lost,Price,
+OPP-2025-1004,Dms Club,Home & Living,2025,Inbound,GLS Regional,6689,0.952,5848,5.41,0.163,False,0.0,False,False,False,7396469,Lack of weekend delivery,1,4.9,2,12,53,36,Won,,27.5
+OPP-2025-1010,Dms Labs,Home & Living,2025,Outbound,CTT,1872,0.98,1625,5.02,0.228,False,0.0,False,False,False,1803884,Slow claims,1,-5.6,3,4,76,12,Lost,Service gap,
+OPP-2025-1012,Lumen Club,Jewellery & Accessories,2025,Inbound,UPS,1052,0.746,775,0.3,0.023,True,0.252,False,False,True,1216873,Poor tracking / visibility,4,2.7,1,11,50,36,Lost,Geographic gap,
+OPP-2025-1013,Faro Brands,Fashion & Apparel,2025,Partner,UPS,1160,0.749,841,1.3,0.063,True,0.226,False,False,True,828876,Poor customer service,2,24.6,4,5,23,36,Won,,22.0
+OPP-2025-1015,Solca Brands,Home & Living,2025,Inbound,GLS Regional,2635,0.566,1345,4.34,0.196,True,0.432,False,False,True,1309049,Peak collapse,1,-1.0,5,9,54,24,Lost,Geographic gap,
+OPP-2025-1022,Ocre Market,Fashion & Apparel,2025,Outbound,DHL,5419,0.811,4337,1.38,0.026,True,0.179,True,True,True,6573521,Slow claims,4,0.8,2,6,73,12,Lost,Geographic gap,
+OPP-2025-1023,Mora Studio,Toys & Baby,2025,Referral,CorreosExpress,2579,0.923,2361,1.69,0.016,False,0.0,True,False,False,3255111,Poor tracking / visibility,2,16.8,3,12,26,24,Lost,Price,
+OPP-2025-1027,Polar & Co.,Home & Living,2025,Referral,MRW,603,0.985,560,5.19,0.111,False,0.0,False,True,True,938676,Poor tracking / visibility,2,-3.4,3,8,54,24,Won,,17.1
+OPP-2025-1028,Bruma Store,Toys & Baby,2025,Outbound,UPS,1508,0.611,914,1.52,0.016,True,0.362,False,False,False,853689,Lack of weekend delivery,2,-3.6,4,11,76,12,Lost,Geographic gap,
+OPP-2025-1031,Ardor Market,Fashion & Apparel,2025,Inbound,GLS Regional,2246,0.951,2062,0.6,0.069,False,0.0,False,False,False,1854515,Poor customer service,2,1.1,5,6,69,12,Lost,Lost to competitor,
+OPP-2025-1033,Nova Works,Food & Gourmet,2025,Partner,NationalExpress Iberia,562,0.936,507,2.82,0.071,False,0.0,False,True,False,732864,International expansion,1,11.0,3,3,36,12,Won,,22.5
+OPP-2025-1037,Kelp Works,Office & Stationery,2025,Inbound,MRW,1123,0.93,1033,1.07,0.021,False,0.0,False,True,True,1702143,Slow claims,3,18.3,3,1,99,24,Won,,20.2
+OPP-2025-1038,Prisma Works,Jewellery & Accessories,2025,Referral,GLS Regional,6056,0.712,4206,0.3,0.049,True,0.253,False,False,True,6289137,Poor customer service,3,10.9,1,7,65,24,Lost,Geographic gap,
+OPP-2025-1043,Jara Iberia,Fashion & Apparel,2025,Partner,GLS Regional,4464,0.704,3075,1.04,0.043,True,0.27,False,False,True,3810100,Slow claims,3,3.8,1,6,97,24,Lost,Geographic gap,
+OPP-2025-1044,Roble Labs,Fashion & Apparel,2025,Inbound,In-house fleet,2060,0.924,1891,1.55,0.013,False,0.0,True,False,True,2182774,Low delivery quality,2,3.9,3,6,53,36,Won,,19.6
+OPP-2025-1045,Mirto Collective,Home & Living,2025,Outbound,DHL,2696,0.938,2447,3.03,0.064,False,0.0,True,False,True,2881465,Low delivery quality,4,0.1,3,4,36,12,Won,,19.2
+OPP-2025-1046,Fauna Group,Consumer Electronics,2025,Outbound,CTT,2064,0.93,1793,3.04,0.131,False,0.0,True,False,False,1764531,Poor customer service,3,4.8,2,1,55,24,Won,,22.4
+OPP-2025-1054,Wabi House,Consumer Electronics,2025,Referral,UPS,2317,0.845,1833,2.84,0.127,True,0.141,True,False,False,1646312,Peak collapse,2,10.3,2,7,69,36,Lost,Service gap,
+OPP-2025-1059,Greca Market,Fashion & Apparel,2025,Outbound,Seur,2757,0.953,2595,0.3,0.024,False,0.0,False,False,False,2631287,Low delivery quality,2,16.8,3,8,7,12,Lost,Price,
+OPP-2025-1062,Litio Labs,Consumer Electronics,2025,Inbound,Seur,5373,0.982,4991,3.02,0.108,False,0.0,True,True,False,5364470,Poor tracking / visibility,3,-8.8,5,8,35,36,Lost,Service gap,
+OPP-2025-1065,Litio Studio,Beauty & Cosmetics,2025,Outbound,CTT,1104,0.694,766,1.06,0.0,True,0.267,True,False,False,1187105,Lack of weekend delivery,2,5.9,2,10,56,12,Lost,Geographic gap,
+OPP-2025-1066,Bahia Works,Consumer Electronics,2025,Referral,CorreosExpress,1080,0.976,961,3.44,0.176,False,0.0,False,False,False,855797,Slow claims,4,6.8,4,7,30,24,Lost,Lost to competitor,
+OPP-2025-1067,Yedra Retail,Fashion & Apparel,2025,Inbound,GLS Regional,3295,0.942,3040,1.0,0.041,False,0.0,False,False,False,3599839,Slow claims,2,9.7,3,6,31,12,Won,,14.6
+OPP-2025-1068,Quartz Brands,Consumer Electronics,2025,Outbound,GLS Regional,3560,0.949,3086,3.03,0.173,False,0.0,False,False,False,3967677,Poor tracking / visibility,1,8.6,3,9,48,24,Lost,Service gap,
+OPP-2025-1069,Vela Market,Books & Media,2025,Outbound,NationalExpress Iberia,1217,0.945,1121,1.78,0.05,False,0.0,True,False,False,996012,Lack of weekend delivery,5,-5.3,1,5,70,24,Lost,Service gap,
+OPP-2025-1073,Marfil Iberia,Health & Pharma,2025,Outbound,MRW,543,0.949,499,0.3,0.063,False,0.0,True,False,False,589009,Slow claims,2,13.1,2,8,77,12,Lost,Service gap,
+OPP-2025-1075,Yedra Trading,Jewellery & Accessories,2025,Outbound,CorreosExpress,3823,0.95,3544,0.61,0.048,False,0.0,False,True,True,3961563,Price / cost,2,5.4,1,1,24,12,Lost,Service gap,
+OPP-2025-1076,Litio Club,Office & Stationery,2025,Outbound,DHL,620,0.959,593,0.96,0.005,False,0.0,False,False,True,536416,Poor customer service,1,13.3,3,7,75,24,Won,,13.8
+OPP-2025-1078,Delta Retail,Beauty & Cosmetics,2025,Referral,CorreosExpress,2097,0.976,1923,1.29,0.12,False,0.0,False,False,True,2673526,Peak collapse,2,21.9,3,9,81,24,Won,,18.8
+OPP-2025-1080,Haya Club,Fashion & Apparel,2025,Outbound,UPS,1423,0.945,1313,1.39,0.046,False,0.0,False,False,True,1321975,Low delivery quality,2,18.2,5,8,96,12,Won,,26.7
+OPP-2025-1081,Prisma & Co.,Books & Media,2025,Inbound,GLS Regional,644,0.959,602,0.3,0.05,False,0.0,False,True,True,538992,Lack of weekend delivery,2,14.3,3,4,36,12,Lost,Price,
+OPP-2025-1083,Duna Co.,Jewellery & Accessories,2025,Inbound,Correos,3283,0.952,3125,0.3,0.0,False,0.0,True,True,True,4210464,Poor tracking / visibility,2,-5.4,3,8,32,12,Lost,Service gap,
+OPP-2025-1086,Risco Trading,Consumer Electronics,2025,Inbound,NationalExpress Iberia,3624,0.972,3327,2.9,0.111,False,0.0,False,True,True,4053133,International expansion,1,2.5,3,7,85,36,Lost,Service gap,
+OPP-2025-1087,Sienna Supply,Consumer Electronics,2025,Referral,DHL,912,0.949,789,3.13,0.175,False,0.0,False,False,False,716414,Lack of weekend delivery,2,1.3,3,2,19,12,Won,,24.3
+OPP-2025-1088,Solca Club,Jewellery & Accessories,2025,Outbound,Correos,2651,0.763,2004,0.55,0.018,True,0.21,True,True,True,2284175,Poor tracking / visibility,4,19.3,1,2,42,24,Lost,Geographic gap,
+OPP-2025-1091,Roble Co.,Fashion & Apparel,2025,Partner,Seur,1678,0.95,1557,1.01,0.046,False,0.0,False,False,False,2467648,Low delivery quality,4,24.4,3,3,54,12,Lost,Price,
+OPP-2025-1095,Junco Works,Jewellery & Accessories,2025,Inbound,Seur,1147,0.65,727,0.75,0.049,True,0.322,False,False,False,989796,Peak collapse,2,10.8,1,6,34,12,Lost,Geographic gap,
+OPP-2025-1096,Kelp Studio,Fashion & Apparel,2025,Inbound,UPS,1780,0.967,1721,0.6,0.0,False,0.0,False,True,False,2339857,Peak collapse,4,4.7,2,7,78,12,Won,,18.6
+OPP-2025-1097,Haya Co.,Beauty & Cosmetics,2025,Outbound,In-house fleet,2259,0.808,1689,1.23,0.149,True,0.176,True,True,True,2678541,Slow claims,2,-8.4,4,5,60,24,Lost,Lost to competitor,
+OPP-2025-1098,Mirto Group,Sports & Outdoor,2025,Inbound,GLS Regional,676,0.963,614,2.78,0.113,False,0.0,False,False,True,949807,Slow claims,3,18.8,2,10,41,24,Won,,14.4
+OPP-2025-1101,Ardor Store,Fashion & Apparel,2025,Outbound,In-house fleet,2629,0.978,2562,1.74,0.007,False,0.0,False,False,True,2251794,Poor tracking / visibility,2,12.3,3,7,44,24,Won,,12.7
+OPP-2025-1102,Risco Works,Food & Gourmet,2025,Inbound,UPS,946,0.703,649,3.73,0.048,True,0.276,False,False,True,959385,Slow claims,1,16.0,2,9,58,36,Won,,16.8
+OPP-2025-1103,Zafiro Co.,Home & Living,2025,Inbound,CTT,2033,0.939,1795,3.81,0.119,False,0.0,False,True,True,2760545,Poor customer service,4,-14.4,2,8,89,12,Won,,24.3
+OPP-2025-1104,Sable & Co.,Food & Gourmet,2025,Referral,Seur,665,0.593,389,3.83,0.027,True,0.383,True,False,False,469361,Price / cost,1,16.9,4,7,49,24,Lost,Price,
+OPP-2025-1107,Junco Supply,Sports & Outdoor,2025,Inbound,CTT,2932,0.967,2602,2.98,0.164,False,0.0,False,False,True,3359354,Lack of weekend delivery,2,3.0,3,5,36,12,Won,,10.3
+OPP-2025-1111,Roble & Co.,Fashion & Apparel,2025,Inbound,UPS,757,0.925,680,1.27,0.057,False,0.0,False,False,True,671008,Poor customer service,2,5.7,4,5,22,12,Won,,19.8
+OPP-2025-1112,Prisma Labs,Home & Living,2025,Partner,DHL,3631,0.965,3288,4.79,0.123,False,0.0,False,False,False,3983490,International expansion,1,4.1,3,5,81,12,Lost,Service gap,
+OPP-2025-1115,Iris House,Consumer Electronics,2025,Outbound,UPS,1979,0.947,1778,4.78,0.102,False,0.0,False,False,True,1802188,Slow claims,3,15.5,2,4,85,24,Won,,24.7
+OPP-2025-1126,Quila Trading,Office & Stationery,2025,Outbound,DHL,1635,0.966,1564,1.12,0.019,False,0.0,True,True,True,1418918,Peak collapse,2,5.4,2,6,34,12,Won,,20.0
+OPP-2025-1130,Quila Co.,Fashion & Apparel,2025,Inbound,UPS,2789,0.97,2563,1.58,0.105,False,0.0,False,False,True,3702261,Slow claims,3,-2.9,1,10,89,24,Won,,17.9
+OPP-2025-1132,Cír Commerce,Office & Stationery,2025,Outbound,Seur,6334,0.969,5695,2.18,0.144,False,0.0,False,False,False,5721545,International expansion,4,12.5,2,12,41,12,Lost,Service gap,
+OPP-2025-1133,Coral Supply,Consumer Electronics,2025,Outbound,UPS,3547,0.948,3233,3.75,0.077,False,0.0,False,False,True,3346618,Lack of weekend delivery,4,2.6,3,10,55,12,Won,,28.7
+OPP-2025-1135,Marfil & Co.,Books & Media,2025,Referral,Seur,427,0.968,412,0.3,0.005,False,0.0,False,False,True,534256,International expansion,2,14.2,3,6,34,12,Won,,11.3
+OPP-2025-1136,Sable Supply,Toys & Baby,2025,Outbound,Seur,2452,0.674,1602,2.49,0.061,True,0.295,False,True,True,2253575,Poor customer service,3,17.0,2,7,32,12,Won,,24.9
+OPP-2025-1140,Roble Trading,Home & Living,2025,Referral,GLS Regional,2081,0.67,1282,4.56,0.161,True,0.301,False,False,True,1846054,Poor customer service,4,6.1,4,10,80,12,Won,,17.4
+OPP-2025-1141,Olmo & Co.,Toys & Baby,2025,Outbound,DHL,540,0.984,518,3.2,0.047,False,0.0,True,False,True,618975,Poor tracking / visibility,4,5.6,1,7,57,36,Lost,Service gap,
+OPP-2025-1142,Haya Retail,Fashion & Apparel,2025,Outbound,In-house fleet,1748,0.614,1073,1.35,0.0,True,0.364,False,False,True,1643746,Lack of weekend delivery,3,16.3,3,4,88,36,Lost,Geographic gap,
+OPP-2025-1144,Aurora Group,Fashion & Apparel,2025,Partner,NationalExpress Iberia,1394,0.971,1323,1.04,0.045,False,0.0,False,False,False,1640397,Poor customer service,3,0.0,2,6,72,24,Won,,25.0
+OPP-2025-1146,Wabi & Co.,Jewellery & Accessories,2025,Referral,Seur,3081,0.95,2825,1.25,0.069,False,0.0,True,False,True,3255081,Peak collapse,3,19.5,3,1,96,24,Won,,20.5
+OPP-2025-1149,Ardor Commerce,Beauty & Cosmetics,2025,Referral,In-house fleet,1187,0.958,1110,2.49,0.046,False,0.0,True,True,False,1082802,Poor tracking / visibility,1,0.7,2,6,103,12,Won,,12.6
+OPP-2025-1150,Etna Collective,Fashion & Apparel,2025,Referral,NationalExpress Iberia,1481,0.974,1430,0.61,0.017,False,0.0,False,True,False,1751845,International expansion,3,20.2,3,6,63,24,Lost,Price,
+OPP-2025-1153,Solca Works,Consumer Electronics,2025,Outbound,In-house fleet,926,0.979,866,2.84,0.088,False,0.0,True,False,True,1163059,International expansion,3,4.8,4,6,59,12,Won,,27.5
+OPP-2025-1154,Galena Store,Home & Living,2025,Inbound,NationalExpress Iberia,2990,0.96,2635,4.43,0.164,False,0.0,True,False,True,3780715,Poor customer service,3,-19.2,3,10,17,12,Won,,28.4
+OPP-2025-1157,Iris Iberia,Jewellery & Accessories,2025,Referral,Seur,1924,0.939,1765,0.3,0.046,False,0.0,False,False,False,1731523,Peak collapse,4,6.7,2,10,128,24,Won,,15.1
+OPP-2025-1159,Volt Labs,Beauty & Cosmetics,2025,Outbound,DHL,1126,0.953,1050,0.9,0.042,False,0.0,False,False,False,1742275,Peak collapse,5,20.5,3,3,45,12,Won,,15.1
+OPP-2025-1161,Nardo Brands,Fashion & Apparel,2025,Outbound,GLS Regional,5454,0.93,4843,1.78,0.09,False,0.0,False,False,False,5706123,Price / cost,2,0.1,1,1,59,24,Won,,24.2
+OPP-2025-1162,Xara Retail,Home & Living,2025,Inbound,DHL,3784,0.601,2078,4.39,0.172,True,0.371,False,False,False,2043038,Poor tracking / visibility,2,7.8,5,10,94,12,Lost,Geographic gap,
+OPP-2025-1163,Galena Co.,Sports & Outdoor,2025,Outbound,Correos,1500,0.83,1155,4.78,0.144,True,0.147,False,False,False,1808012,Poor customer service,3,-0.8,3,5,33,12,Won,,27.0
+OPP-2025-1164,Indigo & Co.,Consumer Electronics,2025,Outbound,NationalExpress Iberia,789,0.944,700,4.22,0.118,False,0.0,False,False,False,902762,International expansion,2,7.3,4,7,34,24,Won,,24.0
+OPP-2025-1168,Vela & Co.,Office & Stationery,2025,Referral,UPS,7974,0.959,7406,2.04,0.063,False,0.0,False,False,True,10176793,Peak collapse,2,15.9,3,11,62,12,Won,,18.9
+OPP-2025-1172,Ocre Store,Health & Pharma,2025,Referral,DHL,530,0.947,494,0.3,0.028,False,0.0,False,False,False,562609,Price / cost,3,11.8,1,5,26,24,Lost,Price,
+OPP-2025-1174,Umbra & Co.,Jewellery & Accessories,2025,Outbound,CTT,667,0.863,564,0.72,0.04,True,0.128,True,False,False,741469,Lack of weekend delivery,4,14.4,2,6,56,24,Won,,17.1
+OPP-2025-1175,Iris Retail,Jewellery & Accessories,2025,Referral,Correos,4693,0.955,4481,0.3,0.0,False,0.0,False,False,True,4263958,Poor customer service,3,16.7,1,6,82,24,Won,,19.2
+OPP-2025-1176,Haya Store,Office & Stationery,2025,Referral,Correos,1737,0.761,1265,0.3,0.085,True,0.201,False,False,False,1495806,Peak collapse,3,13.4,3,3,62,24,Won,,17.7
+OPP-2025-1179,Hielo Studio,Food & Gourmet,2025,Inbound,NationalExpress Iberia,2298,0.927,2042,2.83,0.082,False,0.0,False,False,False,2285867,Poor customer service,3,-0.4,2,9,59,12,Won,,16.4
+OPP-2025-1185,Duna Studio,Office & Stationery,2025,Referral,Correos,5115,0.948,4771,2.01,0.032,False,0.0,True,True,True,4396407,International expansion,3,4.9,3,4,50,12,Lost,Service gap,
+OPP-2025-1190,Aurora Commerce,Office & Stationery,2025,Referral,MRW,844,0.597,497,2.36,0.027,True,0.386,False,False,False,768001,Poor tracking / visibility,3,5.4,3,9,32,12,Won,,18.3
+OPP-2025-1191,Fauna Club,Office & Stationery,2025,Inbound,Correos,858,0.974,818,1.61,0.04,False,0.0,False,False,True,886513,Low delivery quality,4,13.4,4,8,20,24,Won,,20.8
+OPP-2025-1197,Ramo Co.,Sports & Outdoor,2025,Referral,CTT,1271,0.768,941,3.46,0.07,True,0.209,False,True,False,1252474,Price / cost,4,4.7,4,7,57,24,Lost,Lost to competitor,
+OPP-2025-1198,Trino House,Beauty & Cosmetics,2025,Inbound,GLS Regional,584,0.945,518,0.3,0.12,False,0.0,True,True,False,735785,Slow claims,2,10.1,1,6,101,24,Lost,Service gap,
+OPP-2025-1199,Nimbo Studio,Pet Care,2025,Inbound,Seur,3279,0.759,2234,4.0,0.204,True,0.209,False,False,True,3275655,International expansion,2,10.7,2,5,22,12,Won,,26.4
+OPP-2025-1211,Quartz Retail,Pet Care,2025,Inbound,GLS Regional,2737,0.976,2543,4.44,0.096,False,0.0,False,False,False,3113865,Poor tracking / visibility,2,-6.6,4,1,66,24,Won,,14.9
+OPP-2025-1212,Ardor Group,Consumer Electronics,2025,Outbound,MRW,540,0.963,512,3.71,0.028,False,0.0,True,True,True,706796,Slow claims,2,9.2,3,5,38,36,Won,,26.4
+OPP-2025-1213,Litio House,Beauty & Cosmetics,2025,Inbound,In-house fleet,1354,0.584,767,2.23,0.06,True,0.396,False,False,True,1160471,Slow claims,3,6.2,2,13,110,12,Lost,Geographic gap,
+OPP-2025-1214,Lince Supply,Fashion & Apparel,2025,Inbound,NationalExpress Iberia,13951,0.94,12891,1.59,0.034,False,0.0,False,False,True,11924615,Lack of weekend delivery,5,13.0,1,7,119,24,Won,,23.8
+OPP-2025-1215,Aurora Retail,Health & Pharma,2025,Outbound,CTT,1243,0.95,1140,0.94,0.069,False,0.0,True,False,False,1633980,International expansion,3,23.7,3,5,53,12,Lost,Price,
+OPP-2025-1220,Mirto Labs,Fashion & Apparel,2025,Outbound,NationalExpress Iberia,1712,0.946,1576,1.98,0.053,False,0.0,False,False,True,2561488,Lack of weekend delivery,2,5.2,3,10,45,12,Lost,Service gap,
+OPP-2025-1221,Coral Labs,Consumer Electronics,2025,Inbound,CTT,2981,0.754,2176,3.02,0.063,True,0.235,True,False,False,2290428,Peak collapse,3,-0.1,3,3,51,12,Lost,Geographic gap,
+OPP-2025-1222,Bex House,Beauty & Cosmetics,2025,Outbound,Seur,1532,0.698,1043,1.25,0.048,True,0.298,False,False,False,1221879,Peak collapse,3,0.4,4,10,111,12,Won,,17.7
+OPP-2025-1224,Aurora Market,Sports & Outdoor,2025,Inbound,CTT,3422,0.668,2212,3.51,0.064,True,0.314,True,False,False,2865422,Lack of weekend delivery,4,17.5,2,8,77,24,Lost,Price,
+OPP-2025-1227,Coral & Co.,Pet Care,2025,Inbound,DHL,1510,0.71,1015,4.87,0.105,True,0.255,False,True,False,1461979,Poor tracking / visibility,5,-0.8,5,6,59,36,Won,,24.0
+OPP-2025-1229,Kelp Iberia,Office & Stationery,2025,Referral,MRW,2404,0.966,2272,2.44,0.043,False,0.0,True,True,True,2463190,Price / cost,2,-2.6,3,2,60,24,Lost,Service gap,
+OPP-2025-1231,Brisa & Co.,Fashion & Apparel,2025,Inbound,CorreosExpress,2035,0.678,1379,1.5,0.0,True,0.295,False,False,True,1793623,Low delivery quality,3,9.4,3,5,80,36,Won,,18.2
+OPP-2025-1232,Bex Commerce,Beauty & Cosmetics,2025,Outbound,CTT,518,0.555,283,0.46,0.027,True,0.414,False,False,True,425271,Low delivery quality,2,2.5,3,13,55,12,Lost,Geographic gap,
+OPP-2025-1233,Pampa Club,Consumer Electronics,2025,Outbound,Correos,2719,0.679,1736,3.55,0.119,True,0.29,False,True,False,2736690,Low delivery quality,4,13.4,3,11,82,36,Won,,23.1
+OPP-2025-1236,Cobre Labs,Beauty & Cosmetics,2025,Outbound,DHL,2795,0.599,1674,0.78,0.0,True,0.366,True,False,False,2498562,Poor tracking / visibility,2,9.2,5,9,25,24,Lost,Geographic gap,
+OPP-2025-1238,Aurora Works,Sports & Outdoor,2025,Inbound,CTT,6210,0.971,5541,4.42,0.162,False,0.0,True,False,True,8059779,Poor customer service,4,4.7,2,11,49,24,Lost,Service gap,
+OPP-2025-1239,Aurora & Co.,Food & Gourmet,2025,Outbound,CTT,3215,0.959,3064,2.27,0.012,False,0.0,False,False,True,3729972,Slow claims,3,7.2,2,9,7,12,Won,,20.9
+OPP-2025-1241,Olmo Labs,Health & Pharma,2025,Outbound,CTT,1443,0.958,1382,0.43,0.0,False,0.0,False,False,True,1448760,Slow claims,3,2.8,3,10,34,36,Won,,18.8
+OPP-2025-1244,Vetas Goods,Consumer Electronics,2025,Partner,NationalExpress Iberia,1999,0.669,1263,2.95,0.11,True,0.327,False,False,True,1559626,International expansion,1,17.2,3,7,7,12,Lost,Price,
+OPP-2025-1250,Sienna Studio,Health & Pharma,2025,Outbound,GLS Regional,2861,0.712,2016,1.19,0.02,True,0.258,False,False,False,2058792,Lack of weekend delivery,4,15.3,3,9,46,12,Lost,Geographic gap,
+OPP-2025-1253,Fauna Trading,Office & Stationery,2025,Outbound,DHL,863,0.961,788,1.59,0.098,False,0.0,True,False,False,1003936,Poor tracking / visibility,3,3.5,3,5,54,24,Lost,Service gap,
+OPP-2025-1254,Umbra Retail,Health & Pharma,2025,Outbound,Correos,1654,0.951,1549,2.56,0.03,False,0.0,True,False,False,2068256,International expansion,5,-7.9,3,9,18,12,Lost,Service gap,
+OPP-2025-1264,Indigo Store,Office & Stationery,2025,Outbound,NationalExpress Iberia,832,0.928,761,2.04,0.027,False,0.0,False,False,False,850393,Poor customer service,2,-9.8,4,4,71,24,Won,,23.5
+OPP-2025-1270,Trino Works,Beauty & Cosmetics,2025,Outbound,UPS,1617,0.775,1206,0.3,0.075,True,0.199,False,False,True,1739736,Slow claims,2,12.5,2,1,64,12,Won,,21.7
+OPP-2025-1272,Cresta Co.,Home & Living,2025,Outbound,NationalExpress Iberia,2002,0.956,1780,4.42,0.139,False,0.0,True,False,False,2019928,Slow claims,2,10.0,1,7,40,24,Won,,22.4
+OPP-2025-1274,Bruma House,Sports & Outdoor,2025,Inbound,GLS Regional,1258,0.956,1138,3.2,0.107,False,0.0,False,False,True,1637163,Poor tracking / visibility,3,15.4,3,11,47,24,Lost,Price,
+OPP-2025-1276,Risco Iberia,Toys & Baby,2025,Outbound,MRW,4167,0.567,2257,1.33,0.089,True,0.431,True,False,False,2918582,Lack of weekend delivery,2,28.5,4,10,42,36,Lost,Service gap,
+OPP-2025-1281,Indigo Brands,Beauty & Cosmetics,2025,Outbound,DHL,458,0.963,435,0.53,0.024,False,0.0,False,False,True,626622,Peak collapse,3,14.4,1,7,55,24,Won,,17.7
+OPP-2025-1282,Arce Goods,Fashion & Apparel,2025,Referral,CTT,3715,0.959,3416,0.64,0.082,False,0.0,False,True,True,5321545,Poor customer service,3,2.2,4,6,49,36,Lost,Service gap,
+OPP-2025-1287,Aurora Co.,Food & Gourmet,2025,Inbound,MRW,1569,0.981,1481,2.93,0.075,False,0.0,True,True,False,2353140,Low delivery quality,3,7.2,1,7,55,12,Won,,26.3
+OPP-2025-1288,Pampa Supply,Toys & Baby,2025,Referral,CorreosExpress,2043,0.96,1937,2.59,0.024,False,0.0,False,False,True,2249983,Lack of weekend delivery,3,15.3,2,2,75,24,Lost,Price,
+OPP-2025-1294,Indigo Iberia,Health & Pharma,2025,Referral,In-house fleet,6232,0.565,3378,1.61,0.081,True,0.426,True,True,True,3951288,International expansion,2,-3.4,1,5,7,24,Lost,Service gap,
+OPP-2025-1295,Trino Iberia,Health & Pharma,2025,Inbound,In-house fleet,5921,0.687,3909,1.21,0.078,True,0.3,True,False,True,4248289,Low delivery quality,1,13.1,2,7,72,12,Lost,Geographic gap,
+OPP-2025-1297,Cír Works,Office & Stationery,2025,Outbound,CorreosExpress,1715,0.6,969,1.38,0.115,True,0.378,False,False,True,1552371,Peak collapse,3,10.4,2,7,59,24,Lost,Geographic gap,
+OPP-2025-1298,Dms Store,Fashion & Apparel,2025,Partner,MRW,552,0.946,511,0.3,0.042,False,0.0,False,False,False,803300,Slow claims,3,21.6,4,5,66,12,Lost,Lost to competitor,
+OPP-2025-1300,Ramo Store,Consumer Electronics,2025,Inbound,In-house fleet,2668,0.799,2083,3.77,0.045,True,0.194,False,False,False,3169289,Lack of weekend delivery,4,-11.3,3,11,29,36,Won,,21.4
+OPP-2025-1303,Nova Labs,Home & Living,2025,Inbound,UPS,4298,0.675,2757,4.33,0.099,True,0.304,True,False,True,4211545,Peak collapse,3,8.8,3,6,72,24,Won,,18.1
+OPP-2025-1305,Galena Supply,Consumer Electronics,2025,Referral,In-house fleet,1009,0.951,912,3.65,0.099,False,0.0,True,False,False,1185896,Peak collapse,3,3.8,2,1,77,36,Lost,Service gap,
+OPP-2025-1308,Solca Group,Sports & Outdoor,2025,Inbound,Seur,5187,0.783,3941,2.38,0.059,True,0.216,False,False,False,5218433,Low delivery quality,3,7.3,2,9,28,24,Won,,20.0
+OPP-2025-1310,Greca Co.,Office & Stationery,2025,Outbound,DHL,1837,0.956,1689,1.64,0.076,False,0.0,True,False,False,2083142,Poor customer service,2,18.5,5,5,77,12,Lost,Service gap,
+OPP-2025-1311,Cresta Works,Health & Pharma,2025,Referral,UPS,901,0.743,648,1.05,0.064,True,0.236,False,True,False,1045871,Price / cost,3,6.4,2,11,49,24,Won,,24.9
+OPP-2025-1312,Umbra Co.,Food & Gourmet,2025,Referral,Correos,1617,0.973,1487,2.26,0.109,False,0.0,False,False,True,1383921,International expansion,5,1.5,3,5,84,12,Lost,Lost to competitor,
+OPP-2025-1313,Lumen Group,Fashion & Apparel,2025,Referral,UPS,1726,0.954,1643,0.3,0.004,False,0.0,False,False,False,2528789,Price / cost,4,13.4,2,8,53,36,Won,,19.9
+OPP-2025-1314,Sable Collective,Fashion & Apparel,2025,Outbound,In-house fleet,2836,0.972,2644,1.07,0.081,False,0.0,False,True,True,4042445,Price / cost,3,13.0,4,7,95,12,Lost,Price,
+OPP-2025-1315,Lava Iberia,Food & Gourmet,2025,Inbound,NationalExpress Iberia,1612,0.688,1089,1.91,0.035,True,0.308,False,True,False,1637267,Price / cost,3,-11.3,1,9,80,24,Lost,Service gap,
+OPP-2025-1318,Kuna Market,Home & Living,2025,Partner,UPS,5371,0.948,4725,4.28,0.144,False,0.0,True,False,True,4366157,Lack of weekend delivery,4,15.2,3,5,80,12,Won,,15.9
+OPP-2025-1319,Eco Market,Jewellery & Accessories,2025,Outbound,MRW,321,0.984,302,1.69,0.086,False,0.0,False,False,False,290724,Peak collapse,2,9.5,4,8,108,36,Won,,16.6
+OPP-2025-1320,Ardor Club,Consumer Electronics,2025,Inbound,GLS Regional,1779,0.95,1554,3.37,0.161,False,0.0,False,True,True,1675806,Peak collapse,3,6.4,1,1,77,24,Lost,Service gap,
+OPP-2025-1327,Sienna Collective,Sports & Outdoor,2025,Outbound,UPS,1113,0.94,1015,3.79,0.058,False,0.0,False,True,False,1350881,International expansion,3,22.0,2,3,61,12,Lost,Price,
+OPP-2025-1329,Duna Commerce,Office & Stationery,2025,Inbound,UPS,3623,0.858,3058,0.71,0.032,True,0.117,False,False,True,4890143,International expansion,2,14.0,4,11,62,24,Won,,21.4
+OPP-2025-1333,Quila & Co.,Books & Media,2025,Outbound,Correos,857,0.965,776,1.33,0.121,False,0.0,True,False,False,1289356,Lack of weekend delivery,2,17.3,4,2,46,36,Lost,Price,
+OPP-2025-1335,Quartz Group,Home & Living,2025,Outbound,CTT,4330,0.951,3741,4.99,0.183,False,0.0,False,False,False,3820285,Peak collapse,3,13.8,2,4,88,24,Won,,31.9
+OPP-2025-1337,Wabi Supply,Beauty & Cosmetics,2025,Inbound,UPS,3308,0.971,3123,0.6,0.055,False,0.0,False,False,False,2994857,Poor customer service,1,-4.9,2,9,54,36,Lost,Price,
+OPP-2025-1340,Eco Retail,Food & Gourmet,2025,Outbound,GLS Regional,3180,0.947,2921,3.83,0.06,False,0.0,False,False,False,3092043,Price / cost,2,9.6,5,8,117,36,Lost,Lost to competitor,
+OPP-2025-1341,Risco Supply,Office & Stationery,2025,Inbound,MRW,4638,0.65,2978,1.47,0.024,True,0.349,True,False,False,4790545,Slow claims,4,9.0,3,1,63,24,Lost,Service gap,
+OPP-2025-1342,Bruma Group,Sports & Outdoor,2025,Inbound,In-house fleet,589,0.983,555,3.21,0.08,False,0.0,False,False,True,663217,Low delivery quality,5,2.7,1,8,65,12,Won,,24.3
+OPP-2025-1343,Nimbo Co.,Fashion & Apparel,2025,Outbound,GLS Regional,1450,0.963,1362,0.71,0.048,False,0.0,True,False,False,1434564,Peak collapse,1,5.6,3,7,56,12,Won,,16.2
+OPP-2025-1350,Faro Group,Beauty & Cosmetics,2025,Outbound,In-house fleet,1725,0.956,1639,0.4,0.012,False,0.0,False,True,False,2552654,Low delivery quality,3,11.3,4,10,87,12,Won,,29.5
+OPP-2025-1351,Cobre Commerce,Jewellery & Accessories,2025,Inbound,UPS,948,0.948,898,0.55,0.0,False,0.0,False,True,True,1001569,Lack of weekend delivery,2,-4.5,5,8,116,36,Lost,Service gap,
+OPP-2025-1356,Iris Supply,Jewellery & Accessories,2025,Outbound,DHL,2451,0.955,2340,1.35,0.0,False,0.0,True,False,False,2655000,Peak collapse,3,31.8,4,9,70,12,Lost,Price,
+OPP-2025-1358,Vetas Store,Health & Pharma,2025,Inbound,In-house fleet,4539,0.956,4256,0.33,0.038,False,0.0,False,False,True,4259315,Poor tracking / visibility,2,0.4,3,12,58,12,Won,,27.5
+OPP-2026-1001,Duna Works,Office & Stationery,2026,Partner,NationalExpress Iberia,2529,0.961,2345,1.77,0.07,False,0.0,False,False,True,3300395,Peak collapse,2,21.2,3,4,69,24,Lost,Price,
+OPP-2026-1003,Cír Market,Fashion & Apparel,2026,Outbound,In-house fleet,2008,0.99,1968,1.43,0.02,False,0.0,True,False,True,2211198,Peak collapse,4,11.1,1,6,63,12,Won,,26.0
+OPP-2026-1006,Roble Store,Pet Care,2026,Outbound,Correos,814,0.603,463,4.07,0.113,True,0.39,False,False,False,455887,Price / cost,3,21.0,3,10,19,36,Lost,Price,
+OPP-2026-1009,Ocre Iberia,Consumer Electronics,2026,Outbound,Correos,2464,0.702,1668,4.88,0.071,True,0.284,False,False,True,2410588,International expansion,3,20.1,2,7,43,12,Won,,19.8
+OPP-2026-1017,Risco Labs,Office & Stationery,2026,Outbound,In-house fleet,3366,0.973,3191,2.11,0.051,False,0.0,False,True,True,5085075,Lack of weekend delivery,2,5.4,2,8,36,36,Won,,19.4
+OPP-2026-1018,Mora Trading,Office & Stationery,2026,Outbound,CorreosExpress,1333,0.969,1272,1.99,0.03,False,0.0,True,False,True,1930434,International expansion,4,2.5,3,5,44,36,Won,,17.5
+OPP-2026-1019,Kelp Commerce,Toys & Baby,2026,Referral,CorreosExpress,1610,0.933,1496,1.35,0.008,False,0.0,False,True,True,1893466,Poor customer service,1,16.4,1,2,70,24,Won,,18.4
+OPP-2026-1021,Sable House,Home & Living,2026,Outbound,NationalExpress Iberia,1482,0.935,1262,4.66,0.178,False,0.0,True,False,False,1581243,Lack of weekend delivery,2,11.9,2,4,39,12,Lost,Service gap,
+OPP-2026-1024,Vela Supply,Health & Pharma,2026,Inbound,In-house fleet,1118,0.958,1061,1.54,0.017,False,0.0,True,False,False,1600591,Poor customer service,3,8.3,3,6,41,36,Won,,18.3
+OPP-2026-1026,Volt Brands,Fashion & Apparel,2026,Inbound,UPS,2717,0.965,2621,0.3,0.0,False,0.0,True,False,False,3052212,Lack of weekend delivery,2,10.5,2,3,61,12,Won,,24.6
+OPP-2026-1032,Jara Store,Beauty & Cosmetics,2026,Inbound,DHL,6379,0.981,6160,1.99,0.031,False,0.0,False,False,False,9721537,Price / cost,3,20.5,3,8,39,12,Lost,Price,
+OPP-2026-1034,Dms Trading,Fashion & Apparel,2026,Inbound,NationalExpress Iberia,2448,0.638,1546,1.48,0.019,True,0.352,False,True,False,1865358,Peak collapse,2,15.3,2,7,59,24,Lost,Price,
+OPP-2026-1035,Nimbo Works,Office & Stationery,2026,Inbound,NationalExpress Iberia,348,0.99,336,2.07,0.046,False,0.0,True,True,False,418046,Low delivery quality,2,5.4,3,4,63,12,Won,,13.5
+OPP-2026-1039,Cobre Studio,Consumer Electronics,2026,Outbound,CTT,626,0.976,588,2.84,0.072,False,0.0,False,False,True,842238,Peak collapse,3,-0.9,3,8,45,24,Won,,23.1
+OPP-2026-1042,Vetas Group,Books & Media,2026,Outbound,In-house fleet,682,0.927,619,0.37,0.041,False,0.0,True,False,False,830289,Low delivery quality,2,9.3,2,3,86,36,Won,,19.5
+OPP-2026-1048,Umbra Collective,Fashion & Apparel,2026,Referral,CTT,5544,0.977,5413,2.92,0.001,False,0.0,False,False,False,6480899,Peak collapse,2,5.1,1,6,10,24,Lost,Lost to competitor,
+OPP-2026-1052,Faro & Co.,Sports & Outdoor,2026,Inbound,MRW,3534,0.922,3033,3.41,0.138,False,0.0,False,True,False,4425669,Lack of weekend delivery,3,0.4,3,7,86,12,Won,,21.5
+OPP-2026-1058,Lumen Co.,Health & Pharma,2026,Inbound,CorreosExpress,1887,0.814,1483,0.63,0.068,True,0.174,False,False,False,2230848,Price / cost,2,-10.3,3,8,54,24,Lost,Geographic gap,
+OPP-2026-1060,Haya Labs,Health & Pharma,2026,Inbound,MRW,1183,0.964,1122,0.54,0.032,False,0.0,True,False,False,1159316,Poor tracking / visibility,2,10.9,3,11,24,24,Won,,22.4
+OPP-2026-1061,Fauna Supply,Jewellery & Accessories,2026,Outbound,MRW,1514,0.966,1461,1.01,0.001,False,0.0,False,False,True,1599901,Slow claims,3,-1.2,2,8,80,36,Won,,14.8
+OPP-2026-1070,Tinta Brands,Consumer Electronics,2026,Inbound,CTT,1697,0.953,1506,5.19,0.137,False,0.0,False,False,False,2172407,Slow claims,4,5.8,4,5,51,24,Lost,Lost to competitor,
+OPP-2026-1071,Lava Store,Consumer Electronics,2026,Inbound,DHL,3480,0.944,3204,3.83,0.049,False,0.0,True,True,False,3660773,Poor customer service,3,9.6,3,7,12,12,Won,,30.4
+OPP-2026-1072,Cresta Retail,Books & Media,2026,Outbound,Seur,335,0.959,317,0.66,0.025,False,0.0,False,True,False,448448,Poor customer service,3,1.4,3,6,36,12,Won,,22.4
+OPP-2026-1074,Dms Goods,Beauty & Cosmetics,2026,Referral,CorreosExpress,1272,0.959,1219,0.81,0.0,False,0.0,False,False,False,1402726,Price / cost,3,1.1,2,9,31,12,Won,,14.5
+OPP-2026-1077,Bahia Collective,Jewellery & Accessories,2026,Referral,Seur,853,0.922,759,0.35,0.069,False,0.0,False,True,False,1052147,Slow claims,3,4.4,3,2,20,12,Won,,19.2
+OPP-2026-1079,Uva Supply,Home & Living,2026,Inbound,Correos,611,0.971,560,3.77,0.111,False,0.0,False,False,False,806214,Poor tracking / visibility,3,2.9,2,7,73,36,Won,,23.0
+OPP-2026-1085,Sienna Group,Fashion & Apparel,2026,Inbound,Correos,1378,0.911,1255,1.49,0.0,False,0.0,False,False,True,1844538,Poor tracking / visibility,4,14.9,2,11,125,24,Won,,24.1
+OPP-2026-1090,Sienna House,Home & Living,2026,Inbound,Seur,1279,0.607,710,3.95,0.17,True,0.36,False,True,False,1157905,Poor customer service,4,5.7,2,9,51,24,Lost,Geographic gap,
+OPP-2026-1094,Solca Commerce,Fashion & Apparel,2026,Referral,GLS Regional,1395,0.969,1274,1.87,0.114,False,0.0,False,False,False,1454315,Lack of weekend delivery,3,3.8,2,6,16,36,Won,,34.0
+OPP-2026-1105,Marfil Co.,Fashion & Apparel,2026,Inbound,Correos,3263,0.977,3068,1.68,0.075,False,0.0,False,False,True,3907222,Peak collapse,2,15.9,5,5,21,24,Won,,21.6
+OPP-2026-1109,Arce Works,Food & Gourmet,2026,Outbound,In-house fleet,1870,0.797,1462,2.79,0.038,True,0.163,False,True,False,1558117,Slow claims,4,10.1,4,5,64,12,Lost,Lost to competitor,
+OPP-2026-1110,Umbra Iberia,Home & Living,2026,Inbound,CorreosExpress,990,0.642,587,4.39,0.151,True,0.33,False,True,False,687403,Peak collapse,2,1.2,4,7,18,24,Won,,17.6
+OPP-2026-1116,Lava Brands,Office & Stationery,2026,Partner,Correos,2403,0.935,2246,1.81,0.0,False,0.0,False,False,True,3373894,Slow claims,2,8.1,3,9,63,24,Lost,Price,
+OPP-2026-1119,Ardor Retail,Fashion & Apparel,2026,Referral,Seur,3456,0.796,2585,0.3,0.12,True,0.178,True,False,True,3106587,Poor tracking / visibility,4,14.3,2,10,27,36,Won,,19.2
+OPP-2026-1120,Yedra Supply,Consumer Electronics,2026,Outbound,GLS Regional,3508,0.919,3059,3.5,0.102,False,0.0,True,True,False,4700422,Lack of weekend delivery,3,-0.6,1,3,17,12,Lost,Service gap,
+OPP-2026-1121,Ramo Goods,Fashion & Apparel,2026,Inbound,NationalExpress Iberia,956,0.983,908,0.3,0.067,False,0.0,False,False,False,951918,Poor customer service,4,-5.4,4,12,47,36,Won,,26.1
+OPP-2026-1122,Bruma Labs,Home & Living,2026,Inbound,UPS,2352,0.975,2099,5.24,0.169,False,0.0,False,False,False,1853491,Slow claims,3,7.1,2,5,23,12,Lost,Service gap,
+OPP-2026-1123,Brisa Club,Food & Gourmet,2026,Outbound,GLS Regional,1174,0.932,1040,2.57,0.098,False,0.0,False,False,False,1511192,Price / cost,5,12.7,3,4,64,24,Lost,Price,
+OPP-2026-1128,Litio Group,Consumer Electronics,2026,Outbound,CorreosExpress,691,0.963,614,4.05,0.152,False,0.0,False,False,False,608799,International expansion,3,4.8,2,7,34,24,Lost,Service gap,
+OPP-2026-1131,Ardor Labs,Fashion & Apparel,2026,Inbound,Correos,3858,0.76,2932,1.36,0.0,True,0.211,False,False,True,3389355,Poor customer service,2,1.0,2,1,21,36,Lost,Geographic gap,
+OPP-2026-1137,Pampa House,Health & Pharma,2026,Outbound,UPS,2861,0.741,2098,0.3,0.02,True,0.222,True,False,True,3150924,Price / cost,3,9.5,3,7,33,12,Lost,Geographic gap,
+OPP-2026-1138,Lince House,Fashion & Apparel,2026,Outbound,Seur,1311,0.966,1213,0.53,0.084,False,0.0,False,False,False,1506748,International expansion,3,2.7,1,5,68,12,Won,,23.4
+OPP-2026-1139,Olmo Group,Sports & Outdoor,2026,Partner,GLS Regional,699,0.59,388,4.39,0.117,True,0.384,True,True,False,639161,Peak collapse,2,0.5,2,6,93,12,Lost,Geographic gap,
+OPP-2026-1143,Delta Co.,Office & Stationery,2026,Inbound,GLS Regional,951,0.97,883,0.71,0.084,False,0.0,True,False,False,1132652,Poor tracking / visibility,3,16.5,2,5,76,12,Lost,Price,
+OPP-2026-1151,Eco Trading,Consumer Electronics,2026,Referral,In-house fleet,1993,0.941,1791,3.29,0.09,False,0.0,False,True,False,2528098,Poor tracking / visibility,4,10.8,2,6,34,12,Won,,24.4
+OPP-2026-1155,Mora Supply,Home & Living,2026,Inbound,NationalExpress Iberia,1571,0.936,1366,5.86,0.141,False,0.0,False,False,False,2242895,Low delivery quality,3,11.2,1,10,59,24,Lost,Service gap,
+OPP-2026-1158,Quartz Labs,Food & Gourmet,2026,Inbound,CorreosExpress,1416,0.968,1368,1.43,0.003,False,0.0,False,False,True,2213689,International expansion,4,12.2,2,9,7,24,Lost,Lost to competitor,
+OPP-2026-1160,Quartz & Co.,Consumer Electronics,2026,Referral,NationalExpress Iberia,8514,0.973,7662,2.89,0.15,False,0.0,False,True,False,12228432,Slow claims,4,5.5,3,8,77,12,Won,,21.4
+OPP-2026-1165,Trino Goods,Fashion & Apparel,2026,Referral,MRW,847,0.674,558,1.41,0.044,True,0.307,False,True,False,555377,Poor customer service,3,17.9,1,14,46,24,Won,,17.3
+OPP-2026-1167,Kelp Store,Consumer Electronics,2026,Referral,CorreosExpress,1881,0.68,1176,3.36,0.161,True,0.298,False,False,True,1471134,Slow claims,3,3.7,1,1,57,12,Lost,Service gap,
+OPP-2026-1177,Bex Co.,Beauty & Cosmetics,2026,Outbound,GLS Regional,3852,0.573,2187,0.84,0.018,True,0.409,False,True,True,2949276,Low delivery quality,2,12.0,1,2,82,12,Lost,Service gap,
+OPP-2026-1178,Umbra Group,Beauty & Cosmetics,2026,Outbound,DHL,720,0.967,678,0.81,0.051,False,0.0,False,False,False,1093420,Price / cost,4,3.8,1,6,83,24,Lost,Price,
+OPP-2026-1180,Hielo Brands,Food & Gourmet,2026,Outbound,In-house fleet,953,0.979,895,4.62,0.081,False,0.0,False,False,True,1090415,Lack of weekend delivery,3,-0.1,2,7,107,12,Won,,18.6
+OPP-2026-1183,Kelp & Co.,Fashion & Apparel,2026,Outbound,Correos,2979,0.95,2746,0.79,0.059,False,0.0,False,True,False,3935559,Price / cost,5,15.1,4,5,103,36,Lost,Price,
+OPP-2026-1184,Aurora Trading,Fashion & Apparel,2026,Inbound,CTT,2589,0.921,2312,0.33,0.06,False,0.0,False,True,False,3712339,Lack of weekend delivery,3,20.3,2,5,51,36,Lost,Price,
+OPP-2026-1186,Xara Goods,Sports & Outdoor,2026,Inbound,Correos,485,0.989,464,3.3,0.065,False,0.0,True,False,True,534870,Peak collapse,3,6.5,2,8,29,24,Won,,24.1
+OPP-2026-1187,Uva Studio,Fashion & Apparel,2026,Inbound,In-house fleet,1403,0.975,1349,0.96,0.027,False,0.0,False,False,True,1935392,Poor customer service,3,11.7,2,10,85,12,Lost,Price,
+OPP-2026-1189,Cresta Trading,Food & Gourmet,2026,Inbound,UPS,4401,0.983,4192,3.23,0.062,False,0.0,False,False,False,6731042,Lack of weekend delivery,3,-8.8,2,9,44,24,Won,,27.3
+OPP-2026-1193,Volt Retail,Office & Stationery,2026,Outbound,DHL,1854,0.547,1014,1.59,0.0,True,0.443,False,False,False,899334,Poor customer service,1,5.6,3,9,50,24,Lost,Geographic gap,
+OPP-2026-1194,Kelp Collective,Fashion & Apparel,2026,Partner,DHL,1708,0.852,1420,0.82,0.048,True,0.138,False,False,True,1590094,Lack of weekend delivery,3,2.7,4,3,95,36,Won,,13.6
+OPP-2026-1196,Lince Labs,Consumer Electronics,2026,Inbound,DHL,943,0.927,840,3.14,0.077,False,0.0,False,False,True,1117849,Poor customer service,2,-4.8,4,9,65,24,Won,,19.6
+OPP-2026-1200,Xara Trading,Fashion & Apparel,2026,Inbound,NationalExpress Iberia,2211,0.98,2148,0.73,0.017,False,0.0,False,True,False,2268483,Peak collapse,3,-2.1,3,7,89,24,Won,,26.0
+OPP-2026-1201,Kelp Brands,Food & Gourmet,2026,Inbound,Seur,1339,0.835,1118,1.66,0.0,True,0.161,True,False,False,1050980,Lack of weekend delivery,2,5.4,3,5,72,24,Lost,Service gap,
+OPP-2026-1205,Nardo Trading,Office & Stationery,2026,Inbound,CTT,1531,0.941,1362,0.43,0.109,False,0.0,True,False,False,1668225,Poor customer service,3,0.0,1,4,43,24,Won,,18.6
+OPP-2026-1207,Bruma Co.,Consumer Electronics,2026,Partner,GLS Regional,2414,0.848,1888,4.22,0.155,True,0.148,False,False,True,2702189,Lack of weekend delivery,3,-4.6,2,4,71,12,Won,,23.6
+OPP-2026-1209,Galena Retail,Toys & Baby,2026,Inbound,UPS,3168,0.986,3122,2.02,0.001,False,0.0,True,False,True,3916697,International expansion,3,8.1,3,4,70,12,Lost,Service gap,
+OPP-2026-1210,Nova Iberia,Beauty & Cosmetics,2026,Outbound,CorreosExpress,6918,0.972,6327,0.3,0.118,False,0.0,False,False,False,9863312,Slow claims,3,20.0,1,4,73,36,Won,,18.5
+OPP-2026-1216,Junco Brands,Fashion & Apparel,2026,Inbound,Seur,1242,0.945,1173,0.58,0.0,False,0.0,True,False,True,1370248,Price / cost,2,9.2,4,5,49,12,Won,,21.0
+OPP-2026-1217,Xara Store,Beauty & Cosmetics,2026,Partner,MRW,791,0.709,551,0.3,0.034,True,0.262,False,True,True,712273,Slow claims,2,5.5,1,7,13,24,Lost,Service gap,
+OPP-2026-1223,Risco Co.,Consumer Electronics,2026,Inbound,In-house fleet,3981,0.958,3495,2.71,0.167,False,0.0,False,False,True,5009467,Slow claims,1,-8.4,1,10,20,24,Won,,17.3
+OPP-2026-1228,Olmo House,Consumer Electronics,2026,Outbound,Seur,2122,0.954,1894,2.64,0.128,False,0.0,False,False,True,2074850,Poor tracking / visibility,4,-0.1,2,8,55,36,Won,,28.2
+OPP-2026-1230,Bruma Collective,Books & Media,2026,Inbound,Correos,1892,0.926,1731,1.08,0.023,False,0.0,True,False,True,2690881,International expansion,3,-6.8,4,8,59,36,Won,,17.9
+OPP-2026-1237,Ramo Market,Health & Pharma,2026,Inbound,UPS,2891,0.943,2726,0.3,0.0,False,0.0,False,True,False,2518699,Peak collapse,3,13.9,2,7,26,36,Won,,22.1
+OPP-2026-1242,Jara Trading,Fashion & Apparel,2026,Outbound,Seur,1617,0.696,1099,0.3,0.046,True,0.292,False,False,True,1755302,Poor customer service,3,12.5,2,11,71,12,Won,,23.7
+OPP-2026-1243,Quila Works,Home & Living,2026,Inbound,NationalExpress Iberia,618,0.738,419,5.4,0.16,True,0.239,False,False,False,561119,Slow claims,4,-8.1,2,3,58,12,Lost,Geographic gap,
+OPP-2026-1248,Prisma Club,Consumer Electronics,2026,Referral,DHL,1101,0.978,1019,4.44,0.106,False,0.0,False,False,False,1417192,Poor tracking / visibility,5,10.1,4,2,30,24,Won,,19.7
+OPP-2026-1251,Bahia Trading,Toys & Baby,2026,Partner,NationalExpress Iberia,1975,0.981,1889,0.83,0.05,False,0.0,False,False,False,2712896,Slow claims,2,9.9,3,8,23,24,Won,,23.1
+OPP-2026-1252,Brisa Studio,Home & Living,2026,Inbound,In-house fleet,744,0.932,636,5.38,0.165,False,0.0,True,False,False,795094,Low delivery quality,3,9.0,3,8,38,24,Won,,28.3
+OPP-2026-1256,Iris Market,Health & Pharma,2026,Outbound,GLS Regional,1639,0.712,1142,1.43,0.042,True,0.286,False,True,False,1615514,Lack of weekend delivery,3,17.2,2,3,75,24,Won,,25.2
+OPP-2026-1259,Faro Market,Fashion & Apparel,2026,Inbound,DHL,2452,0.978,2318,1.02,0.066,False,0.0,False,False,False,2206314,International expansion,2,7.5,4,10,62,12,Won,,15.5
+OPP-2026-1260,Delta Market,Fashion & Apparel,2026,Partner,GLS Regional,2033,0.986,1960,1.07,0.044,False,0.0,True,False,False,2815773,Poor tracking / visibility,4,9.9,1,3,30,36,Won,,19.0
+OPP-2026-1261,Zafiro Works,Home & Living,2026,Inbound,CTT,903,0.724,589,5.25,0.197,True,0.248,False,False,True,759164,Poor customer service,3,3.4,2,5,42,12,Lost,Service gap,
+OPP-2026-1262,Umbra Commerce,Health & Pharma,2026,Partner,MRW,804,0.973,763,0.3,0.047,False,0.0,True,False,False,856664,Low delivery quality,2,9.6,1,16,58,24,Won,,26.2
+OPP-2026-1263,Cobre Store,Beauty & Cosmetics,2026,Partner,GLS Regional,2612,0.934,2439,0.92,0.0,False,0.0,False,False,True,2445179,Lack of weekend delivery,4,12.1,2,6,53,24,Lost,Price,
+OPP-2026-1265,Volt & Co.,Consumer Electronics,2026,Inbound,CorreosExpress,2937,0.977,2658,3.73,0.147,False,0.0,False,False,True,3090856,International expansion,4,20.5,3,10,38,24,Won,,21.2
+OPP-2026-1269,Galena Collective,Fashion & Apparel,2026,Outbound,NationalExpress Iberia,2024,0.921,1864,1.29,0.0,False,0.0,False,False,False,2295919,Poor customer service,4,4.1,2,4,69,24,Lost,Lost to competitor,
+OPP-2026-1277,Lava Collective,Fashion & Apparel,2026,Outbound,NationalExpress Iberia,3521,0.972,3328,1.11,0.055,False,0.0,False,False,False,2966442,International expansion,2,4.4,5,6,32,36,Lost,Lost to competitor,
+OPP-2026-1280,Bruma Works,Food & Gourmet,2026,Outbound,CorreosExpress,910,0.955,854,2.03,0.034,False,0.0,False,True,True,1115181,International expansion,3,7.1,3,6,71,12,Lost,Service gap,
+OPP-2026-1284,Ocre & Co.,Toys & Baby,2026,Referral,DHL,515,0.737,372,1.71,0.039,True,0.258,False,True,True,341130,Poor customer service,4,22.1,3,6,7,36,Won,,19.2
+OPP-2026-1285,Cír House,Office & Stationery,2026,Outbound,MRW,808,0.921,719,1.65,0.067,False,0.0,True,False,True,1161396,Lack of weekend delivery,3,6.4,3,3,44,36,Won,,26.3
+OPP-2026-1290,Vetas Brands,Sports & Outdoor,2026,Inbound,CTT,1887,0.832,1532,2.62,0.048,True,0.142,False,False,False,1652499,Low delivery quality,2,20.2,2,10,65,24,Lost,Price,
+OPP-2026-1291,Litio Iberia,Office & Stationery,2026,Outbound,MRW,639,0.924,587,1.81,0.009,False,0.0,False,False,False,745274,Price / cost,2,2.6,4,8,49,24,Lost,Price,
+OPP-2026-1292,Roble Studio,Sports & Outdoor,2026,Outbound,DHL,441,0.928,392,3.57,0.081,False,0.0,False,False,False,499515,Price / cost,4,6.2,1,6,24,12,Lost,Price,
+OPP-2026-1293,Litio Trading,Consumer Electronics,2026,Outbound,Seur,1196,0.989,1120,2.2,0.105,False,0.0,False,False,False,1653843,Peak collapse,2,19.3,2,4,75,12,Won,,17.2
+OPP-2026-1302,Marfil Goods,Home & Living,2026,Inbound,GLS Regional,1194,0.977,1086,5.22,0.138,False,0.0,True,False,False,986358,Poor customer service,2,28.7,2,5,50,12,Won,,20.2
+OPP-2026-1304,Haya Commerce,Office & Stationery,2026,Outbound,CorreosExpress,2526,0.66,1594,2.33,0.087,True,0.307,True,True,False,1463664,Lack of weekend delivery,2,12.5,2,11,58,36,Lost,Geographic gap,
+OPP-2026-1306,Litio Collective,Toys & Baby,2026,Outbound,CTT,2698,0.971,2619,2.46,0.0,False,0.0,False,False,False,4121638,Poor customer service,4,15.3,3,6,51,12,Won,,17.3
+OPP-2026-1307,Tinta Club,Fashion & Apparel,2026,Referral,CorreosExpress,2914,0.975,2841,1.27,0.0,False,0.0,True,False,False,4728982,Lack of weekend delivery,2,4.9,3,6,12,24,Won,,25.2
+OPP-2026-1316,Zafiro Group,Jewellery & Accessories,2026,Outbound,NationalExpress Iberia,3782,0.915,3379,0.3,0.047,False,0.0,False,True,True,4958011,Poor tracking / visibility,3,25.1,4,10,51,36,Lost,Lost to competitor,
+OPP-2026-1317,Nimbo Collective,Fashion & Apparel,2026,Outbound,GLS Regional,2891,0.736,2112,1.27,0.014,True,0.249,False,False,True,2564798,Lack of weekend delivery,4,-2.4,3,6,69,24,Won,,23.1
+OPP-2026-1321,Ardor Works,Consumer Electronics,2026,Outbound,Correos,4608,0.933,4146,3.72,0.071,False,0.0,False,False,True,6167106,Price / cost,4,9.4,3,7,76,36,Won,,22.9
+OPP-2026-1322,Nardo Market,Consumer Electronics,2026,Inbound,DHL,345,0.771,246,3.85,0.15,True,0.218,False,False,True,256895,Poor customer service,1,12.5,3,5,38,12,Won,,25.0
+OPP-2026-1323,Bahia Goods,Home & Living,2026,Outbound,UPS,655,0.827,493,4.95,0.179,True,0.167,True,False,True,587745,Peak collapse,4,19.0,4,1,18,12,Lost,Price,
+OPP-2026-1324,Pampa Studio,Health & Pharma,2026,Inbound,In-house fleet,828,0.853,706,1.0,0.0,True,0.142,False,False,True,840463,Peak collapse,4,-7.8,4,5,101,12,Won,,17.6
+OPP-2026-1331,Wabi Labs,Fashion & Apparel,2026,Outbound,DHL,1965,0.943,1821,0.76,0.034,False,0.0,False,False,True,1746843,Lack of weekend delivery,3,9.9,1,10,49,12,Won,,15.8
+OPP-2026-1332,Nardo Labs,Office & Stationery,2026,Inbound,Seur,2703,0.596,1555,1.01,0.069,True,0.402,False,False,False,2508180,Lack of weekend delivery,5,4.5,4,4,98,36,Lost,Lost to competitor,
+OPP-2026-1344,Prisma House,Fashion & Apparel,2026,Outbound,NationalExpress Iberia,953,0.565,528,0.88,0.038,True,0.421,False,False,True,804413,Poor customer service,2,7.9,2,9,43,36,Lost,Geographic gap,
+OPP-2026-1345,Nova Trading,Consumer Electronics,2026,Inbound,In-house fleet,4589,0.921,4103,3.64,0.058,False,0.0,False,False,False,3730471,Poor customer service,3,4.5,3,5,32,24,Lost,Timing / no decision,
+OPP-2026-1346,Bruma Market,Sports & Outdoor,2026,Inbound,NationalExpress Iberia,764,0.97,700,2.16,0.109,False,0.0,False,False,True,656641,Price / cost,4,1.7,4,3,93,12,Won,,22.1
+OPP-2026-1352,Volt Supply,Toys & Baby,2026,Inbound,NationalExpress Iberia,2772,0.98,2716,3.04,0.0,False,0.0,False,False,False,2866752,Lack of weekend delivery,4,0.8,4,2,24,12,Lost,Lost to competitor,
+OPP-2026-1359,Uva Club,Health & Pharma,2026,Partner,UPS,4947,0.988,4743,0.3,0.059,False,0.0,False,False,False,6661929,Poor customer service,2,7.7,2,9,43,24,Won,,24.3

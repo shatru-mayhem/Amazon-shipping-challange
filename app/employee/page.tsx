@@ -10,6 +10,7 @@ import DeliverablesPanel from "@/components/DeliverablesPanel";
 import TenderUploadPanel from "@/components/TenderUploadPanel";
 import EmailImportPanel from "@/components/EmailImportPanel";
 import RetrievalStatusPanel from "@/components/RetrievalStatusPanel";
+import KnowledgePanel from "@/components/KnowledgePanel";
 import {
   reviewFolders,
   employeeQA,
@@ -118,6 +119,8 @@ export default function EmployeePortal() {
             <TeamPanel />
 
             <DeliverablesPanel />
+
+            <KnowledgePanel />
           </div>
 
           <div className="space-y-8">
