@@ -12,7 +12,7 @@ export default function ExecutiveDashboardPage() {
   return (
     <main className="min-h-screen">
       <TopBar context="Executive Dashboard" />
-      <div className="mx-auto max-w-4xl px-4 py-6">
+      <div className="mx-auto max-w-6xl px-4 py-6">
         <div className="mb-6 flex items-center gap-3">
           <Link href="/employee" className="text-sm text-link hover:underline">
             ← Operations Dashboard

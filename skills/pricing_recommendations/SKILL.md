@@ -30,8 +30,13 @@ historical_tenders(margin) + cost_matrix + opportunity_features + opportunities
 - **balanced** = median won margin *(recommended)*.
 - **premium** = 75th percentile.
 - Implied price = `estimated_value × (1 + target_margin)`.
-- Guardrail note fires when the client's requested discount pushes below the
-  historical winning band.
+- Every scenario's margin is floored at `pricing_guardrails.min_contribution_margin_pct`
+  so none of the 3 recommended scenarios can fall into VP-approval or
+  auto-no-go territory — `floor_applied`/`floor_note` say when that happened.
+- Each scenario also gets a `guardrail_result` (`within_target` /
+  `above_min_below_target` / `requires_vp_approval` / `auto_no_go`), checked
+  against the actual `pricing_guardrails` row, plus its own `rationale`,
+  `tradeoffs`, and `negotiation_strategy` (not just a one-line intent).
 
 ## Usage
 ```python
@@ -43,5 +48,6 @@ python skills/pricing_recommendations/pricing_recommendations.py <opportunity_id
 ```
 
 ## Output
-`scenarios` (3), `recommended_scenario`, `cost_matrix_reference_eur`,
-`guardrails`.
+`scenarios` (3, each with `rationale`/`tradeoffs`/`negotiation_strategy`/
+`guardrail_result`), `recommended_scenario`, `cost_matrix_reference_eur`,
+`financial_guardrails` (the actual guardrail row used), `guardrails` (notes).

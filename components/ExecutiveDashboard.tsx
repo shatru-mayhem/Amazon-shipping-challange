@@ -1,50 +1,167 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import StatusBadge from "@/components/StatusBadge";
+import StatusBadge, { type StatusTone } from "@/components/StatusBadge";
 import { listOpportunitiesForIngestion, type OpportunityOption } from "@/app/actions/tender_ingestion";
 
-// Executive-facing view of the whole flow (flow.jpeg): every one of the
-// 8 skills that feed the final decision, in one place, for one
-// opportunity. Executive summary first (the decision prompt an exec
-// actually wants), supporting detail below it.
+// Executive dashboard, structured around the 9 required outputs (not an
+// arbitrary set of business questions): Executive Summary, Opportunity
+// Score, Risk Assessment, Pricing Recommendation, Commercial Strategy,
+// Required Follow-Up Actions, Client Proposal / Pitch Deck, Win
+// Probability Score, Sources Used. Each still runs exactly once via the
+// existing /api/skill + /api/retrieve bridges (skills/*.py); this
+// renders their real, already-tested output instead of a JSON dump.
 
-interface SkillResult {
-  ok: boolean;
-  data?: Record<string, unknown>;
-  error?: string;
+interface OpportunityScore {
+  score: number;
+  band: "hot" | "warm" | "cold";
+  rationale: string;
 }
 
-async function callSkill(skill: string, opportunityId: string, extraArgs?: string[]): Promise<SkillResult> {
+interface WinProbability {
+  win_probability: number;
+  base_rate: number;
+  top_drivers: { factor: string; effect: number }[];
+  rationale: string;
+}
+
+interface Risk {
+  category: string;
+  severity: "low" | "medium" | "high";
+  title: string;
+  detail: string;
+}
+
+interface RiskAssessment {
+  overall_risk: "none" | "low" | "medium" | "high";
+  risk_count: number;
+  risks: Risk[];
+}
+
+interface CommercialStrategy {
+  positioning_statement: string;
+  lead_with_strengths: string[];
+  address_client_pains: string[];
+  align_to_priorities: string[];
+  objections_to_preempt: string[];
+  negotiation_approach: string;
+}
+
+interface PricingScenario {
+  name: "aggressive" | "balanced" | "premium";
+  target_margin_pct: number;
+  implied_price_eur: number | null;
+  rationale: string;
+  tradeoffs: string;
+  negotiation_strategy: string;
+  guardrail_result?: string;
+  floor_applied?: boolean;
+  floor_note?: string;
+}
+
+interface PricingRecommendations {
+  recommended_scenario: string;
+  scenarios: PricingScenario[];
+  guardrails: string[];
+  financial_guardrails: {
+    min_contribution_margin_pct: number;
+    target_contribution_margin_pct: number;
+    vp_approval_required_below_pct: number;
+    auto_no_go_below_pct: number;
+  } | null;
+}
+
+interface FollowUpAction {
+  priority: "high" | "medium" | "low";
+  action: string;
+  detail: string;
+}
+
+interface FollowUpActions {
+  open_action_count: number;
+  actions: FollowUpAction[];
+}
+
+interface ExecutiveSummary {
+  headline: string;
+  decision_prompt: string;
+}
+
+interface ClientProposal {
+  sections: {
+    cover: { title: string; subtitle: string };
+    understanding_your_needs: { points: string[] };
+    why_amazon_shipping: { positioning: string; differentiators: string[] };
+    commercial_proposal: { selected_scenario: string; scenario: PricingScenario | null };
+    next_steps: { points: string[] };
+  };
+}
+
+interface SourcesUsed {
+  challenge_documents: { filename: string; source_type: string }[];
+  email_correspondence: { threads: number; messages: number };
+  extracted_evidence: { tender_constraints_extracted: number; client_highlights_by_source: Record<string, number> };
+  internal_reference_data: Record<string, { total: number; used_by: string[] } | string | null>;
+}
+
+interface Dashboard {
+  executive_summary: ExecutiveSummary;
+  opportunity_score: OpportunityScore;
+  win_probability: WinProbability;
+  risk_assessment: RiskAssessment;
+  commercial_strategy: CommercialStrategy;
+  pricing_recommendations: PricingRecommendations;
+  follow_up_actions: FollowUpActions;
+  client_proposal: ClientProposal;
+  sources_used: SourcesUsed;
+}
+
+async function callSkill<T>(skill: string, opportunityId: string): Promise<T | null> {
   try {
     const res = await fetch("/api/skill", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ skill, opportunity_id: opportunityId, extra_args: extraArgs }),
+      body: JSON.stringify({ skill, opportunity_id: opportunityId }),
     });
     const json = await res.json();
-    if (!json.ok) return { ok: false, error: json.error };
-    return { ok: true, data: json.data };
-  } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Request failed." };
+    return json.ok ? (json.data as T) : null;
+  } catch {
+    return null;
   }
 }
 
-const SKILL_ORDER = [
-  { key: "executive_summary", label: "Executive Summary" },
-  { key: "opportunity_score", label: "Opportunity Score" },
-  { key: "win_probability", label: "Win Probability" },
-  { key: "risk_assessment", label: "Risk Assessment" },
-  { key: "commercial_strategy", label: "Commercial Strategy" },
-  { key: "pricing_recommendations", label: "Pricing Recommendations" },
-  { key: "client_proposal", label: "Client Proposal & Pitch Deck" },
-  { key: "follow_up_actions", label: "Follow-up Actions (Zapier)" },
+const severityTone: Record<string, StatusTone> = { high: "danger", medium: "warning", low: "info", none: "success" };
+const bandTone: Record<string, StatusTone> = { hot: "success", warm: "warning", cold: "neutral" };
+const priorityTone: Record<string, StatusTone> = { high: "danger", medium: "warning", low: "neutral" };
+const guardrailTone: Record<string, StatusTone> = {
+  within_target: "success",
+  above_min_below_target: "info",
+  requires_vp_approval: "warning",
+  auto_no_go: "danger",
+};
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-md border border-border bg-surface p-5">
+      <h3 className="mb-3 text-sm font-bold leading-snug text-ink">{title}</h3>
+      <div className="space-y-2 text-sm text-gray-700">{children}</div>
+    </div>
+  );
+}
+
+function EmptyNote({ text }: { text: string }) {
+  return <p className="text-xs text-gray-500">{text}</p>;
+}
+
+const SKILL_LOAD_ORDER = [
+  "executive_summary", "opportunity_score", "win_probability", "risk_assessment",
+  "commercial_strategy", "pricing_recommendations", "follow_up_actions", "client_proposal", "sources_used",
 ] as const;
 
 export default function ExecutiveDashboard() {
   const [opps, setOpps] = useState<OpportunityOption[]>([]);
   const [opportunityId, setOpportunityId] = useState("");
-  const [results, setResults] = useState<Record<string, SkillResult>>({});
+  const [dashboard, setDashboard] = useState<Dashboard | null>(null);
   const [progress, setProgress] = useState("");
   const [pending, startTransition] = useTransition();
 
@@ -59,30 +176,61 @@ export default function ExecutiveDashboard() {
 
   function loadDashboard() {
     if (!opportunityId) return;
-    setResults({});
+    setDashboard(null);
 
     startTransition(async () => {
-      const collected: Record<string, SkillResult> = {};
-      for (const s of SKILL_ORDER) {
-        setProgress(s.label);
-        collected[s.key] = await callSkill(s.key, opportunityId);
-        setResults({ ...collected });
+      const results: Record<string, unknown> = {};
+      for (const skill of SKILL_LOAD_ORDER) {
+        setProgress(skill.replace(/_/g, " "));
+        results[skill] = await callSkill(skill, opportunityId);
       }
       setProgress("");
+      setDashboard({
+        executive_summary: (results.executive_summary as ExecutiveSummary) ?? { headline: "", decision_prompt: "" },
+        opportunity_score: (results.opportunity_score as OpportunityScore) ?? { score: 0, band: "cold", rationale: "" },
+        win_probability: (results.win_probability as WinProbability) ?? { win_probability: 0, base_rate: 0, top_drivers: [], rationale: "" },
+        risk_assessment: (results.risk_assessment as RiskAssessment) ?? { overall_risk: "none", risk_count: 0, risks: [] },
+        commercial_strategy:
+          (results.commercial_strategy as CommercialStrategy) ?? {
+            positioning_statement: "", lead_with_strengths: [], address_client_pains: [],
+            align_to_priorities: [], objections_to_preempt: [], negotiation_approach: "",
+          },
+        pricing_recommendations:
+          (results.pricing_recommendations as PricingRecommendations) ?? {
+            recommended_scenario: "", scenarios: [], guardrails: [], financial_guardrails: null,
+          },
+        follow_up_actions: (results.follow_up_actions as FollowUpActions) ?? { open_action_count: 0, actions: [] },
+        client_proposal:
+          (results.client_proposal as ClientProposal) ?? {
+            sections: {
+              cover: { title: "", subtitle: "" },
+              understanding_your_needs: { points: [] },
+              why_amazon_shipping: { positioning: "", differentiators: [] },
+              commercial_proposal: { selected_scenario: "", scenario: null },
+              next_steps: { points: [] },
+            },
+          },
+        sources_used:
+          (results.sources_used as SourcesUsed) ?? {
+            challenge_documents: [], email_correspondence: { threads: 0, messages: 0 },
+            extracted_evidence: { tender_constraints_extracted: 0, client_highlights_by_source: {} },
+            internal_reference_data: {},
+          },
+      });
     });
   }
+
+  const d = dashboard;
 
   return (
     <section>
       <h2 className="mb-3 text-base font-bold">Executive Dashboard</h2>
-      <div className="rounded-sm border border-border bg-surface p-4">
+      <div className="rounded-md border border-border bg-surface p-4">
         {opps.length === 0 ? (
           <p className="mb-3 text-sm text-gray-500">No opportunities found.</p>
         ) : (
           <div className="mb-3">
-            <label htmlFor="dash-opp" className="mb-1 block text-sm font-medium">
-              Opportunity
-            </label>
+            <label htmlFor="dash-opp" className="mb-1 block text-sm font-medium">Opportunity</label>
             <select
               id="dash-opp"
               value={opportunityId}
@@ -106,27 +254,238 @@ export default function ExecutiveDashboard() {
           {pending ? `Loading ${progress}…` : "Load dashboard"}
         </button>
 
-        <div className="mt-4 space-y-4 border-t border-border pt-4">
-          {SKILL_ORDER.map(({ key, label }) => {
-            const result = results[key];
-            if (!result) return null;
-            return (
-              <div key={key} className="rounded-sm border border-border p-3">
-                <div className="mb-2 flex items-center justify-between gap-2">
-                  <h3 className="text-sm font-bold">{label}</h3>
-                  <StatusBadge tone={result.ok ? "success" : "danger"} label={result.ok ? "loaded" : "error"} />
-                </div>
-                {result.ok ? (
-                  <pre className="overflow-x-auto text-xs text-gray-700">
-                    {JSON.stringify(result.data, null, 2)}
-                  </pre>
-                ) : (
-                  <p className="text-xs text-danger">{result.error}</p>
-                )}
+        {d ? (
+          <div className="mt-5 space-y-5">
+            {/* 1. Executive Summary */}
+            <div className="rounded-md border-2 border-ink bg-navy p-5 text-white">
+              <p className="mb-2 text-xs font-bold uppercase tracking-wide text-gray-400">Executive Summary</p>
+              <div className="mb-2 flex flex-wrap items-center gap-2">
+                <StatusBadge tone={bandTone[d.opportunity_score.band] ?? "neutral"} label={`${d.opportunity_score.band.toUpperCase()} · ${d.opportunity_score.score}/100`} />
+                <StatusBadge tone={severityTone[d.risk_assessment.overall_risk] ?? "neutral"} label={`${d.risk_assessment.overall_risk} risk`} />
+                <StatusBadge tone="info" label={`${Math.round(d.win_probability.win_probability * 100)}% win probability`} />
               </div>
-            );
-          })}
-        </div>
+              <p className="text-sm font-bold">{d.executive_summary.decision_prompt}</p>
+              {d.executive_summary.headline ? <p className="mt-1 text-xs text-gray-300">{d.executive_summary.headline}</p> : null}
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              {/* 2. Opportunity Score */}
+              <Section title="Opportunity Score">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl font-bold text-ink">{d.opportunity_score.score}/100</span>
+                  <StatusBadge tone={bandTone[d.opportunity_score.band] ?? "neutral"} label={d.opportunity_score.band} />
+                </div>
+                <p className="text-xs text-gray-600">{d.opportunity_score.rationale}</p>
+              </Section>
+
+              {/* 8. Win Probability Score */}
+              <Section title="Win Probability Score">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl font-bold text-ink">{Math.round(d.win_probability.win_probability * 100)}%</span>
+                  <span className="text-xs text-gray-500">vs. {Math.round(d.win_probability.base_rate * 100)}% historical base rate</span>
+                </div>
+                <p className="text-xs text-gray-600">{d.win_probability.rationale}</p>
+                {d.win_probability.top_drivers.length > 0 ? (
+                  <ul className="space-y-0.5 text-xs">
+                    {d.win_probability.top_drivers.map((dr, i) => (
+                      <li key={i} className="flex items-center gap-2">
+                        <StatusBadge tone={dr.effect >= 0 ? "success" : "danger"} label={dr.effect >= 0 ? "win factor" : "loss factor"} />
+                        {dr.factor}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <EmptyNote text="No win/loss signals checked yet — probability is the historical base rate." />
+                )}
+              </Section>
+
+              {/* 3. Risk Assessment */}
+              <Section title="Risk Assessment">
+                {d.risk_assessment.risks.length === 0 ? (
+                  <EmptyNote text="No operational, commercial, or financial risks identified from current data." />
+                ) : (
+                  <ul className="space-y-1.5">
+                    {d.risk_assessment.risks.map((r, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <StatusBadge tone={severityTone[r.severity] ?? "neutral"} label={r.category} />
+                        <span className="text-xs">{r.title}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </Section>
+
+              {/* 6. Required Follow-Up Actions */}
+              <Section title="Required Follow-Up Actions">
+                {d.follow_up_actions.actions.length === 0 ? (
+                  <EmptyNote text="No open questions, meetings, or validations required — clear to proceed." />
+                ) : (
+                  <ul className="space-y-1.5">
+                    {d.follow_up_actions.actions.map((a, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <StatusBadge tone={priorityTone[a.priority] ?? "neutral"} label={a.priority} />
+                        <span className="text-xs">{a.action}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </Section>
+            </div>
+
+            {/* 4. Pricing Recommendation */}
+            <Section title="Pricing Recommendation">
+              {d.pricing_recommendations.financial_guardrails ? (
+                <p className="text-xs text-gray-500">
+                  Guardrails: min {d.pricing_recommendations.financial_guardrails.min_contribution_margin_pct}% · target{" "}
+                  {d.pricing_recommendations.financial_guardrails.target_contribution_margin_pct}% · VP approval below{" "}
+                  {d.pricing_recommendations.financial_guardrails.vp_approval_required_below_pct}% · auto-no-go below{" "}
+                  {d.pricing_recommendations.financial_guardrails.auto_no_go_below_pct}%
+                </p>
+              ) : null}
+              {d.pricing_recommendations.scenarios.length === 0 ? (
+                <EmptyNote text="Not enough data to price this opportunity yet." />
+              ) : (
+                <div className="grid gap-3 md:grid-cols-3">
+                  {d.pricing_recommendations.scenarios.map((s) => (
+                    <div
+                      key={s.name}
+                      className={
+                        "rounded-sm border p-3 " +
+                        (s.name === d.pricing_recommendations.recommended_scenario ? "border-orange bg-orange/10" : "border-border")
+                      }
+                    >
+                      <div className="mb-1 flex items-center justify-between">
+                        <p className="text-xs font-bold uppercase text-gray-600">{s.name}</p>
+                        {s.guardrail_result ? <StatusBadge tone={guardrailTone[s.guardrail_result] ?? "neutral"} label={s.guardrail_result.replace(/_/g, " ")} /> : null}
+                      </div>
+                      <p className="mb-1 text-lg font-bold">{s.target_margin_pct}%</p>
+                      {s.implied_price_eur ? <p className="mb-2 text-xs text-gray-500">€{s.implied_price_eur.toLocaleString()}</p> : null}
+                      <p className="text-xs text-gray-700">{s.rationale}</p>
+                      <p className="mt-1 text-xs text-gray-500"><span className="font-medium">Trade-off: </span>{s.tradeoffs}</p>
+                      <p className="mt-1 text-xs text-link"><span className="font-medium">Negotiation: </span>{s.negotiation_strategy}</p>
+                      {s.floor_note ? <p className="mt-1 text-xs text-warning">{s.floor_note}</p> : null}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {d.pricing_recommendations.guardrails.map((g, i) => (
+                <p key={i} className="text-xs text-warning">{g}</p>
+              ))}
+            </Section>
+
+            {/* 5. Commercial Strategy */}
+            <Section title="Commercial Strategy">
+              {d.commercial_strategy.positioning_statement ? (
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <p className="mb-2 text-xs font-medium">{d.commercial_strategy.positioning_statement}</p>
+                    {d.commercial_strategy.lead_with_strengths.length > 0 ? (
+                      <>
+                        <p className="text-xs font-bold text-gray-500">Lead with</p>
+                        <ul className="list-disc space-y-0.5 pl-4 text-xs text-gray-600">
+                          {d.commercial_strategy.lead_with_strengths.map((s, i) => <li key={i}>{s}</li>)}
+                        </ul>
+                      </>
+                    ) : null}
+                    {d.commercial_strategy.objections_to_preempt.length > 0 ? (
+                      <>
+                        <p className="mt-2 text-xs font-bold text-gray-500">Objections to pre-empt</p>
+                        <ul className="list-disc space-y-0.5 pl-4 text-xs text-gray-600">
+                          {d.commercial_strategy.objections_to_preempt.map((s, i) => <li key={i}>{s}</li>)}
+                        </ul>
+                      </>
+                    ) : null}
+                  </div>
+                  <div>
+                    {d.commercial_strategy.align_to_priorities.length > 0 ? (
+                      <>
+                        <p className="text-xs font-bold text-gray-500">Align to client priorities</p>
+                        <ul className="list-disc space-y-0.5 pl-4 text-xs text-gray-600">
+                          {d.commercial_strategy.align_to_priorities.map((s, i) => <li key={i}>{s}</li>)}
+                        </ul>
+                      </>
+                    ) : null}
+                    {d.commercial_strategy.negotiation_approach ? (
+                      <p className="mt-2 border-t border-border pt-2 text-xs text-gray-600">
+                        <span className="font-medium">Negotiation approach: </span>{d.commercial_strategy.negotiation_approach}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+              ) : (
+                <EmptyNote text="Not enough client/competitive data yet to recommend a strategy." />
+              )}
+            </Section>
+
+            {/* 7. Client Proposal / Pitch Deck */}
+            <div className="rounded-md border-2 border-orange bg-surface p-5">
+              <p className="mb-3 text-xs font-bold uppercase tracking-wide text-orange-dark">Client Proposal / Pitch Deck</p>
+              <p className="mb-1 text-base font-bold text-ink">{d.client_proposal.sections.cover.title}</p>
+              <p className="mb-3 text-xs text-gray-500">{d.client_proposal.sections.cover.subtitle}</p>
+              <div className="grid gap-3 md:grid-cols-2">
+                <div>
+                  <p className="text-xs font-bold text-gray-500">What we heard from you</p>
+                  <ul className="list-disc space-y-0.5 pl-4 text-xs text-gray-700">
+                    {d.client_proposal.sections.understanding_your_needs.points.map((p, i) => <li key={i}>{p}</li>)}
+                  </ul>
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-gray-500">Why Amazon Shipping</p>
+                  <p className="text-xs text-gray-700">{d.client_proposal.sections.why_amazon_shipping.positioning}</p>
+                  {d.client_proposal.sections.commercial_proposal.scenario ? (
+                    <p className="mt-2 text-xs text-gray-700">
+                      <span className="font-medium">Proposed pricing ({d.client_proposal.sections.commercial_proposal.selected_scenario}): </span>
+                      {d.client_proposal.sections.commercial_proposal.scenario.target_margin_pct}% margin
+                    </p>
+                  ) : null}
+                  {d.client_proposal.sections.next_steps.points.length > 0 ? (
+                    <>
+                      <p className="mt-2 text-xs font-bold text-gray-500">Next steps</p>
+                      <ul className="list-disc space-y-0.5 pl-4 text-xs text-gray-700">
+                        {d.client_proposal.sections.next_steps.points.map((p, i) => <li key={i}>{p}</li>)}
+                      </ul>
+                    </>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+
+            {/* 9. Sources Used */}
+            <Section title="Sources Used">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <p className="text-xs font-bold text-gray-500">Opportunity-specific evidence</p>
+                  {d.sources_used.challenge_documents.length === 0 ? (
+                    <EmptyNote text="No documents ingested yet." />
+                  ) : (
+                    <ul className="space-y-0.5 text-xs text-gray-700">
+                      {d.sources_used.challenge_documents.map((doc, i) => (
+                        <li key={i}>{doc.filename} <span className="text-gray-400">({doc.source_type})</span></li>
+                      ))}
+                    </ul>
+                  )}
+                  <p className="mt-2 text-xs text-gray-600">
+                    {d.sources_used.email_correspondence.messages} email(s) across {d.sources_used.email_correspondence.threads} thread(s) ·{" "}
+                    {d.sources_used.extracted_evidence.tender_constraints_extracted} constraint(s) extracted
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-gray-500">Internal reference data used</p>
+                  <ul className="space-y-0.5 text-xs text-gray-600">
+                    {Object.entries(d.sources_used.internal_reference_data).map(([key, val]) => {
+                      if (!val || typeof val === "string") return null;
+                      return (
+                        <li key={key}>
+                          {key.replace(/_/g, " ")}: {val.total} row(s) — used by {val.used_by.join(", ")}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              </div>
+            </Section>
+          </div>
+        ) : null}
       </div>
     </section>
   );

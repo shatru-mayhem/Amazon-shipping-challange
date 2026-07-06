@@ -22,6 +22,7 @@ const SKILLS: Record<string, string> = {
   client_proposal: "client_proposal/client_proposal.py",
   follow_up_actions: "follow_up_actions/follow_up_actions.py",
   executive_summary: "executive_summary/executive_summary.py",
+  sources_used: "sources_used/sources_used.py",
 };
 
 const SKILLS_DIR = path.join(process.cwd(), "skills");

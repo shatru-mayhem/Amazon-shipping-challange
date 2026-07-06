@@ -25,6 +25,21 @@ CREATE POLICY "authenticated_read" ON pricing.premium_service_costs FOR SELECT T
 CREATE POLICY "authenticated_read" ON pricing.pricing_scenarios FOR SELECT TO authenticated USING (true);
 CREATE POLICY "authenticated_read" ON pricing.pricing_compliance_results FOR SELECT TO authenticated USING (true);
 
+-- Enabling RLS above silently broke pricing_recommendations.py: it reads
+-- pricing_guardrails via nl_query_readonly, which had no policy on these
+-- 5 tables (RLS with zero matching policies = zero visible rows, not an
+-- error — the query just silently returned nothing). Same lesson as
+-- app_ingestion's missing DELETE/UPDATE grants below: a GRANT and an RLS
+-- policy are both required, one doesn't imply the other.
+GRANT SELECT ON pricing.pricing_guardrails, pricing.region_multipliers, pricing.premium_service_costs,
+  pricing.pricing_scenarios, pricing.pricing_compliance_results TO nl_query_readonly;
+
+CREATE POLICY "nl_query_readonly_select" ON pricing.pricing_guardrails FOR SELECT TO nl_query_readonly USING (true);
+CREATE POLICY "nl_query_readonly_select" ON pricing.region_multipliers FOR SELECT TO nl_query_readonly USING (true);
+CREATE POLICY "nl_query_readonly_select" ON pricing.premium_service_costs FOR SELECT TO nl_query_readonly USING (true);
+CREATE POLICY "nl_query_readonly_select" ON pricing.pricing_scenarios FOR SELECT TO nl_query_readonly USING (true);
+CREATE POLICY "nl_query_readonly_select" ON pricing.pricing_compliance_results FOR SELECT TO nl_query_readonly USING (true);
+
 -- ---------------------------------------------------------------------
 -- 2. app_ingestion — write-capable role for the Next.js tender-upload
 --    and email/CRM-import server actions (app/actions/tender_ingestion.ts,
