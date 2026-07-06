@@ -1,0 +1,115 @@
+"""commercial_strategy — recommend positioning and a negotiation approach
+for an opportunity from client highlights, win/loss signals and the
+competitive context. Pure read: no writes, no Gemini.
+
+    from commercial_strategy import build_commercial_strategy
+    result = build_commercial_strategy(opportunity_id)
+"""
+
+import os
+import sys
+import json
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from _db import run_sql, run_sql_one  # noqa: E402
+
+
+def build_commercial_strategy(opportunity_id: str) -> dict:
+    highlights = run_sql(
+        """
+        SELECT highlight_type, text
+        FROM client_highlights
+        WHERE opportunity_id = %s
+        ORDER BY highlight_type
+        """,
+        (opportunity_id,),
+    )
+    by_type = {}
+    for h in highlights:
+        by_type.setdefault(h["highlight_type"], []).append(h["text"])
+
+    signals = run_sql(
+        """
+        SELECT c.factor_name, c.direction, c.strength
+        FROM signal_check_results r
+        JOIN win_loss_signal_catalog c ON c.signal_id = r.signal_id
+        WHERE r.opportunity_id = %s AND r.status = 'present'
+        ORDER BY c.strength DESC
+        """,
+        (opportunity_id,),
+    )
+    strengths = [s["factor_name"] for s in signals if s["direction"] == "win"]
+    objections = [s["factor_name"] for s in signals if s["direction"] == "loss"]
+
+    proof_points = run_sql(
+        """
+        SELECT cc.name AS constraint_name
+        FROM constraint_compliance_results ccr
+        JOIN tender_constraints tc ON tc.tender_constraint_id = ccr.tender_constraint_id
+        JOIN constraint_catalog cc ON cc.constraint_type_id = tc.constraint_type_id
+        WHERE ccr.opportunity_id = %s AND ccr.result = 'satisfied'
+        LIMIT 10
+        """,
+        (opportunity_id,),
+    )
+
+    ctx = run_sql_one(
+        """
+        SELECT of.incumbent_provider, of.requested_discount_pct, o.title
+        FROM opportunities o
+        LEFT JOIN opportunity_features of ON of.opportunity_id = o.opportunity_id
+        WHERE o.opportunity_id = %s
+        """,
+        (opportunity_id,),
+    ) or {}
+
+    pains = by_type.get("pain_point", []) + by_type.get("past_complaint", [])
+    priorities = by_type.get("stated_priority", []) + by_type.get("growth_objective", [])
+
+    positioning = _positioning(ctx, priorities, strengths)
+    negotiation = _negotiation(ctx, objections)
+
+    return {
+        "opportunity_id": opportunity_id,
+        "title": ctx.get("title"),
+        "positioning_statement": positioning,
+        "lead_with_strengths": strengths[:5],
+        "proof_points": [p["constraint_name"] for p in proof_points],
+        "address_client_pains": pains[:5],
+        "align_to_priorities": priorities[:5],
+        "objections_to_preempt": objections[:5],
+        "negotiation_approach": negotiation,
+        "incumbent_provider": ctx.get("incumbent_provider"),
+    }
+
+
+def _positioning(ctx: dict, priorities: list, strengths: list) -> str:
+    incumbent = ctx.get("incumbent_provider")
+    lead = strengths[0].replace("_", " ") if strengths else "reliability and network scale"
+    prio = priorities[0] if priorities else "their stated operational goals"
+    base = f"Position Amazon Shipping around {lead}, directly tied to {prio}."
+    if incumbent:
+        base += f" Frame against the incumbent ({incumbent}) on service consistency and coverage."
+    return base
+
+
+def _negotiation(ctx: dict, objections: list) -> str:
+    discount = ctx.get("requested_discount_pct")
+    parts = []
+    if discount is not None and float(discount) > 0:
+        parts.append(
+            f"Client asked for {float(discount):.0f}% off — trade any concession for term length "
+            f"or volume commitment rather than giving flat discount."
+        )
+    else:
+        parts.append("No explicit discount ask — anchor on value, hold list pricing.")
+    if objections:
+        parts.append("Pre-empt likely objections: " + ", ".join(objections[:3]) + ".")
+    return " ".join(parts)
+
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("Usage: python commercial_strategy.py <opportunity_id>")
+        sys.exit(1)
+    print(json.dumps(build_commercial_strategy(sys.argv[1]), indent=2, default=str))

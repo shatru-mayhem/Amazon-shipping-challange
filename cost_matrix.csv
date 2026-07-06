@@ -1,0 +1,961 @@
+mile_type,daily_volume_band,weight_band,cost_eur
+first_mile,0-200,0-0.25kg,3.04
+first_mile,0-200,0.25-0.5kg,3.32
+first_mile,0-200,0.5-0.75kg,3.41
+first_mile,0-200,0.75-1kg,3.45
+first_mile,0-200,up to 1.5kg,3.64
+first_mile,0-200,up to 2kg,3.75
+first_mile,0-200,up to 2.5kg,3.97
+first_mile,0-200,up to 3kg,4.2
+first_mile,0-200,Up to 4kg,4.42
+first_mile,0-200,Up to 5kg,4.53
+first_mile,0-200,Up to 6 kg,4.66
+first_mile,0-200,Up to 7kg,4.9
+first_mile,0-200,Up to 9kg,5.03
+first_mile,0-200,Up to 12kg,5.12
+first_mile,0-200,Up to 15kg,5.31
+first_mile,0-200,Up to 18kg,5.61
+first_mile,0-200,Up to 21kg,5.86
+first_mile,0-200,Up to 24kg,6.09
+first_mile,0-200,Up to 27kg,6.18
+first_mile,0-200,Up to 30kg,6.43
+first_mile,201-300,0-0.25kg,2.44
+first_mile,201-300,0.25-0.5kg,2.59
+first_mile,201-300,0.5-0.75kg,2.63
+first_mile,201-300,0.75-1kg,2.72
+first_mile,201-300,up to 1.5kg,2.87
+first_mile,201-300,up to 2kg,3.01
+first_mile,201-300,up to 2.5kg,3.15
+first_mile,201-300,up to 3kg,3.29
+first_mile,201-300,Up to 4kg,3.38
+first_mile,201-300,Up to 5kg,3.46
+first_mile,201-300,Up to 6 kg,3.63
+first_mile,201-300,Up to 7kg,3.81
+first_mile,201-300,Up to 9kg,4.01
+first_mile,201-300,Up to 12kg,4.23
+first_mile,201-300,Up to 15kg,4.38
+first_mile,201-300,Up to 18kg,4.53
+first_mile,201-300,Up to 21kg,4.76
+first_mile,201-300,Up to 24kg,4.96
+first_mile,201-300,Up to 27kg,5.18
+first_mile,201-300,Up to 30kg,5.44
+first_mile,301-400,0-0.25kg,1.74
+first_mile,301-400,0.25-0.5kg,1.88
+first_mile,301-400,0.5-0.75kg,1.98
+first_mile,301-400,0.75-1kg,2.08
+first_mile,301-400,up to 1.5kg,2.14
+first_mile,301-400,up to 2kg,2.2
+first_mile,301-400,up to 2.5kg,2.23
+first_mile,301-400,up to 3kg,2.32
+first_mile,301-400,Up to 4kg,2.35
+first_mile,301-400,Up to 5kg,2.43
+first_mile,301-400,Up to 6 kg,2.52
+first_mile,301-400,Up to 7kg,2.58
+first_mile,301-400,Up to 9kg,2.68
+first_mile,301-400,Up to 12kg,2.71
+first_mile,301-400,Up to 15kg,2.74
+first_mile,301-400,Up to 18kg,2.88
+first_mile,301-400,Up to 21kg,2.96
+first_mile,301-400,Up to 24kg,3.01
+first_mile,301-400,Up to 27kg,3.12
+first_mile,301-400,Up to 30kg,3.27
+first_mile,401-500,0-0.25kg,1.4
+first_mile,401-500,0.25-0.5kg,1.41
+first_mile,401-500,0.5-0.75kg,1.59
+first_mile,401-500,0.75-1kg,1.62
+first_mile,401-500,up to 1.5kg,1.69
+first_mile,401-500,up to 2kg,1.71
+first_mile,401-500,up to 2.5kg,1.73
+first_mile,401-500,up to 3kg,1.81
+first_mile,401-500,Up to 4kg,1.88
+first_mile,401-500,Up to 5kg,1.96
+first_mile,401-500,Up to 6 kg,2.03
+first_mile,401-500,Up to 7kg,2.11
+first_mile,401-500,Up to 9kg,2.21
+first_mile,401-500,Up to 12kg,2.34
+first_mile,401-500,Up to 15kg,2.42
+first_mile,401-500,Up to 18kg,2.48
+first_mile,401-500,Up to 21kg,2.6
+first_mile,401-500,Up to 24kg,2.66
+first_mile,401-500,Up to 27kg,2.74
+first_mile,401-500,Up to 30kg,2.78
+first_mile,501-700,0-0.25kg,1.17
+first_mile,501-700,0.25-0.5kg,1.18
+first_mile,501-700,0.5-0.75kg,1.25
+first_mile,501-700,0.75-1kg,1.31
+first_mile,501-700,up to 1.5kg,1.37
+first_mile,501-700,up to 2kg,1.41
+first_mile,501-700,up to 2.5kg,1.42
+first_mile,501-700,up to 3kg,1.45
+first_mile,501-700,Up to 4kg,1.56
+first_mile,501-700,Up to 5kg,1.59
+first_mile,501-700,Up to 6 kg,1.62
+first_mile,501-700,Up to 7kg,1.7
+first_mile,501-700,Up to 9kg,1.77
+first_mile,501-700,Up to 12kg,1.78
+first_mile,501-700,Up to 15kg,1.91
+first_mile,501-700,Up to 18kg,1.95
+first_mile,501-700,Up to 21kg,1.98
+first_mile,501-700,Up to 24kg,2.02
+first_mile,501-700,Up to 27kg,2.21
+first_mile,501-700,Up to 30kg,2.29
+first_mile,701-900,0-0.25kg,0.79
+first_mile,701-900,0.25-0.5kg,0.91
+first_mile,701-900,0.5-0.75kg,0.95
+first_mile,701-900,0.75-1kg,0.98
+first_mile,701-900,up to 1.5kg,1.09
+first_mile,701-900,up to 2kg,1.14
+first_mile,701-900,up to 2.5kg,1.17
+first_mile,701-900,up to 3kg,1.22
+first_mile,701-900,Up to 4kg,1.29
+first_mile,701-900,Up to 5kg,1.35
+first_mile,701-900,Up to 6 kg,1.4
+first_mile,701-900,Up to 7kg,1.46
+first_mile,701-900,Up to 9kg,1.57
+first_mile,701-900,Up to 12kg,1.61
+first_mile,701-900,Up to 15kg,1.64
+first_mile,701-900,Up to 18kg,1.78
+first_mile,701-900,Up to 21kg,1.84
+first_mile,701-900,Up to 24kg,1.9
+first_mile,701-900,Up to 27kg,2.05
+first_mile,701-900,Up to 30kg,2.1
+first_mile,901-1200,0-0.25kg,0.69
+first_mile,901-1200,0.25-0.5kg,0.74
+first_mile,901-1200,0.5-0.75kg,0.76
+first_mile,901-1200,0.75-1kg,0.8
+first_mile,901-1200,up to 1.5kg,0.81
+first_mile,901-1200,up to 2kg,0.85
+first_mile,901-1200,up to 2.5kg,0.96
+first_mile,901-1200,up to 3kg,1.02
+first_mile,901-1200,Up to 4kg,1.04
+first_mile,901-1200,Up to 5kg,1.07
+first_mile,901-1200,Up to 6 kg,1.12
+first_mile,901-1200,Up to 7kg,1.14
+first_mile,901-1200,Up to 9kg,1.18
+first_mile,901-1200,Up to 12kg,1.3
+first_mile,901-1200,Up to 15kg,1.51
+first_mile,901-1200,Up to 18kg,1.53
+first_mile,901-1200,Up to 21kg,1.57
+first_mile,901-1200,Up to 24kg,1.71
+first_mile,901-1200,Up to 27kg,1.71
+first_mile,901-1200,Up to 30kg,1.99
+first_mile,1201-1500,0-0.25kg,0.54
+first_mile,1201-1500,0.25-0.5kg,0.55
+first_mile,1201-1500,0.5-0.75kg,0.58
+first_mile,1201-1500,0.75-1kg,0.59
+first_mile,1201-1500,up to 1.5kg,0.63
+first_mile,1201-1500,up to 2kg,0.64
+first_mile,1201-1500,up to 2.5kg,0.75
+first_mile,1201-1500,up to 3kg,0.79
+first_mile,1201-1500,Up to 4kg,0.83
+first_mile,1201-1500,Up to 5kg,0.87
+first_mile,1201-1500,Up to 6 kg,1.02
+first_mile,1201-1500,Up to 7kg,1.07
+first_mile,1201-1500,Up to 9kg,1.11
+first_mile,1201-1500,Up to 12kg,1.16
+first_mile,1201-1500,Up to 15kg,1.33
+first_mile,1201-1500,Up to 18kg,1.35
+first_mile,1201-1500,Up to 21kg,1.44
+first_mile,1201-1500,Up to 24kg,1.55
+first_mile,1201-1500,Up to 27kg,1.67
+first_mile,1201-1500,Up to 30kg,1.76
+first_mile,1501-2000,0-0.25kg,0.38
+first_mile,1501-2000,0.25-0.5kg,0.43
+first_mile,1501-2000,0.5-0.75kg,0.46
+first_mile,1501-2000,0.75-1kg,0.49
+first_mile,1501-2000,up to 1.5kg,0.49
+first_mile,1501-2000,up to 2kg,0.59
+first_mile,1501-2000,up to 2.5kg,0.59
+first_mile,1501-2000,up to 3kg,0.62
+first_mile,1501-2000,Up to 4kg,0.65
+first_mile,1501-2000,Up to 5kg,0.76
+first_mile,1501-2000,Up to 6 kg,0.83
+first_mile,1501-2000,Up to 7kg,0.86
+first_mile,1501-2000,Up to 9kg,0.94
+first_mile,1501-2000,Up to 12kg,0.96
+first_mile,1501-2000,Up to 15kg,1.11
+first_mile,1501-2000,Up to 18kg,1.15
+first_mile,1501-2000,Up to 21kg,1.29
+first_mile,1501-2000,Up to 24kg,1.32
+first_mile,1501-2000,Up to 27kg,1.55
+first_mile,1501-2000,Up to 30kg,1.6
+first_mile,2001-3000,0-0.25kg,0.29
+first_mile,2001-3000,0.25-0.5kg,0.31
+first_mile,2001-3000,0.5-0.75kg,0.38
+first_mile,2001-3000,0.75-1kg,0.41
+first_mile,2001-3000,up to 1.5kg,0.42
+first_mile,2001-3000,up to 2kg,0.47
+first_mile,2001-3000,up to 2.5kg,0.52
+first_mile,2001-3000,up to 3kg,0.54
+first_mile,2001-3000,Up to 4kg,0.58
+first_mile,2001-3000,Up to 5kg,0.6
+first_mile,2001-3000,Up to 6 kg,0.64
+first_mile,2001-3000,Up to 7kg,0.79
+first_mile,2001-3000,Up to 9kg,0.86
+first_mile,2001-3000,Up to 12kg,0.89
+first_mile,2001-3000,Up to 15kg,0.92
+first_mile,2001-3000,Up to 18kg,1.0
+first_mile,2001-3000,Up to 21kg,1.16
+first_mile,2001-3000,Up to 24kg,1.29
+first_mile,2001-3000,Up to 27kg,1.4
+first_mile,2001-3000,Up to 30kg,1.49
+first_mile,3001-4000,0-0.25kg,0.24
+first_mile,3001-4000,0.25-0.5kg,0.24
+first_mile,3001-4000,0.5-0.75kg,0.26
+first_mile,3001-4000,0.75-1kg,0.33
+first_mile,3001-4000,up to 1.5kg,0.34
+first_mile,3001-4000,up to 2kg,0.34
+first_mile,3001-4000,up to 2.5kg,0.38
+first_mile,3001-4000,up to 3kg,0.45
+first_mile,3001-4000,Up to 4kg,0.46
+first_mile,3001-4000,Up to 5kg,0.5
+first_mile,3001-4000,Up to 6 kg,0.58
+first_mile,3001-4000,Up to 7kg,0.65
+first_mile,3001-4000,Up to 9kg,0.71
+first_mile,3001-4000,Up to 12kg,0.73
+first_mile,3001-4000,Up to 15kg,0.86
+first_mile,3001-4000,Up to 18kg,0.87
+first_mile,3001-4000,Up to 21kg,0.97
+first_mile,3001-4000,Up to 24kg,1.13
+first_mile,3001-4000,Up to 27kg,1.22
+first_mile,3001-4000,Up to 30kg,1.38
+first_mile,4000+,0-0.25kg,0.18
+first_mile,4000+,0.25-0.5kg,0.2
+first_mile,4000+,0.5-0.75kg,0.21
+first_mile,4000+,0.75-1kg,0.24
+first_mile,4000+,up to 1.5kg,0.26
+first_mile,4000+,up to 2kg,0.28
+first_mile,4000+,up to 2.5kg,0.35
+first_mile,4000+,up to 3kg,0.36
+first_mile,4000+,Up to 4kg,0.43
+first_mile,4000+,Up to 5kg,0.45
+first_mile,4000+,Up to 6 kg,0.51
+first_mile,4000+,Up to 7kg,0.54
+first_mile,4000+,Up to 9kg,0.6
+first_mile,4000+,Up to 12kg,0.66
+first_mile,4000+,Up to 15kg,0.69
+first_mile,4000+,Up to 18kg,0.83
+first_mile,4000+,Up to 21kg,0.86
+first_mile,4000+,Up to 24kg,0.91
+first_mile,4000+,Up to 27kg,1.11
+first_mile,4000+,Up to 30kg,1.14
+middle_mile,0-200,0-0.25kg,2.75
+middle_mile,0-200,0.25-0.5kg,2.85
+middle_mile,0-200,0.5-0.75kg,2.86
+middle_mile,0-200,0.75-1kg,2.91
+middle_mile,0-200,up to 1.5kg,2.96
+middle_mile,0-200,up to 2kg,3.01
+middle_mile,0-200,up to 2.5kg,3.06
+middle_mile,0-200,up to 3kg,3.19
+middle_mile,0-200,Up to 4kg,3.25
+middle_mile,0-200,Up to 5kg,3.34
+middle_mile,0-200,Up to 6 kg,3.52
+middle_mile,0-200,Up to 7kg,3.64
+middle_mile,0-200,Up to 9kg,3.8
+middle_mile,0-200,Up to 12kg,3.87
+middle_mile,0-200,Up to 15kg,3.95
+middle_mile,0-200,Up to 18kg,4.0
+middle_mile,0-200,Up to 21kg,4.07
+middle_mile,0-200,Up to 24kg,4.17
+middle_mile,0-200,Up to 27kg,4.25
+middle_mile,0-200,Up to 30kg,4.31
+middle_mile,201-300,0-0.25kg,2.3
+middle_mile,201-300,0.25-0.5kg,2.34
+middle_mile,201-300,0.5-0.75kg,2.35
+middle_mile,201-300,0.75-1kg,2.35
+middle_mile,201-300,up to 1.5kg,2.43
+middle_mile,201-300,up to 2kg,2.48
+middle_mile,201-300,up to 2.5kg,2.55
+middle_mile,201-300,up to 3kg,2.64
+middle_mile,201-300,Up to 4kg,2.76
+middle_mile,201-300,Up to 5kg,2.79
+middle_mile,201-300,Up to 6 kg,2.93
+middle_mile,201-300,Up to 7kg,3.05
+middle_mile,201-300,Up to 9kg,3.09
+middle_mile,201-300,Up to 12kg,3.26
+middle_mile,201-300,Up to 15kg,3.44
+middle_mile,201-300,Up to 18kg,3.48
+middle_mile,201-300,Up to 21kg,3.56
+middle_mile,201-300,Up to 24kg,3.74
+middle_mile,201-300,Up to 27kg,3.92
+middle_mile,201-300,Up to 30kg,4.0
+middle_mile,301-400,0-0.25kg,1.71
+middle_mile,301-400,0.25-0.5kg,1.76
+middle_mile,301-400,0.5-0.75kg,1.8
+middle_mile,301-400,0.75-1kg,1.85
+middle_mile,301-400,up to 1.5kg,1.91
+middle_mile,301-400,up to 2kg,1.99
+middle_mile,301-400,up to 2.5kg,2.05
+middle_mile,301-400,up to 3kg,2.12
+middle_mile,301-400,Up to 4kg,2.22
+middle_mile,301-400,Up to 5kg,2.25
+middle_mile,301-400,Up to 6 kg,2.3
+middle_mile,301-400,Up to 7kg,2.41
+middle_mile,301-400,Up to 9kg,2.54
+middle_mile,301-400,Up to 12kg,2.63
+middle_mile,301-400,Up to 15kg,2.73
+middle_mile,301-400,Up to 18kg,2.77
+middle_mile,301-400,Up to 21kg,2.86
+middle_mile,301-400,Up to 24kg,2.96
+middle_mile,301-400,Up to 27kg,3.03
+middle_mile,301-400,Up to 30kg,3.1
+middle_mile,401-500,0-0.25kg,1.22
+middle_mile,401-500,0.25-0.5kg,1.38
+middle_mile,401-500,0.5-0.75kg,1.42
+middle_mile,401-500,0.75-1kg,1.44
+middle_mile,401-500,up to 1.5kg,1.5
+middle_mile,401-500,up to 2kg,1.54
+middle_mile,401-500,up to 2.5kg,1.57
+middle_mile,401-500,up to 3kg,1.64
+middle_mile,401-500,Up to 4kg,1.69
+middle_mile,401-500,Up to 5kg,1.73
+middle_mile,401-500,Up to 6 kg,1.76
+middle_mile,401-500,Up to 7kg,1.86
+middle_mile,401-500,Up to 9kg,1.93
+middle_mile,401-500,Up to 12kg,2.01
+middle_mile,401-500,Up to 15kg,2.11
+middle_mile,401-500,Up to 18kg,2.18
+middle_mile,401-500,Up to 21kg,2.21
+middle_mile,401-500,Up to 24kg,2.29
+middle_mile,401-500,Up to 27kg,2.38
+middle_mile,401-500,Up to 30kg,2.49
+middle_mile,501-700,0-0.25kg,0.9
+middle_mile,501-700,0.25-0.5kg,1.01
+middle_mile,501-700,0.5-0.75kg,1.03
+middle_mile,501-700,0.75-1kg,1.15
+middle_mile,501-700,up to 1.5kg,1.19
+middle_mile,501-700,up to 2kg,1.21
+middle_mile,501-700,up to 2.5kg,1.24
+middle_mile,501-700,up to 3kg,1.31
+middle_mile,501-700,Up to 4kg,1.33
+middle_mile,501-700,Up to 5kg,1.37
+middle_mile,501-700,Up to 6 kg,1.43
+middle_mile,501-700,Up to 7kg,1.5
+middle_mile,501-700,Up to 9kg,1.56
+middle_mile,501-700,Up to 12kg,1.65
+middle_mile,501-700,Up to 15kg,1.68
+middle_mile,501-700,Up to 18kg,1.73
+middle_mile,501-700,Up to 21kg,1.83
+middle_mile,501-700,Up to 24kg,1.96
+middle_mile,501-700,Up to 27kg,2.04
+middle_mile,501-700,Up to 30kg,2.08
+middle_mile,701-900,0-0.25kg,0.78
+middle_mile,701-900,0.25-0.5kg,0.83
+middle_mile,701-900,0.5-0.75kg,0.88
+middle_mile,701-900,0.75-1kg,0.89
+middle_mile,701-900,up to 1.5kg,0.9
+middle_mile,701-900,up to 2kg,0.92
+middle_mile,701-900,up to 2.5kg,1.02
+middle_mile,701-900,up to 3kg,1.04
+middle_mile,701-900,Up to 4kg,1.06
+middle_mile,701-900,Up to 5kg,1.2
+middle_mile,701-900,Up to 6 kg,1.23
+middle_mile,701-900,Up to 7kg,1.23
+middle_mile,701-900,Up to 9kg,1.25
+middle_mile,701-900,Up to 12kg,1.35
+middle_mile,701-900,Up to 15kg,1.41
+middle_mile,701-900,Up to 18kg,1.44
+middle_mile,701-900,Up to 21kg,1.46
+middle_mile,701-900,Up to 24kg,1.67
+middle_mile,701-900,Up to 27kg,1.78
+middle_mile,701-900,Up to 30kg,1.82
+middle_mile,901-1200,0-0.25kg,0.61
+middle_mile,901-1200,0.25-0.5kg,0.62
+middle_mile,901-1200,0.5-0.75kg,0.63
+middle_mile,901-1200,0.75-1kg,0.71
+middle_mile,901-1200,up to 1.5kg,0.75
+middle_mile,901-1200,up to 2kg,0.81
+middle_mile,901-1200,up to 2.5kg,0.82
+middle_mile,901-1200,up to 3kg,0.9
+middle_mile,901-1200,Up to 4kg,0.93
+middle_mile,901-1200,Up to 5kg,1.0
+middle_mile,901-1200,Up to 6 kg,1.0
+middle_mile,901-1200,Up to 7kg,1.13
+middle_mile,901-1200,Up to 9kg,1.16
+middle_mile,901-1200,Up to 12kg,1.18
+middle_mile,901-1200,Up to 15kg,1.33
+middle_mile,901-1200,Up to 18kg,1.41
+middle_mile,901-1200,Up to 21kg,1.42
+middle_mile,901-1200,Up to 24kg,1.51
+middle_mile,901-1200,Up to 27kg,1.54
+middle_mile,901-1200,Up to 30kg,1.67
+middle_mile,1201-1500,0-0.25kg,0.44
+middle_mile,1201-1500,0.25-0.5kg,0.49
+middle_mile,1201-1500,0.5-0.75kg,0.5
+middle_mile,1201-1500,0.75-1kg,0.51
+middle_mile,1201-1500,up to 1.5kg,0.6
+middle_mile,1201-1500,up to 2kg,0.64
+middle_mile,1201-1500,up to 2.5kg,0.64
+middle_mile,1201-1500,up to 3kg,0.7
+middle_mile,1201-1500,Up to 4kg,0.71
+middle_mile,1201-1500,Up to 5kg,0.74
+middle_mile,1201-1500,Up to 6 kg,0.83
+middle_mile,1201-1500,Up to 7kg,0.87
+middle_mile,1201-1500,Up to 9kg,0.96
+middle_mile,1201-1500,Up to 12kg,0.99
+middle_mile,1201-1500,Up to 15kg,1.17
+middle_mile,1201-1500,Up to 18kg,1.25
+middle_mile,1201-1500,Up to 21kg,1.27
+middle_mile,1201-1500,Up to 24kg,1.32
+middle_mile,1201-1500,Up to 27kg,1.4
+middle_mile,1201-1500,Up to 30kg,1.58
+middle_mile,1501-2000,0-0.25kg,0.34
+middle_mile,1501-2000,0.25-0.5kg,0.34
+middle_mile,1501-2000,0.5-0.75kg,0.41
+middle_mile,1501-2000,0.75-1kg,0.44
+middle_mile,1501-2000,up to 1.5kg,0.48
+middle_mile,1501-2000,up to 2kg,0.5
+middle_mile,1501-2000,up to 2.5kg,0.53
+middle_mile,1501-2000,up to 3kg,0.55
+middle_mile,1501-2000,Up to 4kg,0.65
+middle_mile,1501-2000,Up to 5kg,0.69
+middle_mile,1501-2000,Up to 6 kg,0.73
+middle_mile,1501-2000,Up to 7kg,0.77
+middle_mile,1501-2000,Up to 9kg,0.8
+middle_mile,1501-2000,Up to 12kg,0.92
+middle_mile,1501-2000,Up to 15kg,1.02
+middle_mile,1501-2000,Up to 18kg,1.07
+middle_mile,1501-2000,Up to 21kg,1.11
+middle_mile,1501-2000,Up to 24kg,1.16
+middle_mile,1501-2000,Up to 27kg,1.37
+middle_mile,1501-2000,Up to 30kg,1.45
+middle_mile,2001-3000,0-0.25kg,0.27
+middle_mile,2001-3000,0.25-0.5kg,0.28
+middle_mile,2001-3000,0.5-0.75kg,0.3
+middle_mile,2001-3000,0.75-1kg,0.32
+middle_mile,2001-3000,up to 1.5kg,0.33
+middle_mile,2001-3000,up to 2kg,0.41
+middle_mile,2001-3000,up to 2.5kg,0.44
+middle_mile,2001-3000,up to 3kg,0.5
+middle_mile,2001-3000,Up to 4kg,0.54
+middle_mile,2001-3000,Up to 5kg,0.55
+middle_mile,2001-3000,Up to 6 kg,0.62
+middle_mile,2001-3000,Up to 7kg,0.69
+middle_mile,2001-3000,Up to 9kg,0.74
+middle_mile,2001-3000,Up to 12kg,0.76
+middle_mile,2001-3000,Up to 15kg,0.82
+middle_mile,2001-3000,Up to 18kg,0.84
+middle_mile,2001-3000,Up to 21kg,1.05
+middle_mile,2001-3000,Up to 24kg,1.08
+middle_mile,2001-3000,Up to 27kg,1.1
+middle_mile,2001-3000,Up to 30kg,1.29
+middle_mile,3001-4000,0-0.25kg,0.2
+middle_mile,3001-4000,0.25-0.5kg,0.21
+middle_mile,3001-4000,0.5-0.75kg,0.22
+middle_mile,3001-4000,0.75-1kg,0.27
+middle_mile,3001-4000,up to 1.5kg,0.28
+middle_mile,3001-4000,up to 2kg,0.33
+middle_mile,3001-4000,up to 2.5kg,0.34
+middle_mile,3001-4000,up to 3kg,0.4
+middle_mile,3001-4000,Up to 4kg,0.42
+middle_mile,3001-4000,Up to 5kg,0.46
+middle_mile,3001-4000,Up to 6 kg,0.53
+middle_mile,3001-4000,Up to 7kg,0.54
+middle_mile,3001-4000,Up to 9kg,0.56
+middle_mile,3001-4000,Up to 12kg,0.61
+middle_mile,3001-4000,Up to 15kg,0.75
+middle_mile,3001-4000,Up to 18kg,0.81
+middle_mile,3001-4000,Up to 21kg,0.9
+middle_mile,3001-4000,Up to 24kg,0.95
+middle_mile,3001-4000,Up to 27kg,0.99
+middle_mile,3001-4000,Up to 30kg,1.06
+middle_mile,4000+,0-0.25kg,0.15
+middle_mile,4000+,0.25-0.5kg,0.17
+middle_mile,4000+,0.5-0.75kg,0.18
+middle_mile,4000+,0.75-1kg,0.2
+middle_mile,4000+,up to 1.5kg,0.24
+middle_mile,4000+,up to 2kg,0.24
+middle_mile,4000+,up to 2.5kg,0.28
+middle_mile,4000+,up to 3kg,0.32
+middle_mile,4000+,Up to 4kg,0.33
+middle_mile,4000+,Up to 5kg,0.38
+middle_mile,4000+,Up to 6 kg,0.44
+middle_mile,4000+,Up to 7kg,0.5
+middle_mile,4000+,Up to 9kg,0.51
+middle_mile,4000+,Up to 12kg,0.61
+middle_mile,4000+,Up to 15kg,0.63
+middle_mile,4000+,Up to 18kg,0.67
+middle_mile,4000+,Up to 21kg,0.77
+middle_mile,4000+,Up to 24kg,0.92
+middle_mile,4000+,Up to 27kg,0.95
+middle_mile,4000+,Up to 30kg,1.02
+last_mile,0-200,0-0.25kg,3.29
+last_mile,0-200,0.25-0.5kg,3.42
+last_mile,0-200,0.5-0.75kg,3.48
+last_mile,0-200,0.75-1kg,3.66
+last_mile,0-200,up to 1.5kg,3.88
+last_mile,0-200,up to 2kg,4.02
+last_mile,0-200,up to 2.5kg,4.09
+last_mile,0-200,up to 3kg,4.19
+last_mile,0-200,Up to 4kg,4.24
+last_mile,0-200,Up to 5kg,4.48
+last_mile,0-200,Up to 6 kg,4.55
+last_mile,0-200,Up to 7kg,4.73
+last_mile,0-200,Up to 9kg,4.84
+last_mile,0-200,Up to 12kg,5.02
+last_mile,0-200,Up to 15kg,5.23
+last_mile,0-200,Up to 18kg,5.5
+last_mile,0-200,Up to 21kg,5.61
+last_mile,0-200,Up to 24kg,5.67
+last_mile,0-200,Up to 27kg,5.77
+last_mile,0-200,Up to 30kg,6.09
+last_mile,201-300,0-0.25kg,2.34
+last_mile,201-300,0.25-0.5kg,2.47
+last_mile,201-300,0.5-0.75kg,2.73
+last_mile,201-300,0.75-1kg,2.84
+last_mile,201-300,up to 1.5kg,2.95
+last_mile,201-300,up to 2kg,3.08
+last_mile,201-300,up to 2.5kg,3.14
+last_mile,201-300,up to 3kg,3.31
+last_mile,201-300,Up to 4kg,3.41
+last_mile,201-300,Up to 5kg,3.51
+last_mile,201-300,Up to 6 kg,3.64
+last_mile,201-300,Up to 7kg,3.68
+last_mile,201-300,Up to 9kg,3.75
+last_mile,201-300,Up to 12kg,3.93
+last_mile,201-300,Up to 15kg,3.99
+last_mile,201-300,Up to 18kg,4.15
+last_mile,201-300,Up to 21kg,4.24
+last_mile,201-300,Up to 24kg,4.36
+last_mile,201-300,Up to 27kg,4.47
+last_mile,201-300,Up to 30kg,4.59
+last_mile,301-400,0-0.25kg,2.01
+last_mile,301-400,0.25-0.5kg,2.1
+last_mile,301-400,0.5-0.75kg,2.11
+last_mile,301-400,0.75-1kg,2.16
+last_mile,301-400,up to 1.5kg,2.18
+last_mile,301-400,up to 2kg,2.26
+last_mile,301-400,up to 2.5kg,2.34
+last_mile,301-400,up to 3kg,2.44
+last_mile,301-400,Up to 4kg,2.58
+last_mile,301-400,Up to 5kg,2.7
+last_mile,301-400,Up to 6 kg,2.76
+last_mile,301-400,Up to 7kg,2.79
+last_mile,301-400,Up to 9kg,2.85
+last_mile,301-400,Up to 12kg,2.96
+last_mile,301-400,Up to 15kg,3.0
+last_mile,301-400,Up to 18kg,3.1
+last_mile,301-400,Up to 21kg,3.22
+last_mile,301-400,Up to 24kg,3.31
+last_mile,301-400,Up to 27kg,3.47
+last_mile,301-400,Up to 30kg,3.52
+last_mile,401-500,0-0.25kg,1.5
+last_mile,401-500,0.25-0.5kg,1.52
+last_mile,401-500,0.5-0.75kg,1.69
+last_mile,401-500,0.75-1kg,1.77
+last_mile,401-500,up to 1.5kg,1.83
+last_mile,401-500,up to 2kg,1.84
+last_mile,401-500,up to 2.5kg,1.92
+last_mile,401-500,up to 3kg,1.98
+last_mile,401-500,Up to 4kg,2.0
+last_mile,401-500,Up to 5kg,2.04
+last_mile,401-500,Up to 6 kg,2.14
+last_mile,401-500,Up to 7kg,2.25
+last_mile,401-500,Up to 9kg,2.35
+last_mile,401-500,Up to 12kg,2.41
+last_mile,401-500,Up to 15kg,2.51
+last_mile,401-500,Up to 18kg,2.58
+last_mile,401-500,Up to 21kg,2.62
+last_mile,401-500,Up to 24kg,2.77
+last_mile,401-500,Up to 27kg,2.82
+last_mile,401-500,Up to 30kg,2.98
+last_mile,501-700,0-0.25kg,1.21
+last_mile,501-700,0.25-0.5kg,1.25
+last_mile,501-700,0.5-0.75kg,1.27
+last_mile,501-700,0.75-1kg,1.36
+last_mile,501-700,up to 1.5kg,1.43
+last_mile,501-700,up to 2kg,1.46
+last_mile,501-700,up to 2.5kg,1.53
+last_mile,501-700,up to 3kg,1.59
+last_mile,501-700,Up to 4kg,1.65
+last_mile,501-700,Up to 5kg,1.74
+last_mile,501-700,Up to 6 kg,1.82
+last_mile,501-700,Up to 7kg,1.83
+last_mile,501-700,Up to 9kg,1.92
+last_mile,501-700,Up to 12kg,2.0
+last_mile,501-700,Up to 15kg,2.02
+last_mile,501-700,Up to 18kg,2.09
+last_mile,501-700,Up to 21kg,2.14
+last_mile,501-700,Up to 24kg,2.24
+last_mile,501-700,Up to 27kg,2.27
+last_mile,501-700,Up to 30kg,2.37
+last_mile,701-900,0-0.25kg,0.89
+last_mile,701-900,0.25-0.5kg,0.9
+last_mile,701-900,0.5-0.75kg,1.06
+last_mile,701-900,0.75-1kg,1.12
+last_mile,701-900,up to 1.5kg,1.15
+last_mile,701-900,up to 2kg,1.19
+last_mile,701-900,up to 2.5kg,1.28
+last_mile,701-900,up to 3kg,1.31
+last_mile,701-900,Up to 4kg,1.33
+last_mile,701-900,Up to 5kg,1.37
+last_mile,701-900,Up to 6 kg,1.46
+last_mile,701-900,Up to 7kg,1.55
+last_mile,701-900,Up to 9kg,1.66
+last_mile,701-900,Up to 12kg,1.76
+last_mile,701-900,Up to 15kg,1.86
+last_mile,701-900,Up to 18kg,1.86
+last_mile,701-900,Up to 21kg,2.01
+last_mile,701-900,Up to 24kg,2.04
+last_mile,701-900,Up to 27kg,2.06
+last_mile,701-900,Up to 30kg,2.19
+last_mile,901-1200,0-0.25kg,0.72
+last_mile,901-1200,0.25-0.5kg,0.74
+last_mile,901-1200,0.5-0.75kg,0.82
+last_mile,901-1200,0.75-1kg,0.89
+last_mile,901-1200,up to 1.5kg,0.94
+last_mile,901-1200,up to 2kg,0.98
+last_mile,901-1200,up to 2.5kg,1.04
+last_mile,901-1200,up to 3kg,1.12
+last_mile,901-1200,Up to 4kg,1.15
+last_mile,901-1200,Up to 5kg,1.17
+last_mile,901-1200,Up to 6 kg,1.3
+last_mile,901-1200,Up to 7kg,1.37
+last_mile,901-1200,Up to 9kg,1.37
+last_mile,901-1200,Up to 12kg,1.46
+last_mile,901-1200,Up to 15kg,1.49
+last_mile,901-1200,Up to 18kg,1.49
+last_mile,901-1200,Up to 21kg,1.65
+last_mile,901-1200,Up to 24kg,1.88
+last_mile,901-1200,Up to 27kg,1.95
+last_mile,901-1200,Up to 30kg,1.95
+last_mile,1201-1500,0-0.25kg,0.54
+last_mile,1201-1500,0.25-0.5kg,0.59
+last_mile,1201-1500,0.5-0.75kg,0.66
+last_mile,1201-1500,0.75-1kg,0.7
+last_mile,1201-1500,up to 1.5kg,0.71
+last_mile,1201-1500,up to 2kg,0.78
+last_mile,1201-1500,up to 2.5kg,0.8
+last_mile,1201-1500,up to 3kg,0.82
+last_mile,1201-1500,Up to 4kg,0.91
+last_mile,1201-1500,Up to 5kg,0.92
+last_mile,1201-1500,Up to 6 kg,0.99
+last_mile,1201-1500,Up to 7kg,1.11
+last_mile,1201-1500,Up to 9kg,1.17
+last_mile,1201-1500,Up to 12kg,1.34
+last_mile,1201-1500,Up to 15kg,1.4
+last_mile,1201-1500,Up to 18kg,1.45
+last_mile,1201-1500,Up to 21kg,1.56
+last_mile,1201-1500,Up to 24kg,1.57
+last_mile,1201-1500,Up to 27kg,1.78
+last_mile,1201-1500,Up to 30kg,1.82
+last_mile,1501-2000,0-0.25kg,0.46
+last_mile,1501-2000,0.25-0.5kg,0.49
+last_mile,1501-2000,0.5-0.75kg,0.49
+last_mile,1501-2000,0.75-1kg,0.5
+last_mile,1501-2000,up to 1.5kg,0.62
+last_mile,1501-2000,up to 2kg,0.66
+last_mile,1501-2000,up to 2.5kg,0.67
+last_mile,1501-2000,up to 3kg,0.71
+last_mile,1501-2000,Up to 4kg,0.8
+last_mile,1501-2000,Up to 5kg,0.83
+last_mile,1501-2000,Up to 6 kg,0.94
+last_mile,1501-2000,Up to 7kg,0.99
+last_mile,1501-2000,Up to 9kg,1.04
+last_mile,1501-2000,Up to 12kg,1.07
+last_mile,1501-2000,Up to 15kg,1.18
+last_mile,1501-2000,Up to 18kg,1.29
+last_mile,1501-2000,Up to 21kg,1.36
+last_mile,1501-2000,Up to 24kg,1.54
+last_mile,1501-2000,Up to 27kg,1.58
+last_mile,1501-2000,Up to 30kg,1.71
+last_mile,2001-3000,0-0.25kg,0.33
+last_mile,2001-3000,0.25-0.5kg,0.35
+last_mile,2001-3000,0.5-0.75kg,0.39
+last_mile,2001-3000,0.75-1kg,0.4
+last_mile,2001-3000,up to 1.5kg,0.44
+last_mile,2001-3000,up to 2kg,0.53
+last_mile,2001-3000,up to 2.5kg,0.58
+last_mile,2001-3000,up to 3kg,0.58
+last_mile,2001-3000,Up to 4kg,0.62
+last_mile,2001-3000,Up to 5kg,0.71
+last_mile,2001-3000,Up to 6 kg,0.74
+last_mile,2001-3000,Up to 7kg,0.76
+last_mile,2001-3000,Up to 9kg,0.84
+last_mile,2001-3000,Up to 12kg,1.0
+last_mile,2001-3000,Up to 15kg,1.07
+last_mile,2001-3000,Up to 18kg,1.08
+last_mile,2001-3000,Up to 21kg,1.18
+last_mile,2001-3000,Up to 24kg,1.28
+last_mile,2001-3000,Up to 27kg,1.49
+last_mile,2001-3000,Up to 30kg,1.61
+last_mile,3001-4000,0-0.25kg,0.24
+last_mile,3001-4000,0.25-0.5kg,0.3
+last_mile,3001-4000,0.5-0.75kg,0.31
+last_mile,3001-4000,0.75-1kg,0.35
+last_mile,3001-4000,up to 1.5kg,0.36
+last_mile,3001-4000,up to 2kg,0.38
+last_mile,3001-4000,up to 2.5kg,0.43
+last_mile,3001-4000,up to 3kg,0.51
+last_mile,3001-4000,Up to 4kg,0.56
+last_mile,3001-4000,Up to 5kg,0.62
+last_mile,3001-4000,Up to 6 kg,0.63
+last_mile,3001-4000,Up to 7kg,0.72
+last_mile,3001-4000,Up to 9kg,0.73
+last_mile,3001-4000,Up to 12kg,0.82
+last_mile,3001-4000,Up to 15kg,0.98
+last_mile,3001-4000,Up to 18kg,1.0
+last_mile,3001-4000,Up to 21kg,1.04
+last_mile,3001-4000,Up to 24kg,1.22
+last_mile,3001-4000,Up to 27kg,1.23
+last_mile,3001-4000,Up to 30kg,1.52
+last_mile,4000+,0-0.25kg,0.2
+last_mile,4000+,0.25-0.5kg,0.22
+last_mile,4000+,0.5-0.75kg,0.26
+last_mile,4000+,0.75-1kg,0.28
+last_mile,4000+,up to 1.5kg,0.29
+last_mile,4000+,up to 2kg,0.32
+last_mile,4000+,up to 2.5kg,0.36
+last_mile,4000+,up to 3kg,0.41
+last_mile,4000+,Up to 4kg,0.43
+last_mile,4000+,Up to 5kg,0.5
+last_mile,4000+,Up to 6 kg,0.54
+last_mile,4000+,Up to 7kg,0.61
+last_mile,4000+,Up to 9kg,0.66
+last_mile,4000+,Up to 12kg,0.71
+last_mile,4000+,Up to 15kg,0.88
+last_mile,4000+,Up to 18kg,0.94
+last_mile,4000+,Up to 21kg,0.94
+last_mile,4000+,Up to 24kg,1.17
+last_mile,4000+,Up to 27kg,1.22
+last_mile,4000+,Up to 30kg,1.44
+other_fixed,0-200,0-0.25kg,"$0,17"
+other_fixed,0-200,0.25-0.5kg,"$0,17"
+other_fixed,0-200,0.5-0.75kg,"$0,17"
+other_fixed,0-200,0.75-1kg,"$0,17"
+other_fixed,0-200,up to 1.5kg,"$0,17"
+other_fixed,0-200,up to 2kg,"$0,17"
+other_fixed,0-200,up to 2.5kg,"$0,17"
+other_fixed,0-200,up to 3kg,"$0,17"
+other_fixed,0-200,Up to 4kg,"$0,17"
+other_fixed,0-200,Up to 5kg,"$0,17"
+other_fixed,0-200,Up to 6 kg,"$0,17"
+other_fixed,0-200,Up to 7kg,"$0,17"
+other_fixed,0-200,Up to 9kg,"$0,17"
+other_fixed,0-200,Up to 12kg,"$0,17"
+other_fixed,0-200,Up to 15kg,"$0,17"
+other_fixed,0-200,Up to 18kg,"$0,17"
+other_fixed,0-200,Up to 21kg,"$0,17"
+other_fixed,0-200,Up to 24kg,"$0,17"
+other_fixed,0-200,Up to 27kg,"$0,17"
+other_fixed,0-200,Up to 30kg,"$0,17"
+other_fixed,201-300,0-0.25kg,"$0,17"
+other_fixed,201-300,0.25-0.5kg,"$0,17"
+other_fixed,201-300,0.5-0.75kg,"$0,17"
+other_fixed,201-300,0.75-1kg,"$0,17"
+other_fixed,201-300,up to 1.5kg,"$0,17"
+other_fixed,201-300,up to 2kg,"$0,17"
+other_fixed,201-300,up to 2.5kg,"$0,17"
+other_fixed,201-300,up to 3kg,"$0,17"
+other_fixed,201-300,Up to 4kg,"$0,17"
+other_fixed,201-300,Up to 5kg,"$0,17"
+other_fixed,201-300,Up to 6 kg,"$0,17"
+other_fixed,201-300,Up to 7kg,"$0,17"
+other_fixed,201-300,Up to 9kg,"$0,17"
+other_fixed,201-300,Up to 12kg,"$0,17"
+other_fixed,201-300,Up to 15kg,"$0,17"
+other_fixed,201-300,Up to 18kg,"$0,17"
+other_fixed,201-300,Up to 21kg,"$0,17"
+other_fixed,201-300,Up to 24kg,"$0,17"
+other_fixed,201-300,Up to 27kg,"$0,17"
+other_fixed,201-300,Up to 30kg,"$0,17"
+other_fixed,301-400,0-0.25kg,"$0,17"
+other_fixed,301-400,0.25-0.5kg,"$0,17"
+other_fixed,301-400,0.5-0.75kg,"$0,17"
+other_fixed,301-400,0.75-1kg,"$0,17"
+other_fixed,301-400,up to 1.5kg,"$0,17"
+other_fixed,301-400,up to 2kg,"$0,17"
+other_fixed,301-400,up to 2.5kg,"$0,17"
+other_fixed,301-400,up to 3kg,"$0,17"
+other_fixed,301-400,Up to 4kg,"$0,17"
+other_fixed,301-400,Up to 5kg,"$0,17"
+other_fixed,301-400,Up to 6 kg,"$0,17"
+other_fixed,301-400,Up to 7kg,"$0,17"
+other_fixed,301-400,Up to 9kg,"$0,17"
+other_fixed,301-400,Up to 12kg,"$0,17"
+other_fixed,301-400,Up to 15kg,"$0,17"
+other_fixed,301-400,Up to 18kg,"$0,17"
+other_fixed,301-400,Up to 21kg,"$0,17"
+other_fixed,301-400,Up to 24kg,"$0,17"
+other_fixed,301-400,Up to 27kg,"$0,17"
+other_fixed,301-400,Up to 30kg,"$0,17"
+other_fixed,401-500,0-0.25kg,"$0,17"
+other_fixed,401-500,0.25-0.5kg,"$0,17"
+other_fixed,401-500,0.5-0.75kg,"$0,17"
+other_fixed,401-500,0.75-1kg,"$0,17"
+other_fixed,401-500,up to 1.5kg,"$0,17"
+other_fixed,401-500,up to 2kg,"$0,17"
+other_fixed,401-500,up to 2.5kg,"$0,17"
+other_fixed,401-500,up to 3kg,"$0,17"
+other_fixed,401-500,Up to 4kg,"$0,17"
+other_fixed,401-500,Up to 5kg,"$0,17"
+other_fixed,401-500,Up to 6 kg,"$0,17"
+other_fixed,401-500,Up to 7kg,"$0,17"
+other_fixed,401-500,Up to 9kg,"$0,17"
+other_fixed,401-500,Up to 12kg,"$0,17"
+other_fixed,401-500,Up to 15kg,"$0,17"
+other_fixed,401-500,Up to 18kg,"$0,17"
+other_fixed,401-500,Up to 21kg,"$0,17"
+other_fixed,401-500,Up to 24kg,"$0,17"
+other_fixed,401-500,Up to 27kg,"$0,17"
+other_fixed,401-500,Up to 30kg,"$0,17"
+other_fixed,501-700,0-0.25kg,"$0,17"
+other_fixed,501-700,0.25-0.5kg,"$0,17"
+other_fixed,501-700,0.5-0.75kg,"$0,17"
+other_fixed,501-700,0.75-1kg,"$0,17"
+other_fixed,501-700,up to 1.5kg,"$0,17"
+other_fixed,501-700,up to 2kg,"$0,17"
+other_fixed,501-700,up to 2.5kg,"$0,17"
+other_fixed,501-700,up to 3kg,"$0,17"
+other_fixed,501-700,Up to 4kg,"$0,17"
+other_fixed,501-700,Up to 5kg,"$0,17"
+other_fixed,501-700,Up to 6 kg,"$0,17"
+other_fixed,501-700,Up to 7kg,"$0,17"
+other_fixed,501-700,Up to 9kg,"$0,17"
+other_fixed,501-700,Up to 12kg,"$0,17"
+other_fixed,501-700,Up to 15kg,"$0,17"
+other_fixed,501-700,Up to 18kg,"$0,17"
+other_fixed,501-700,Up to 21kg,"$0,17"
+other_fixed,501-700,Up to 24kg,"$0,17"
+other_fixed,501-700,Up to 27kg,"$0,17"
+other_fixed,501-700,Up to 30kg,"$0,17"
+other_fixed,701-900,0-0.25kg,"$0,17"
+other_fixed,701-900,0.25-0.5kg,"$0,17"
+other_fixed,701-900,0.5-0.75kg,"$0,17"
+other_fixed,701-900,0.75-1kg,"$0,17"
+other_fixed,701-900,up to 1.5kg,"$0,17"
+other_fixed,701-900,up to 2kg,"$0,17"
+other_fixed,701-900,up to 2.5kg,"$0,17"
+other_fixed,701-900,up to 3kg,"$0,17"
+other_fixed,701-900,Up to 4kg,"$0,17"
+other_fixed,701-900,Up to 5kg,"$0,17"
+other_fixed,701-900,Up to 6 kg,"$0,17"
+other_fixed,701-900,Up to 7kg,"$0,17"
+other_fixed,701-900,Up to 9kg,"$0,17"
+other_fixed,701-900,Up to 12kg,"$0,17"
+other_fixed,701-900,Up to 15kg,"$0,17"
+other_fixed,701-900,Up to 18kg,"$0,17"
+other_fixed,701-900,Up to 21kg,"$0,17"
+other_fixed,701-900,Up to 24kg,"$0,17"
+other_fixed,701-900,Up to 27kg,"$0,17"
+other_fixed,701-900,Up to 30kg,"$0,17"
+other_fixed,901-1200,0-0.25kg,"$0,17"
+other_fixed,901-1200,0.25-0.5kg,"$0,17"
+other_fixed,901-1200,0.5-0.75kg,"$0,17"
+other_fixed,901-1200,0.75-1kg,"$0,17"
+other_fixed,901-1200,up to 1.5kg,"$0,17"
+other_fixed,901-1200,up to 2kg,"$0,17"
+other_fixed,901-1200,up to 2.5kg,"$0,17"
+other_fixed,901-1200,up to 3kg,"$0,17"
+other_fixed,901-1200,Up to 4kg,"$0,17"
+other_fixed,901-1200,Up to 5kg,"$0,17"
+other_fixed,901-1200,Up to 6 kg,"$0,17"
+other_fixed,901-1200,Up to 7kg,"$0,17"
+other_fixed,901-1200,Up to 9kg,"$0,17"
+other_fixed,901-1200,Up to 12kg,"$0,17"
+other_fixed,901-1200,Up to 15kg,"$0,17"
+other_fixed,901-1200,Up to 18kg,"$0,17"
+other_fixed,901-1200,Up to 21kg,"$0,17"
+other_fixed,901-1200,Up to 24kg,"$0,17"
+other_fixed,901-1200,Up to 27kg,"$0,17"
+other_fixed,901-1200,Up to 30kg,"$0,17"
+other_fixed,1201-1500,0-0.25kg,"$0,17"
+other_fixed,1201-1500,0.25-0.5kg,"$0,17"
+other_fixed,1201-1500,0.5-0.75kg,"$0,17"
+other_fixed,1201-1500,0.75-1kg,"$0,17"
+other_fixed,1201-1500,up to 1.5kg,"$0,17"
+other_fixed,1201-1500,up to 2kg,"$0,17"
+other_fixed,1201-1500,up to 2.5kg,"$0,17"
+other_fixed,1201-1500,up to 3kg,"$0,17"
+other_fixed,1201-1500,Up to 4kg,"$0,17"
+other_fixed,1201-1500,Up to 5kg,"$0,17"
+other_fixed,1201-1500,Up to 6 kg,"$0,17"
+other_fixed,1201-1500,Up to 7kg,"$0,17"
+other_fixed,1201-1500,Up to 9kg,"$0,17"
+other_fixed,1201-1500,Up to 12kg,"$0,17"
+other_fixed,1201-1500,Up to 15kg,"$0,17"
+other_fixed,1201-1500,Up to 18kg,"$0,17"
+other_fixed,1201-1500,Up to 21kg,"$0,17"
+other_fixed,1201-1500,Up to 24kg,"$0,17"
+other_fixed,1201-1500,Up to 27kg,"$0,17"
+other_fixed,1201-1500,Up to 30kg,"$0,17"
+other_fixed,1501-2000,0-0.25kg,"$0,17"
+other_fixed,1501-2000,0.25-0.5kg,"$0,17"
+other_fixed,1501-2000,0.5-0.75kg,"$0,17"
+other_fixed,1501-2000,0.75-1kg,"$0,17"
+other_fixed,1501-2000,up to 1.5kg,"$0,17"
+other_fixed,1501-2000,up to 2kg,"$0,17"
+other_fixed,1501-2000,up to 2.5kg,"$0,17"
+other_fixed,1501-2000,up to 3kg,"$0,17"
+other_fixed,1501-2000,Up to 4kg,"$0,17"
+other_fixed,1501-2000,Up to 5kg,"$0,17"
+other_fixed,1501-2000,Up to 6 kg,"$0,17"
+other_fixed,1501-2000,Up to 7kg,"$0,17"
+other_fixed,1501-2000,Up to 9kg,"$0,17"
+other_fixed,1501-2000,Up to 12kg,"$0,17"
+other_fixed,1501-2000,Up to 15kg,"$0,17"
+other_fixed,1501-2000,Up to 18kg,"$0,17"
+other_fixed,1501-2000,Up to 21kg,"$0,17"
+other_fixed,1501-2000,Up to 24kg,"$0,17"
+other_fixed,1501-2000,Up to 27kg,"$0,17"
+other_fixed,1501-2000,Up to 30kg,"$0,17"
+other_fixed,2001-3000,0-0.25kg,"$0,17"
+other_fixed,2001-3000,0.25-0.5kg,"$0,17"
+other_fixed,2001-3000,0.5-0.75kg,"$0,17"
+other_fixed,2001-3000,0.75-1kg,"$0,17"
+other_fixed,2001-3000,up to 1.5kg,"$0,17"
+other_fixed,2001-3000,up to 2kg,"$0,17"
+other_fixed,2001-3000,up to 2.5kg,"$0,17"
+other_fixed,2001-3000,up to 3kg,"$0,17"
+other_fixed,2001-3000,Up to 4kg,"$0,17"
+other_fixed,2001-3000,Up to 5kg,"$0,17"
+other_fixed,2001-3000,Up to 6 kg,"$0,17"
+other_fixed,2001-3000,Up to 7kg,"$0,17"
+other_fixed,2001-3000,Up to 9kg,"$0,17"
+other_fixed,2001-3000,Up to 12kg,"$0,17"
+other_fixed,2001-3000,Up to 15kg,"$0,17"
+other_fixed,2001-3000,Up to 18kg,"$0,17"
+other_fixed,2001-3000,Up to 21kg,"$0,17"
+other_fixed,2001-3000,Up to 24kg,"$0,17"
+other_fixed,2001-3000,Up to 27kg,"$0,17"
+other_fixed,2001-3000,Up to 30kg,"$0,17"
+other_fixed,3001-4000,0-0.25kg,"$0,17"
+other_fixed,3001-4000,0.25-0.5kg,"$0,17"
+other_fixed,3001-4000,0.5-0.75kg,"$0,17"
+other_fixed,3001-4000,0.75-1kg,"$0,17"
+other_fixed,3001-4000,up to 1.5kg,"$0,17"
+other_fixed,3001-4000,up to 2kg,"$0,17"
+other_fixed,3001-4000,up to 2.5kg,"$0,17"
+other_fixed,3001-4000,up to 3kg,"$0,17"
+other_fixed,3001-4000,Up to 4kg,"$0,17"
+other_fixed,3001-4000,Up to 5kg,"$0,17"
+other_fixed,3001-4000,Up to 6 kg,"$0,17"
+other_fixed,3001-4000,Up to 7kg,"$0,17"
+other_fixed,3001-4000,Up to 9kg,"$0,17"
+other_fixed,3001-4000,Up to 12kg,"$0,17"
+other_fixed,3001-4000,Up to 15kg,"$0,17"
+other_fixed,3001-4000,Up to 18kg,"$0,17"
+other_fixed,3001-4000,Up to 21kg,"$0,17"
+other_fixed,3001-4000,Up to 24kg,"$0,17"
+other_fixed,3001-4000,Up to 27kg,"$0,17"
+other_fixed,3001-4000,Up to 30kg,"$0,17"
+other_fixed,4000+,0-0.25kg,"$0,17"
+other_fixed,4000+,0.25-0.5kg,"$0,17"
+other_fixed,4000+,0.5-0.75kg,"$0,17"
+other_fixed,4000+,0.75-1kg,"$0,17"
+other_fixed,4000+,up to 1.5kg,"$0,17"
+other_fixed,4000+,up to 2kg,"$0,17"
+other_fixed,4000+,up to 2.5kg,"$0,17"
+other_fixed,4000+,up to 3kg,"$0,17"
+other_fixed,4000+,Up to 4kg,"$0,17"
+other_fixed,4000+,Up to 5kg,"$0,17"
+other_fixed,4000+,Up to 6 kg,"$0,17"
+other_fixed,4000+,Up to 7kg,"$0,17"
+other_fixed,4000+,Up to 9kg,"$0,17"
+other_fixed,4000+,Up to 12kg,"$0,17"
+other_fixed,4000+,Up to 15kg,"$0,17"
+other_fixed,4000+,Up to 18kg,"$0,17"
+other_fixed,4000+,Up to 21kg,"$0,17"
+other_fixed,4000+,Up to 24kg,"$0,17"
+other_fixed,4000+,Up to 27kg,"$0,17"
+other_fixed,4000+,Up to 30kg,"$0,17"

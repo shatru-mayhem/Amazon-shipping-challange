@@ -1,2 +1,17 @@
 .env*.local
 .env
+
+# Source documents (Word / Excel / PowerPoint) — excluded from the repo
+*.doc
+*.docx
+*.xls
+*.xlsx
+*.ppt
+*.pptx
+
+# Python
+__pycache__/
+*.pyc
+
+# Local schema introspection cache (regenerated at runtime)
+.nl_query_schema_cache.json
