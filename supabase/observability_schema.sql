@@ -44,3 +44,37 @@ GRANT SELECT ON observability.llm_call_log TO nl_query_readonly;
 ALTER TABLE observability.llm_call_log ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "app_ingestion_rw" ON observability.llm_call_log FOR ALL TO app_ingestion USING (true) WITH CHECK (true);
 CREATE POLICY "nl_query_readonly_select" ON observability.llm_call_log FOR SELECT TO nl_query_readonly USING (true);
+
+-- ---------------------------------------------------------------------
+-- draft_send_log — closes the loop on skills/follow_up_actions.py's
+-- Zapier sends. A 200 from Zapier's Catch Hook only means "Zapier
+-- received the payload," not "the Gmail draft exists" (that's a later
+-- step in the Zap, and can fail independently — wrong scope, revoked
+-- Gmail auth, etc). Every send logs a row here as 'sent_to_zapier';
+-- app/api/zapier-draft-callback/route.ts flips it to 'completed'/
+-- 'failed' once a step added to the END of the Zap (after Gmail's
+-- "Create Draft") calls back with the draft_id. The dashboard polls
+-- get_draft_status() so the UI shows real completion, not just "sent."
+-- ---------------------------------------------------------------------
+
+CREATE TABLE observability.draft_send_log (
+    draft_id        UUID PRIMARY KEY,
+    opportunity_id  UUID REFERENCES core.opportunities(opportunity_id),
+    kind            TEXT NOT NULL CHECK (kind IN ('client_reply', 'internal_summary')),
+    to_email        TEXT NOT NULL,
+    subject         TEXT,
+    status          TEXT NOT NULL DEFAULT 'sent_to_zapier'
+                    CHECK (status IN ('sent_to_zapier', 'completed', 'failed')),
+    gmail_draft_id  TEXT,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    completed_at    TIMESTAMPTZ
+);
+
+CREATE INDEX draft_send_log_created_at_idx ON observability.draft_send_log (created_at);
+
+GRANT SELECT, INSERT, UPDATE ON observability.draft_send_log TO app_ingestion;
+GRANT SELECT ON observability.draft_send_log TO nl_query_readonly;
+
+ALTER TABLE observability.draft_send_log ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "app_ingestion_rw" ON observability.draft_send_log FOR ALL TO app_ingestion USING (true) WITH CHECK (true);
+CREATE POLICY "nl_query_readonly_select" ON observability.draft_send_log FOR SELECT TO nl_query_readonly USING (true);

@@ -11,6 +11,7 @@ The `actions` list is shaped to drop straight into a Zapier webhook payload.
 import os
 import sys
 import json
+import uuid
 import urllib.request
 import urllib.error
 
@@ -18,6 +19,7 @@ _SKILLS_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, _SKILLS_DIR)
 sys.path.insert(0, os.path.join(_SKILLS_DIR, "constraint_compliance"))
 from _db import run_sql, run_sql_one  # noqa: E402
+from _ingestion_db import write_sql  # noqa: E402
 from constraint_compliance import is_hard_blocker  # noqa: E402
 
 # Zapier Catch Hook: receives {to, subject, body, opportunity_id, issues}
@@ -182,6 +184,44 @@ def _post_to_zapier(payload: dict) -> dict:
         return {"ok": False, "error": f"Could not reach Zapier webhook: {e}", "payload": payload}
 
 
+def _log_draft_send(draft_id: str, opportunity_id: str, kind: str, to_email: str, subject: str) -> None:
+    write_sql(
+        """INSERT INTO draft_send_log (draft_id, opportunity_id, kind, to_email, subject, status)
+           VALUES (%s, %s, %s, %s, %s, 'sent_to_zapier')""",
+        (draft_id, opportunity_id, kind, to_email, subject),
+    )
+
+
+def get_draft_status(draft_id: str) -> dict:
+    """Polled by the dashboard after a send, so the UI can show real
+    completion instead of the user having to check Gmail/Zapier manually.
+    'sent_to_zapier' just means our own POST succeeded — completed/failed
+    only get set by mark_draft_completed(), called from the Zapier
+    callback step once the Gmail draft actually exists (or fails)."""
+    row = run_sql_one(
+        "SELECT draft_id, status, gmail_draft_id, completed_at FROM draft_send_log WHERE draft_id = %s",
+        (draft_id,),
+    )
+    if not row:
+        return {"ok": False, "error": "Unknown draft_id."}
+    return {"ok": True, **row}
+
+
+def mark_draft_completed(draft_id: str, status: str, gmail_draft_id: str = None) -> dict:
+    """Called from the Zapier callback (a step added AFTER Gmail's
+    'Create Draft' in the Zap, POSTing back to our own /api/zapier-draft-
+    callback route with this draft_id) — this is what turns 'we handed it
+    to Zapier' into 'the draft actually exists.'"""
+    if status not in ("completed", "failed"):
+        return {"ok": False, "error": "status must be 'completed' or 'failed'."}
+    write_sql(
+        """UPDATE draft_send_log SET status = %s, gmail_draft_id = %s, completed_at = now()
+           WHERE draft_id = %s""",
+        (status, gmail_draft_id, draft_id),
+    )
+    return {"ok": True}
+
+
 def send_followup_draft(opportunity_id: str, to_email: str = DEFAULT_FOLLOWUP_RECIPIENT) -> dict:
     """Sends the current open follow-up actions (internal BD summary,
     including hard-blocker escalations verbatim) to the Zapier webhook,
@@ -190,8 +230,10 @@ def send_followup_draft(opportunity_id: str, to_email: str = DEFAULT_FOLLOWUP_RE
     for the client-facing version, which never includes this raw text."""
     follow_up = get_follow_up_actions(opportunity_id)
     draft = _build_email_draft(opportunity_id, follow_up)
+    draft_id = str(uuid.uuid4())
 
     result = _post_to_zapier({
+        "draft_id": draft_id,
         "to": to_email,
         "subject": draft["subject"],
         "body": draft["body"],
@@ -201,8 +243,10 @@ def send_followup_draft(opportunity_id: str, to_email: str = DEFAULT_FOLLOWUP_RE
     })
     if not result["ok"]:
         return result
+    _log_draft_send(draft_id, opportunity_id, "internal_summary", to_email, draft["subject"])
     return {
         "ok": True,
+        "draft_id": draft_id,
         "zapier_status": result["zapier_status"],
         "zapier_response": result["zapier_response"],
         "to": to_email,
@@ -297,7 +341,9 @@ def send_client_reply_draft(opportunity_id: str, to_email: str = DEFAULT_FOLLOWU
     harshithadivakar23@gmail.com placeholder (no real client inbox in the
     demo); swap to the actual client contact's email once this is live."""
     draft = _build_client_reply_draft(opportunity_id)
+    draft_id = str(uuid.uuid4())
     result = _post_to_zapier({
+        "draft_id": draft_id,
         "to": to_email,
         "subject": draft["subject"],
         "body": draft["body"],
@@ -306,8 +352,10 @@ def send_client_reply_draft(opportunity_id: str, to_email: str = DEFAULT_FOLLOWU
     })
     if not result["ok"]:
         return result
+    _log_draft_send(draft_id, opportunity_id, "client_reply", to_email, draft["subject"])
     return {
         "ok": True,
+        "draft_id": draft_id,
         "zapier_status": result["zapier_status"],
         "zapier_response": result["zapier_response"],
         "to": to_email,
@@ -317,9 +365,17 @@ def send_client_reply_draft(opportunity_id: str, to_email: str = DEFAULT_FOLLOWU
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python follow_up_actions.py <opportunity_id> [send_draft|send_client_reply [to_email]]")
+        print(
+            "Usage: python follow_up_actions.py <opportunity_id> "
+            "[send_draft|send_client_reply [to_email] | draft_status <draft_id> | "
+            "mark_completed <draft_id> <completed|failed> [gmail_draft_id]]"
+        )
         sys.exit(1)
 
+    # opportunity_id (argv[1]) is a required positional slot to match the
+    # /api/skill route's contract, but draft_status/mark_completed act on a
+    # draft_id instead and ignore it — the Zapier callback route has no
+    # real opportunity_id handy, so it passes a placeholder.
     opportunity_id = sys.argv[1]
     if len(sys.argv) > 2 and sys.argv[2] == "send_draft":
         to_email = sys.argv[3] if len(sys.argv) > 3 else DEFAULT_FOLLOWUP_RECIPIENT
@@ -327,5 +383,10 @@ if __name__ == "__main__":
     elif len(sys.argv) > 2 and sys.argv[2] == "send_client_reply":
         to_email = sys.argv[3] if len(sys.argv) > 3 else DEFAULT_FOLLOWUP_RECIPIENT
         print(json.dumps(send_client_reply_draft(opportunity_id, to_email), indent=2, default=str))
+    elif len(sys.argv) > 3 and sys.argv[2] == "draft_status":
+        print(json.dumps(get_draft_status(sys.argv[3]), indent=2, default=str))
+    elif len(sys.argv) > 4 and sys.argv[2] == "mark_completed":
+        gmail_draft_id = sys.argv[5] if len(sys.argv) > 5 else None
+        print(json.dumps(mark_draft_completed(sys.argv[3], sys.argv[4], gmail_draft_id), indent=2, default=str))
     else:
         print(json.dumps(get_follow_up_actions(opportunity_id), indent=2, default=str))

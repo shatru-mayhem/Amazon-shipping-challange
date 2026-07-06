@@ -255,11 +255,41 @@ export default function ExecutiveDashboard() {
     });
   }
 
+  // Polls draft_send_log (via follow_up_actions.py's draft_status action)
+  // after a send. "sent_to_zapier" just means our own POST succeeded; it
+  // only flips to "completed"/"failed" once the Zap's final step calls
+  // /api/zapier-draft-callback after Gmail's "Create Draft" actually runs
+  // — see that route for the one extra Zap step this needs. Without that
+  // Zap step configured, this polls until timeout and says so plainly
+  // rather than pretending completion.
+  async function pollDraftStatus(draftId: string, label: string) {
+    for (let attempt = 0; attempt < 20; attempt++) {
+      await new Promise((r) => setTimeout(r, 3000));
+      const status = await callSkill<{ ok: boolean; status?: string }>(
+        "follow_up_actions",
+        opportunityId,
+        ["draft_status", draftId]
+      );
+      if (status?.status === "completed") {
+        setDraftMessage(`${label} — confirmed created in Gmail drafts.`);
+        return;
+      }
+      if (status?.status === "failed") {
+        setDraftMessage(`${label} — Zapier reported a failure creating the Gmail draft.`);
+        return;
+      }
+    }
+    setDraftMessage(
+      `${label} — no completion confirmation received after 1 minute. Either check Gmail directly, or add the ` +
+      `callback step to the Zap (see app/api/zapier-draft-callback/route.ts) so this can confirm automatically.`
+    );
+  }
+
   function sendFollowUpDraft() {
     if (!opportunityId) return;
     setDraftMessage("");
     startDraftTransition(async () => {
-      const result = await callSkill<{ ok: boolean; to?: string; open_action_count?: number; error?: string }>(
+      const result = await callSkill<{ ok: boolean; to?: string; open_action_count?: number; error?: string; draft_id?: string }>(
         "follow_up_actions",
         opportunityId,
         ["send_draft"]
@@ -268,7 +298,9 @@ export default function ExecutiveDashboard() {
         setDraftMessage(`Failed to send internal summary: ${result?.error ?? "unknown error"}`);
         return;
       }
-      setDraftMessage(`Internal summary sent to Zapier for ${result.to} (${result.open_action_count} open action(s)) — check Gmail drafts.`);
+      const label = `Internal summary sent to Zapier for ${result.to} (${result.open_action_count} open action(s))`;
+      setDraftMessage(`${label} — waiting for confirmation…`);
+      if (result.draft_id) pollDraftStatus(result.draft_id, label);
     });
   }
 
@@ -276,7 +308,7 @@ export default function ExecutiveDashboard() {
     if (!opportunityId) return;
     setDraftMessage("");
     startDraftTransition(async () => {
-      const result = await callSkill<{ ok: boolean; to?: string; subject?: string; error?: string }>(
+      const result = await callSkill<{ ok: boolean; to?: string; subject?: string; error?: string; draft_id?: string }>(
         "follow_up_actions",
         opportunityId,
         ["send_client_reply"]
@@ -285,7 +317,9 @@ export default function ExecutiveDashboard() {
         setDraftMessage(`Failed to send client reply: ${result?.error ?? "unknown error"}`);
         return;
       }
-      setDraftMessage(`Client reply draft ("${result.subject}") sent to Zapier for ${result.to} — check Gmail drafts.`);
+      const label = `Client reply draft ("${result.subject}") sent to Zapier for ${result.to}`;
+      setDraftMessage(`${label} — waiting for confirmation…`);
+      if (result.draft_id) pollDraftStatus(result.draft_id, label);
     });
   }
 
