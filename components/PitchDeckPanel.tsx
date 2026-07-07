@@ -26,6 +26,7 @@ export default function PitchDeckPanel({
 
   const hasHardBlocker = dashboard.client_proposal.internal_flags.has_hard_blocker;
   const canDownload = !hasHardBlocker || acknowledged;
+  const pricingScenario = dashboard.client_proposal.sections.commercial_proposal.scenario;
 
   async function exportPptx() {
     const PptxGenJS = (await import("pptxgenjs")).default;
@@ -102,6 +103,23 @@ export default function PitchDeckPanel({
           </div>
         ))}
       </div>
+
+      {pricingScenario?.calculation?.length ? (
+        <details className="mt-4 rounded-sm border border-border bg-canvas p-3">
+          <summary className="cursor-pointer text-xs font-bold uppercase tracking-wide text-navy select-none">
+            Show the math behind this price (internal only — not in the exported deck)
+          </summary>
+          <ol className="mt-2 space-y-1.5 border-l-2 border-border pl-3">
+            {pricingScenario.calculation.map((s, i) => (
+              <li key={i} className="text-xs">
+                <span className="text-gray-500">{s.label}:</span>{" "}
+                <code className="text-gray-700">{s.expression}</code>
+                {s.unit ? <span className="text-gray-400"> {s.unit}</span> : null}
+              </li>
+            ))}
+          </ol>
+        </details>
+      ) : null}
 
       <button
         onClick={exportPptx}
