@@ -20,6 +20,8 @@ export default function TenderUploadPanel() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
+  const [pipelineRunning, setPipelineRunning] = useState(false);
+  const [pipelineError, setPipelineError] = useState("");
 
   useEffect(() => {
     listOpportunitiesForIngestion().then((res) => {
@@ -47,6 +49,7 @@ export default function TenderUploadPanel() {
     if (!file || !opportunityId) return;
     setError("");
     setMessage("");
+    setPipelineError("");
 
     startTransition(async () => {
       const formData = new FormData();
@@ -76,6 +79,35 @@ export default function TenderUploadPanel() {
       setFile(null);
       const list = await listTenderDocuments(opportunityId);
       if (list.ok && list.data) setDocs(list.data);
+
+      // Upload alone only lands the file + chunks — nothing downstream
+      // reads them until retrieval actually runs and persists what it
+      // finds. Trigger that pipeline run now rather than leaving it as a
+      // manual, easy-to-forget CLI step (skills/retrieval/persist.py).
+      setPipelineRunning(true);
+      try {
+        const pipelineRes = await fetch("/api/pipeline", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ opportunity_id: opportunityId }),
+        });
+        const pipelineJson = await pipelineRes.json();
+        if (pipelineJson.ok) {
+          const d = pipelineJson.data;
+          setMessage(
+            `Uploaded — ${res.data.chunk_count} chunk(s). Pipeline complete: `
+            + `${d.opportunity_features?.fields_written ?? 0} field(s), `
+            + `${d.tender_constraints?.rows_written ?? 0} constraint(s), `
+            + `${d.client_highlights?.rows_written ?? 0} highlight(s) extracted.`,
+          );
+        } else {
+          setPipelineError(pipelineJson.error ?? "Pipeline run failed.");
+        }
+      } catch {
+        setPipelineError("Could not reach the pipeline service.");
+      } finally {
+        setPipelineRunning(false);
+      }
     });
   }
 
@@ -131,6 +163,8 @@ export default function TenderUploadPanel() {
 
         {error ? <p className="mt-3 text-sm text-danger" role="alert">{error}</p> : null}
         {message ? <p className="mt-3 text-sm text-success">{message}</p> : null}
+        {pipelineRunning ? <p className="mt-3 text-sm text-gray-500">Running extraction pipeline… this can take a few minutes.</p> : null}
+        {pipelineError ? <p className="mt-3 text-sm text-danger" role="alert">Pipeline: {pipelineError}</p> : null}
 
         {docs.length > 0 ? (
           <ul className="mt-4 space-y-2 border-t border-border pt-4">

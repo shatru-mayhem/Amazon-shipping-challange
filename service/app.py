@@ -38,6 +38,10 @@ sys.path.insert(0, _ROOT)
 
 SERVICE_TOKEN = os.environ.get("SKILLS_SERVICE_TOKEN")
 TIMEOUT_SECONDS = 120
+# persist.py makes one retrieval call per opportunity_features field plus
+# every constraint catalog type — much longer-running than a single skill
+# call, same reasoning as PERSIST_TIMEOUT_MS in lib/skills-bridge.ts.
+PERSIST_TIMEOUT_SECONDS = 600
 
 # Mirrors app/api/skill/route.ts's SKILLS map exactly — keep both in sync
 # if a skill is added/renamed.
@@ -82,6 +86,10 @@ class HistoricalAnalysisRequest(BaseModel):
     update_requirements_doc: bool | None = None
 
 
+class PersistRequest(BaseModel):
+    opportunity_id: str
+
+
 def _check_auth(x_service_token: str | None):
     if not SERVICE_TOKEN:
         raise HTTPException(500, "SKILLS_SERVICE_TOKEN is not set on this service — refusing to run unauthenticated.")
@@ -89,17 +97,17 @@ def _check_auth(x_service_token: str | None):
         raise HTTPException(401, "Invalid or missing X-Service-Token.")
 
 
-def _run_python(args: list) -> dict:
+def _run_python(args: list, timeout_seconds: int = TIMEOUT_SECONDS) -> dict:
     try:
         proc = subprocess.run(
             ["python", *args],
             cwd=_ROOT,
             capture_output=True,
             text=True,
-            timeout=TIMEOUT_SECONDS,
+            timeout=timeout_seconds,
         )
     except subprocess.TimeoutExpired:
-        raise HTTPException(504, f"Script timed out after {TIMEOUT_SECONDS}s.")
+        raise HTTPException(504, f"Script timed out after {timeout_seconds}s.")
     if proc.returncode != 0:
         raise HTTPException(500, proc.stderr.strip() or f"Script exited {proc.returncode}.")
     try:
@@ -170,6 +178,16 @@ def run_historical_analysis(req: HistoricalAnalysisRequest, x_service_token: str
         args.append("--update-requirements-doc")
 
     return _run_python(args)
+
+
+@app.post("/persist")
+def run_persist(req: PersistRequest, x_service_token: str | None = Header(default=None)):
+    _check_auth(x_service_token)
+    if not req.opportunity_id.strip():
+        raise HTTPException(400, "opportunity_id is required.")
+
+    script = os.path.join(_ROOT, "skills", "retrieval", "persist.py")
+    return _run_python([script, req.opportunity_id], timeout_seconds=PERSIST_TIMEOUT_SECONDS)
 
 
 @app.get("/historical_model")

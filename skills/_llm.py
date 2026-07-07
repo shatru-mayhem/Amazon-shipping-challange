@@ -1,13 +1,14 @@
-"""Shared LLM access for retrieval/extraction skills, via Ollama — split
-across local and cloud because Ollama's cloud API (ollama.com) only serves
-its own curated :cloud chat/generation models, not custom models pushed to
-a personal namespace, and it has no embedding models at all:
+"""Shared LLM access for retrieval/extraction skills — embeddings via
+Gemini's cloud API, generation via Ollama:
 
-  - EMBED_MODEL   (nomic-embed-text) -> embed() / embed_batch()
-    Always LOCAL (http://localhost:11434) — no cloud embedding models
-    exist. Turns text into a vector for cosine-similarity matching:
-    classifying a tender's stated constraint against constraint_catalog,
-    or matching a reply email to the question it resolves.
+  - EMBED_MODEL    (gemini-embedding-001) -> embed() / embed_batch()
+    Cloud only, via GEMINI_API_KEY (google-genai, same key/package
+    nl_query_gemini.py already uses). Ollama's cloud API has no embedding
+    models at all — a local Ollama server was previously required just
+    for this — so this runs on Gemini instead, no local server needed.
+    Turns text into a vector for cosine-similarity matching: classifying
+    a tender's stated constraint against constraint_catalog, or matching
+    a reply email to the question it resolves.
   - GENERATE_MODEL (gpt-oss:20b-cloud by default) -> generate_json()
     Runs on ollama.com's cloud API when OLLAMA_API_KEY is set (reachable
     from anywhere, no local server needed); falls back to a local model
@@ -17,10 +18,10 @@ a personal namespace, and it has no embedding models at all:
 
     from _llm import embed, embed_batch, generate_json, cosine_similarity
 
-Local setup (embeddings always need this):
-    ollama pull nomic-embed-text
-Cloud setup (optional, for generate_json):
-    Get a key at https://ollama.com/settings/keys, set OLLAMA_API_KEY.
+Cloud setup:
+    GEMINI_API_KEY   - required for embed()/embed_batch()
+    OLLAMA_API_KEY   - optional, for generate_json() (falls back to a
+                       local Ollama server running llama3.2 if unset)
 """
 
 import os
@@ -66,6 +67,36 @@ OLLAMA_LOCAL_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
 OLLAMA_CLOUD_HOST = "https://ollama.com"
 OLLAMA_API_KEY = os.environ.get("OLLAMA_API_KEY")
 
+GEMINI_EMBED_MODEL = os.environ.get("GEMINI_EMBED_MODEL", "gemini-embedding-001")
+
+# GEMINI_API_SECRET_PRIVATE is a second Gemini key, used only as a
+# fallback when the primary key (GEMINI_API_KEY) hits a quota/rate-limit
+# error — embed_batch() below switches to it automatically, mid-request,
+# rather than failing the whole retrieval call over an exhausted quota.
+GEMINI_API_KEY_FALLBACK = os.environ.get("GEMINI_API_SECRET_PRIVATE")
+
+_gemini_clients: dict = {}
+
+
+def _get_gemini_client(use_fallback: bool = False):
+    """Lazy import/init, same reasoning as nl_query_gemini.py's
+    _get_client() — a module that only ever calls generate_json()
+    shouldn't need google-genai installed or GEMINI_API_KEY set."""
+    cache_key = "fallback" if use_fallback else "primary"
+    if cache_key not in _gemini_clients:
+        api_key = GEMINI_API_KEY_FALLBACK if use_fallback else os.environ.get("GEMINI_API_KEY")
+        if not api_key:
+            var = "GEMINI_API_SECRET_PRIVATE" if use_fallback else "GEMINI_API_KEY"
+            raise RuntimeError(f"{var} is not set — required for embed()/embed_batch().")
+        from google import genai
+        _gemini_clients[cache_key] = genai.Client(api_key=api_key)
+    return _gemini_clients[cache_key]
+
+
+def _is_quota_error(e: Exception) -> bool:
+    msg = str(e)
+    return "RESOURCE_EXHAUSTED" in msg or "429" in msg or "quota" in msg.lower()
+
 # Cloud is the default. Measured on this machine: local llama3.2 runs at
 # 100% CPU with no GPU — fine for tiny prompts (5-9s) but scales badly
 # with real ~4000-char batched prompts (a full tender_constraints run
@@ -76,7 +107,6 @@ OLLAMA_API_KEY = os.environ.get("OLLAMA_API_KEY")
 # with a real GPU where local would actually win).
 OLLAMA_USE_CLOUD = os.environ.get("OLLAMA_USE_CLOUD", "true").lower() == "true"
 
-EMBED_MODEL = os.environ.get("OLLAMA_EMBED_MODEL", "nomic-embed-text")
 GENERATE_MODEL = os.environ.get(
     "OLLAMA_GENERATE_MODEL", "gpt-oss:20b-cloud" if OLLAMA_USE_CLOUD else "llama3.2"
 )
@@ -150,40 +180,62 @@ def _log_call(**fields):
 
 
 def embed(text: str, *, opportunity_id: str = None, skill: str = None) -> list:
-    """Embed a single string with EMBED_MODEL. Always local — Ollama's
-    cloud API has no embedding models. Returns a list[float].
+    """Embed a single string with GEMINI_EMBED_MODEL, via the cloud.
+    Returns a list[float].
 
     opportunity_id/skill are optional attribution labels for the
     observability log (which opportunity and which retrieval.py function
     triggered this call) — purely for analytics, never required."""
-    start = time.perf_counter()
-    try:
-        result = _post(OLLAMA_LOCAL_HOST, "/api/embeddings", {"model": EMBED_MODEL, "prompt": text})
-    except Exception as e:
-        _log_call(
-            opportunity_id=opportunity_id, skill=skill, call_type="embed", model=EMBED_MODEL,
-            is_cloud=False, prompt_tokens=None, completion_tokens=None, total_tokens=None,
-            total_duration_ms=round((time.perf_counter() - start) * 1000, 1),
-            load_duration_ms=None, eval_duration_ms=None, success=False, error_message=str(e)[:2000],
-        )
-        raise
-    # Ollama's legacy /api/embeddings endpoint returns just {"embedding": [...]}
-    # — no token counts or server-side timing, unlike /api/generate. Wall-clock
-    # duration is still real and worth recording.
-    _log_call(
-        opportunity_id=opportunity_id, skill=skill, call_type="embed", model=EMBED_MODEL,
-        is_cloud=False, prompt_tokens=None, completion_tokens=None, total_tokens=None,
-        total_duration_ms=round((time.perf_counter() - start) * 1000, 1),
-        load_duration_ms=None, eval_duration_ms=None, success=True, error_message=None,
-    )
-    return result["embedding"]
+    return embed_batch([text], opportunity_id=opportunity_id, skill=skill)[0]
 
 
 def embed_batch(texts: list, *, opportunity_id: str = None, skill: str = None) -> list:
-    """Embed multiple strings. Ollama's embeddings endpoint is single-prompt,
-    so this just loops — fine at retrieval-engine volumes (per-tender,
-    per-email), not a hot request path."""
-    return [embed(t, opportunity_id=opportunity_id, skill=skill) for t in texts]
+    """Embed multiple strings in one Gemini API call (embed_content
+    accepts a list of contents directly — no need to loop per string the
+    way Ollama's single-prompt endpoint required).
+
+    If the primary key (GEMINI_API_KEY) comes back with a quota/rate-limit
+    error and GEMINI_API_SECRET_PRIVATE is set, retries once with that
+    second key before giving up — a quota exhaustion on one key
+    shouldn't fail retrieval outright."""
+    start = time.perf_counter()
+    used_fallback = False
+    try:
+        result = _get_gemini_client().models.embed_content(model=GEMINI_EMBED_MODEL, contents=texts)
+    except Exception as e:
+        if _is_quota_error(e) and GEMINI_API_KEY_FALLBACK:
+            used_fallback = True
+            try:
+                result = _get_gemini_client(use_fallback=True).models.embed_content(
+                    model=GEMINI_EMBED_MODEL, contents=texts,
+                )
+            except Exception as e2:
+                _log_call(
+                    opportunity_id=opportunity_id, skill=skill, call_type="embed", model=GEMINI_EMBED_MODEL,
+                    is_cloud=True, prompt_tokens=None, completion_tokens=None, total_tokens=None,
+                    total_duration_ms=round((time.perf_counter() - start) * 1000, 1),
+                    load_duration_ms=None, eval_duration_ms=None, success=False, error_message=str(e2)[:2000],
+                )
+                raise
+        else:
+            _log_call(
+                opportunity_id=opportunity_id, skill=skill, call_type="embed", model=GEMINI_EMBED_MODEL,
+                is_cloud=True, prompt_tokens=None, completion_tokens=None, total_tokens=None,
+                total_duration_ms=round((time.perf_counter() - start) * 1000, 1),
+                load_duration_ms=None, eval_duration_ms=None, success=False, error_message=str(e)[:2000],
+            )
+            raise
+    # Gemini's embed_content response carries no token-usage metadata
+    # (unlike generate_content) — wall-clock duration is still real and
+    # worth recording.
+    _log_call(
+        opportunity_id=opportunity_id, skill=skill, call_type="embed",
+        model=GEMINI_EMBED_MODEL + (" (fallback key)" if used_fallback else ""),
+        is_cloud=True, prompt_tokens=None, completion_tokens=None, total_tokens=None,
+        total_duration_ms=round((time.perf_counter() - start) * 1000, 1),
+        load_duration_ms=None, eval_duration_ms=None, success=True, error_message=None,
+    )
+    return [e.values for e in result.embeddings]
 
 
 def cosine_similarity(a: list, b: list) -> float:
@@ -275,7 +327,7 @@ def generate_json(prompt: str, system: str = None, *, opportunity_id: str = None
 
 if __name__ == "__main__":
     vec = embed("delivery to mainland Spain within 48 hours")
-    print(f"embed() OK — {EMBED_MODEL} returned a {len(vec)}-dim vector")
+    print(f"embed() OK — {GEMINI_EMBED_MODEL} returned a {len(vec)}-dim vector")
 
     out = generate_json(
         "Extract a JSON object with one field, greeting, containing the word hello.",

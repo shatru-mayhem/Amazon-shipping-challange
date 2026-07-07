@@ -11,12 +11,18 @@ import path from "path";
 // subprocess behavior unchanged.
 
 const TIMEOUT_MS = 120_000;
+// persist_opportunity() makes one retrieval call (each potentially an LLM
+// call) per opportunity_features field plus every constraint catalog type
+// — SKILL.md is explicit that neither local nor cloud generation is
+// reliably fast, so the standard 2-minute timeout above is too tight for
+// this one, multi-call pipeline run.
+const PERSIST_TIMEOUT_MS = 600_000;
 const SERVICE_URL = process.env.PYTHON_SKILLS_SERVICE_URL;
 const SERVICE_TOKEN = process.env.PYTHON_SKILLS_SERVICE_TOKEN;
 
-function runPythonLocal(args: string[]): Promise<string> {
+function runPythonLocal(args: string[], timeoutMs: number = TIMEOUT_MS): Promise<string> {
   return new Promise((resolve, reject) => {
-    execFile("python", args, { timeout: TIMEOUT_MS, cwd: process.cwd() }, (err, stdout, stderr) => {
+    execFile("python", args, { timeout: timeoutMs, cwd: process.cwd() }, (err, stdout, stderr) => {
       if (err) {
         reject(new Error(stderr.trim() || err.message));
         return;
@@ -26,7 +32,7 @@ function runPythonLocal(args: string[]): Promise<string> {
   });
 }
 
-async function callRemote(endpoint: string, body: Record<string, unknown>): Promise<unknown> {
+async function callRemote(endpoint: string, body: Record<string, unknown>, timeoutMs: number = TIMEOUT_MS): Promise<unknown> {
   if (!SERVICE_TOKEN) {
     throw new Error("PYTHON_SKILLS_SERVICE_TOKEN is not set — required alongside PYTHON_SKILLS_SERVICE_URL.");
   }
@@ -34,7 +40,7 @@ async function callRemote(endpoint: string, body: Record<string, unknown>): Prom
     method: "POST",
     headers: { "Content-Type": "application/json", "X-Service-Token": SERVICE_TOKEN },
     body: JSON.stringify(body),
-    signal: AbortSignal.timeout(TIMEOUT_MS),
+    signal: AbortSignal.timeout(timeoutMs),
   });
   const json = await res.json().catch(() => null);
   if (!res.ok) {
@@ -110,6 +116,21 @@ export async function callHistoricalAnalysis(options: {
     ...(updateRequirementsDoc ? ["--update-requirements-doc"] : []),
   ];
   return JSON.parse(await runPythonLocal(cliArgs));
+}
+
+// skills/retrieval/persist.py: runs retrieval on every opportunity_features
+// field + every constraint catalog type + client_highlights + email
+// resolutions, then writes the found values into the real tables (plus
+// derived constraint_compliance_results / signal_check_results). Existed
+// as a CLI-only script — this is what makes it reachable from an upload,
+// so "upload a document" actually results in the pipeline running instead
+// of just landing a file + chunks with nothing downstream reading them.
+export async function callPersistOpportunity(opportunityId: string): Promise<unknown> {
+  if (SERVICE_URL) {
+    return callRemote("/persist", { opportunity_id: opportunityId }, PERSIST_TIMEOUT_MS);
+  }
+  const scriptPath = path.join(process.cwd(), "skills", "retrieval", "persist.py");
+  return JSON.parse(await runPythonLocal([scriptPath, opportunityId], PERSIST_TIMEOUT_MS));
 }
 
 // Raw bytes of the serialized model — either read straight off disk

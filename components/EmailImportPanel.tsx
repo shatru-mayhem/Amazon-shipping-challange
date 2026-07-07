@@ -17,6 +17,8 @@ export default function EmailImportPanel() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
+  const [pipelineRunning, setPipelineRunning] = useState(false);
+  const [pipelineError, setPipelineError] = useState("");
 
   useEffect(() => {
     listOpportunitiesForIngestion().then((res) => {
@@ -44,6 +46,7 @@ export default function EmailImportPanel() {
     if (!file || !opportunityId) return;
     setError("");
     setMessage("");
+    setPipelineError("");
 
     startTransition(async () => {
       const formData = new FormData();
@@ -67,6 +70,33 @@ export default function EmailImportPanel() {
       setFile(null);
       const list = await listEmailThreads(opportunityId);
       if (list.ok && list.data) setThreads(list.data);
+
+      // Same reasoning as TenderUploadPanel: importing alone only lands
+      // threads/messages — nothing downstream reads them until retrieval
+      // runs and persists what it finds. Trigger that now.
+      setPipelineRunning(true);
+      try {
+        const pipelineRes = await fetch("/api/pipeline", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ opportunity_id: opportunityId }),
+        });
+        const pipelineJson = await pipelineRes.json();
+        if (pipelineJson.ok) {
+          const d = pipelineJson.data;
+          setMessage(
+            `Imported: ${parts.join(" + ")}. Pipeline complete: `
+            + `${d.client_highlights?.rows_written ?? 0} highlight(s), `
+            + `${d.email_messages?.rows_updated ?? 0} thread(s) resolved.`,
+          );
+        } else {
+          setPipelineError(pipelineJson.error ?? "Pipeline run failed.");
+        }
+      } catch {
+        setPipelineError("Could not reach the pipeline service.");
+      } finally {
+        setPipelineRunning(false);
+      }
     });
   }
 
@@ -127,6 +157,8 @@ export default function EmailImportPanel() {
 
         {error ? <p className="mt-3 text-sm text-danger" role="alert">{error}</p> : null}
         {message ? <p className="mt-3 text-sm text-success">{message}</p> : null}
+        {pipelineRunning ? <p className="mt-3 text-sm text-gray-500">Running extraction pipeline… this can take a few minutes.</p> : null}
+        {pipelineError ? <p className="mt-3 text-sm text-danger" role="alert">Pipeline: {pipelineError}</p> : null}
 
         {threads.length > 0 ? (
           <ul className="mt-4 space-y-2 border-t border-border pt-4">
