@@ -58,16 +58,23 @@ const SKILL_LOAD_ORDER = [
   "commercial_strategy", "pricing_recommendations", "follow_up_actions", "client_proposal", "sources_used",
 ] as const;
 
-async function callSkill<T>(skill: string, opportunityId: string, extraArgs?: string[]): Promise<T | null> {
+async function callSkill<T>(
+  skill: string,
+  opportunityId: string,
+  extraArgs?: string[],
+  onError?: (skill: string, message: string) => void,
+): Promise<T | null> {
   try {
     const res = await fetch("/api/skill", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ skill, opportunity_id: opportunityId, extra_args: extraArgs }),
     });
-    const json = await res.json();
+    const json = await res.json().catch(() => ({ ok: false, error: res.status + " " + res.statusText }));
+    if (!json.ok) onError?.(skill, json.error ?? "unknown error");
     return json.ok ? (json.data as T) : null;
-  } catch {
+  } catch (e) {
+    onError?.(skill, e instanceof Error ? e.message : "network error");
     return null;
   }
 }
@@ -572,6 +579,7 @@ function ExecutiveMode() {
   const [oppsError, setOppsError] = useState<string | null>(null);
   const [selectedOpp, setSelectedOpp] = useState("");
   const [activeId, setActiveId] = useState("executive_summary");
+  const [skillError, setSkillError] = useState("");
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingSkill, setLoadingSkill] = useState("");
@@ -591,13 +599,23 @@ function ExecutiveMode() {
   function handleLoad() {
     if (!selectedOpp) return;
     setDashboard(null);
+    setSkillError("");
     setLoading(true);
     (async () => {
       const results: Record<string, unknown> = {};
+      const errors: string[] = [];
       for (const skill of SKILL_LOAD_ORDER) {
         setLoadingSkill(NAV_ITEMS.find((n) => n.id === skill)?.label ?? skill.replace(/_/g, " "));
-        results[skill] = await callSkill(skill, selectedOpp);
+        results[skill] = await callSkill(skill, selectedOpp, undefined, (s, m) => {
+          if (errors.length === 0) errors.push(s + ": " + m);
+          else if (!errors[0].includes(m)) errors.push(s);
+        });
       }
+      setSkillError(
+        errors.length > 0
+          ? errors[0] + (errors.length > 1 ? " (+" + (errors.length - 1) + " more skills failed the same way)" : "")
+          : "",
+      );
       setDashboard({
         executive_summary: (results.executive_summary as ExecutiveSummary) ?? { headline: "", decision_prompt: "" },
         opportunity_score: (results.opportunity_score as OpportunityScore) ?? { score: 0, band: "cold", rationale: "" },
@@ -736,6 +754,12 @@ function ExecutiveMode() {
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-xl font-bold" style={{ color: C.ink }}>{activeNav.label}</h1>
         </div>
+        {skillError ? (
+          <div className="mb-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
+            <span className="font-bold">AI skills unavailable — panels below show empty defaults, not real analysis.</span>{" "}
+            {skillError}
+          </div>
+        ) : null}
         {renderPanel()}
       </main>
 

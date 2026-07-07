@@ -36,6 +36,16 @@ async function callRemote(endpoint: string, body: Record<string, unknown>, timeo
   if (!SERVICE_TOKEN) {
     throw new Error("PYTHON_SKILLS_SERVICE_TOKEN is not set — required alongside PYTHON_SKILLS_SERVICE_URL.");
   }
+  if (SERVICE_URL && (SERVICE_URL.includes("<") || SERVICE_URL.includes(">"))) {
+    throw new Error(
+      "PYTHON_SKILLS_SERVICE_URL is still the placeholder value ('" + SERVICE_URL + "'). Deploy service/ (see service/README.md), then set the real https://….up.railway.app URL in Vercel and redeploy.",
+    );
+  }
+  try {
+    new URL(SERVICE_URL!);
+  } catch {
+    throw new Error("PYTHON_SKILLS_SERVICE_URL is not a valid URL: '" + SERVICE_URL + "'.");
+  }
   const res = await fetch(`${SERVICE_URL}${endpoint}`, {
     method: "POST",
     headers: { "Content-Type": "application/json", "X-Service-Token": SERVICE_TOKEN },

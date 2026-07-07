@@ -34,6 +34,30 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true, data: result });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Chat query failed.";
+    // Fallback: answer from the Supabase knowledge base (full-text search
+    // over historical deals, pricing, and the service description) so the
+    // chat still works while the Python service is not deployed.
+    try {
+      const { data: chunks } = await supabase.rpc("search_knowledge", {
+        query: question,
+        top_k: 3,
+      });
+      if (chunks && chunks.length > 0) {
+        const answer =
+          "(Answering from the knowledge base — AI query service not configured: " +
+          message +
+          ")\n\n" +
+          chunks
+            .map(
+              (c: { title: string; content: string }) =>
+                "• " + c.title + "\n" + (c.content.length > 500 ? c.content.slice(0, 500) + "…" : c.content),
+            )
+            .join("\n\n");
+        return NextResponse.json({ ok: true, data: { answer, mode: "knowledge-base-fallback" } });
+      }
+    } catch {
+      // fall through to the original error
+    }
     return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
 }
