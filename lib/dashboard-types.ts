@@ -52,6 +52,13 @@ export interface CommercialStrategy {
   has_hard_blocker: boolean;
 }
 
+export interface CalculationStep {
+  label: string;
+  expression: string;
+  result: number;
+  unit?: string;
+}
+
 export interface PricingScenario {
   name: "aggressive" | "balanced" | "premium";
   target_margin_pct: number;
@@ -63,6 +70,28 @@ export interface PricingScenario {
   tradeoffs: string;
   negotiation_strategy: string;
   guardrail_result?: string;
+  // Step-by-step arithmetic behind this scenario's numbers — shown as a
+  // collapsible "show the data behind this" section, not inline.
+  calculation?: CalculationStep[];
+}
+
+export interface CostMatrixRow {
+  mile_type: string;
+  daily_volume_band: string;
+  avg_cost_eur: number;
+  weight_band_samples: number;
+}
+
+export interface PricingEvidence {
+  cost_matrix_rows: CostMatrixRow[];
+  region_multiplier_rows_matched: { region_name: string; cost_multiplier: number }[];
+  guardrails_row: {
+    effective_date: string | null;
+    min_contribution_margin_pct: number;
+    target_contribution_margin_pct: number;
+    vp_approval_required_below_pct: number;
+    auto_no_go_below_pct: number;
+  };
 }
 
 export interface PricingRecommendations {
@@ -84,6 +113,10 @@ export interface PricingRecommendations {
     vp_approval_required_below_pct: number;
     auto_no_go_below_pct: number;
   } | null;
+  // The raw cost_matrix/region_multiplier/pricing_guardrails rows and the
+  // blended-cost arithmetic that total_cost_per_package_eur came from.
+  cost_calculation?: CalculationStep[];
+  evidence?: PricingEvidence;
 }
 
 export interface FollowUpAction {

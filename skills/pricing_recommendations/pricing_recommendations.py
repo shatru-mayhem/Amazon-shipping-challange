@@ -86,12 +86,15 @@ def _match_volume_band(volume: float, bands: list) -> str:
 
 
 def _region_multiplier(geography: list, multiplier_rows: list):
-    """Returns (multiplier, matched_region_names, unmatched_geography_terms).
-    multiplier is None if nothing in `geography` matches a priced region —
-    that's a real gap, not defaulted to 1.0, since pricing an unpriced
-    region at Spanish-Peninsula cost would understate it."""
+    """Returns (multiplier, matched_region_names, unmatched_geography_terms,
+    matched_rows). multiplier is None if nothing in `geography` matches a
+    priced region — that's a real gap, not defaulted to 1.0, since pricing
+    an unpriced region at Spanish-Peninsula cost would understate it.
+    matched_rows is every region_multipliers row that matched (not just
+    the one picked) — kept for evidence/provenance, since "why this
+    multiplier" needs to show what else was considered."""
     if not geography:
-        return None, [], []
+        return None, [], [], []
     matched, unmatched = [], []
     for g in geography:
         g_lower = g.lower()
@@ -105,9 +108,9 @@ def _region_multiplier(geography: list, multiplier_rows: list):
         else:
             unmatched.append(g)
     if not matched:
-        return None, [], unmatched
+        return None, [], unmatched, []
     best = max(matched, key=lambda r: float(r["cost_multiplier"]))
-    return float(best["cost_multiplier"]), [r["region_name"] for r in matched], unmatched
+    return float(best["cost_multiplier"]), [r["region_name"] for r in matched], unmatched, matched
 
 
 def _cost_per_package_eur(daily_volume_band: str) -> dict:
@@ -130,6 +133,18 @@ def _cost_per_package_eur(daily_volume_band: str) -> dict:
         "by_mile_type_eur": by_mile_type,
         "total_eur": round(sum(by_mile_type.values()), 4),
         "weight_bands_averaged": rows[0]["weight_band_samples"] if rows else 0,
+        # Raw rows this was built from — daily_volume_band is the same
+        # for every row (that's what was queried on) but repeating it per
+        # row keeps this list self-describing without a second lookup.
+        "rows": [
+            {
+                "mile_type": r["mile_type"],
+                "daily_volume_band": daily_volume_band,
+                "avg_cost_eur": round(float(r["avg_cost_eur"]), 4),
+                "weight_band_samples": r["weight_band_samples"],
+            }
+            for r in rows
+        ],
     }
 
 
@@ -141,6 +156,16 @@ def _guardrail_result(margin_pct: float, g: dict) -> str:
     if margin_pct < float(g["target_contribution_margin_pct"]):
         return "above_min_below_target"
     return "within_target"
+
+
+def _step(label: str, expression: str, result, unit: str = None) -> dict:
+    """One line of a calculation trace: what was computed, the exact
+    numbers plugged in, and the result — shown in the UI as a collapsible
+    'data behind this' breakdown rather than only the prose rationale."""
+    step = {"label": label, "expression": expression, "result": result}
+    if unit:
+        step["unit"] = unit
+    return step
 
 
 def recommend_pricing(opportunity_id: str) -> dict:
@@ -159,7 +184,8 @@ def recommend_pricing(opportunity_id: str) -> dict:
 
     guardrails_row = run_sql_one(
         """SELECT min_contribution_margin_pct, target_contribution_margin_pct,
-                  vp_approval_required_below_pct, auto_no_go_below_pct, eur_usd_fx_rate
+                  vp_approval_required_below_pct, auto_no_go_below_pct, eur_usd_fx_rate,
+                  effective_date
            FROM pricing_guardrails ORDER BY effective_date DESC LIMIT 1"""
     )
     if not guardrails_row:
@@ -193,7 +219,9 @@ def recommend_pricing(opportunity_id: str) -> dict:
     cost_ref = _cost_per_package_eur(matched_band)
 
     multiplier_rows = run_sql("SELECT region_name, cost_multiplier FROM region_multipliers")
-    region_multiplier, matched_regions, unpriced_regions = _region_multiplier(geography, multiplier_rows)
+    region_multiplier, matched_regions, unpriced_regions, matched_multiplier_rows = _region_multiplier(
+        geography, multiplier_rows,
+    )
 
     # A stated region with no cost data at all is a real gap — same shape
     # as constraint_compliance's is_hard_blocker, surfaced here for pricing
@@ -209,6 +237,22 @@ def recommend_pricing(opportunity_id: str) -> dict:
 
     total_cost_per_package = round(cost_ref["total_eur"] * region_multiplier, 4)
     daily_cost_eur = round(total_cost_per_package * volume, 2)
+
+    mile_terms = " + ".join(f"{v:g}" for v in cost_ref["by_mile_type_eur"].values())
+    cost_calculation = [
+        _step(
+            f"Blend mile-type costs for daily_volume_band={matched_band}",
+            f"{mile_terms} = {cost_ref['total_eur']:g}",
+            cost_ref["total_eur"],
+            "EUR/package",
+        ),
+        _step(
+            f"Apply region multiplier ({', '.join(matched_regions)}: {region_multiplier:g}x)",
+            f"{cost_ref['total_eur']:g} × {region_multiplier:g} = {total_cost_per_package:g}",
+            total_cost_per_package,
+            "EUR/package",
+        ),
+    ]
 
     g = guardrails_row
     min_m = float(g["min_contribution_margin_pct"])
@@ -234,6 +278,39 @@ def recommend_pricing(opportunity_id: str) -> dict:
             round(daily_revenue * 30.44 * float(opp["contract_length_months"]), 2)
             if opp.get("contract_length_months") else None
         )
+
+        calc_steps = [
+            _step(
+                f"Price at {margin_pct:.1f}% contribution margin",
+                f"{total_cost_per_package:g} / (1 - {margin_pct:g}/100) = {price:g}",
+                price,
+                "EUR/package",
+            ),
+            _step(
+                "Discount vs. list (premium) price",
+                f"({premium_price:g} - {price:g}) / {premium_price:g} × 100 = {discount_pct:g}"
+                if premium_price else "n/a — no premium price computed",
+                discount_pct,
+                "%",
+            ),
+            _step(
+                f"Daily revenue at {int(volume)} packages/day",
+                f"{price:g} × {int(volume)} = {daily_revenue:g}",
+                daily_revenue,
+                "EUR/day",
+            ),
+        ]
+        if contract_value is not None:
+            months = float(opp["contract_length_months"])
+            calc_steps.append(
+                _step(
+                    f"Contract value over {months:g} months",
+                    f"{daily_revenue:,.2f} × 30.44 × {months:g} = {contract_value:,.2f}",
+                    contract_value,
+                    "EUR",
+                )
+            )
+
         return {
             "name": name,
             "target_margin_pct": round(margin_pct, 1),
@@ -245,6 +322,7 @@ def recommend_pricing(opportunity_id: str) -> dict:
             "rationale": rationale,
             "tradeoffs": tradeoffs,
             "negotiation_strategy": negotiation_strategy,
+            "calculation": calc_steps,
         }
 
     scenarios = [
@@ -316,6 +394,24 @@ def recommend_pricing(opportunity_id: str) -> dict:
         "recommended_scenario": "balanced",
         "scenarios": scenarios,
         "guardrails": guardrail_notes,
+        # Raw rows + step-by-step arithmetic behind total_cost_per_package_eur
+        # and each scenario's numbers — rendered as a collapsible "show the
+        # data behind this" section rather than only the prose rationale.
+        "cost_calculation": cost_calculation,
+        "evidence": {
+            "cost_matrix_rows": cost_ref["rows"],
+            "region_multiplier_rows_matched": [
+                {"region_name": r["region_name"], "cost_multiplier": float(r["cost_multiplier"])}
+                for r in matched_multiplier_rows
+            ],
+            "guardrails_row": {
+                "effective_date": str(g["effective_date"]) if g.get("effective_date") is not None else None,
+                "min_contribution_margin_pct": min_m,
+                "target_contribution_margin_pct": target_m,
+                "vp_approval_required_below_pct": float(g["vp_approval_required_below_pct"]),
+                "auto_no_go_below_pct": float(g["auto_no_go_below_pct"]),
+            },
+        },
     })
     return result
 

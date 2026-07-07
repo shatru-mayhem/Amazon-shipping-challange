@@ -30,6 +30,7 @@ import type {
   RiskAssessment,
   CommercialStrategy,
   PricingRecommendations,
+  CalculationStep,
   FollowUpActions,
   ClientProposal,
   SourcesUsed,
@@ -303,6 +304,33 @@ function RiskAssessmentPanel({ data }: { data: RiskAssessment }) {
   );
 }
 
+// Collapsible "show the data behind this" — a step-by-step arithmetic
+// trace (label, the exact numbers plugged in, the result), closed by
+// default so it doesn't clutter the panel until someone wants to verify
+// a number rather than just read the prose rationale.
+function CalculationTrace({ steps }: { steps: CalculationStep[] }) {
+  if (steps.length === 0) return null;
+  return (
+    <details className="mt-2 group">
+      <summary
+        className="cursor-pointer text-sm font-medium select-none"
+        style={{ color: C.link }}
+      >
+        Show the math
+      </summary>
+      <ol className="mt-2 space-y-1.5 border-l-2 pl-3" style={{ borderColor: C.border }}>
+        {steps.map((s, i) => (
+          <li key={i} className="text-sm">
+            <span className="text-gray-500">{s.label}:</span>{" "}
+            <code className="text-xs text-gray-700">{s.expression}</code>
+            {s.unit ? <span className="text-gray-400"> {s.unit}</span> : null}
+          </li>
+        ))}
+      </ol>
+    </details>
+  );
+}
+
 function PricingPanel({ data }: { data: PricingRecommendations }) {
   return (
     <div className="space-y-4">
@@ -339,6 +367,7 @@ function PricingPanel({ data }: { data: PricingRecommendations }) {
                 <p className="text-sm text-gray-700 mb-1"><strong>Rationale:</strong> {s.rationale}</p>
                 <p className="text-sm text-gray-600 mb-1"><strong>Tradeoffs:</strong> {s.tradeoffs}</p>
                 <p className="text-sm text-gray-600"><strong>Strategy:</strong> {s.negotiation_strategy}</p>
+                <CalculationTrace steps={s.calculation ?? []} />
               </Card>
             );
           })}
@@ -347,6 +376,76 @@ function PricingPanel({ data }: { data: PricingRecommendations }) {
       {(data.guardrails ?? []).map((note, i) => (
         <p key={i} className="text-sm" style={{ color: C.warning }}>⚠ {note}</p>
       ))}
+      {data.cost_calculation || data.evidence ? (
+        <Card>
+          <details className="group">
+            <summary className="cursor-pointer text-sm font-bold select-none" style={{ color: C.ink }}>
+              Show the data behind the cost calculation
+            </summary>
+            <div className="mt-3 space-y-4">
+              {data.cost_calculation ? <CalculationTrace steps={data.cost_calculation} /> : null}
+
+              {data.evidence?.cost_matrix_rows.length ? (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-1.5">
+                    cost_matrix rows used
+                  </p>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="text-left text-gray-400">
+                          <th className="pr-4 font-medium">Mile type</th>
+                          <th className="pr-4 font-medium">Volume band</th>
+                          <th className="pr-4 font-medium">Avg cost (EUR)</th>
+                          <th className="font-medium">Weight bands averaged</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {data.evidence.cost_matrix_rows.map((r, i) => (
+                          <tr key={i} className="border-t" style={{ borderColor: C.border }}>
+                            <td className="pr-4 py-1 text-gray-700">{r.mile_type}</td>
+                            <td className="pr-4 py-1 text-gray-600">{r.daily_volume_band}</td>
+                            <td className="pr-4 py-1 text-gray-600">{r.avg_cost_eur}</td>
+                            <td className="py-1 text-gray-600">{r.weight_band_samples}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : null}
+
+              {data.evidence?.region_multiplier_rows_matched.length ? (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-1.5">
+                    region_multipliers rows matched
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {data.evidence.region_multiplier_rows_matched.map((r, i) => (
+                      <span key={i} className="text-sm px-2 py-0.5 rounded border text-gray-600" style={{ borderColor: C.border, background: C.canvas }}>
+                        {r.region_name} — {r.cost_multiplier}x
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              {data.evidence?.guardrails_row ? (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-1.5">
+                    pricing_guardrails row used
+                    {data.evidence.guardrails_row.effective_date ? ` (effective ${data.evidence.guardrails_row.effective_date})` : ""}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    min {data.evidence.guardrails_row.min_contribution_margin_pct}% · target {data.evidence.guardrails_row.target_contribution_margin_pct}% ·
+                    {" "}VP approval below {data.evidence.guardrails_row.vp_approval_required_below_pct}% · auto no-go below {data.evidence.guardrails_row.auto_no_go_below_pct}%
+                  </p>
+                </div>
+              ) : null}
+            </div>
+          </details>
+        </Card>
+      ) : null}
     </div>
   );
 }
