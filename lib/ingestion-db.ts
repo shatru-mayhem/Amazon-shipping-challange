@@ -28,9 +28,18 @@ export async function ingestionQuery<T = Record<string, unknown>>(
 ): Promise<T[]> {
   const client = await getPool().connect();
   try {
-    await client.query("SET search_path TO core, constraints");
+    // Supabase's transaction-mode pooler (port 6543) may route each
+    // standalone statement to a DIFFERENT backend connection, so a bare
+    // "SET search_path" does not persist to the next query. Wrapping in a
+    // transaction pins one backend, and SET LOCAL scopes the path to it.
+    await client.query("BEGIN");
+    await client.query("SET LOCAL search_path TO core, constraints");
     const result = await client.query(sql, params);
+    await client.query("COMMIT");
     return result.rows as T[];
+  } catch (e) {
+    await client.query("ROLLBACK").catch(() => undefined);
+    throw e;
   } finally {
     client.release();
   }
