@@ -25,7 +25,7 @@ FROM ollama/ollama:latest AS ollama
 FROM python:3.11-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      ca-certificates libvulkan1 libopenblas0 \
+      curl ca-certificates libvulkan1 libopenblas0 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=ollama /usr/bin/ollama /usr/bin/ollama
