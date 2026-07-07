@@ -74,7 +74,7 @@ export async function updateQuestionStatus(
     .eq("id", id);
   if (error) return { ok: false, error: error.message };
   revalidatePath("/client");
-  revalidatePath("/employee");
+  revalidatePath("/employee/dashboard");
   return { ok: true };
 }
 
@@ -115,6 +115,6 @@ export async function answerQuestion(
     after: data,
   });
   revalidatePath("/client");
-  revalidatePath("/employee");
+  revalidatePath("/employee/dashboard");
   return { ok: true, data: data as QnaThread };
 }

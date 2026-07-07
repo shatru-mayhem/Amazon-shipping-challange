@@ -611,6 +611,7 @@ if __name__ == "__main__":
         print("Usage: python nl_query.py \"your question here\"")
         print("       python nl_query.py --debug-schema   (prints the schema context Gemini receives, no LLM call)")
         print("       python nl_query.py --refresh-cache \"your question here\"   (bypass the schema cache for this run)")
+        print("       python nl_query.py --json \"your question here\"   (prints ask()'s result as JSON, for callers like lib/skills-bridge.ts)")
         sys.exit(1)
 
     if sys.argv[1] == "--debug-schema":
@@ -627,6 +628,18 @@ if __name__ == "__main__":
         refresh = True
         args = args[1:]
 
+    as_json = False
+    if args and args[0] == "--json":
+        as_json = True
+        args = args[1:]
+
     result = ask(" ".join(args), force_refresh_schema=refresh)
-    print(f"\nSQL run:\n{result['sql']}\n")
-    print(f"Answer:\n{result['answer']}\n")
+
+    if as_json:
+        # No extra prints here — the bridge (lib/skills-bridge.ts /
+        # service/app.py) parses stdout as JSON, same contract as the
+        # skills/*.py scripts it already calls.
+        print(json.dumps(result))
+    else:
+        print(f"\nSQL run:\n{result['sql']}\n")
+        print(f"Answer:\n{result['answer']}\n")

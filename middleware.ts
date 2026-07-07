@@ -73,7 +73,7 @@ async function handleAuth(request: NextRequest, url: string, anonKey: string) {
     return NextResponse.redirect(new URL("/client", request.url));
   }
   if (path.startsWith("/client") && isEmployee) {
-    return NextResponse.redirect(new URL("/employee", request.url));
+    return NextResponse.redirect(new URL("/employee/dashboard", request.url));
   }
   return response;
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import TopBar from "@/components/TopBar";
 import LoginModal, { type PortalKind } from "@/components/LoginModal";
 
@@ -37,6 +38,12 @@ export default function LandingPage() {
             storage through last-mile delivery with Amazon Shipping. Select
             your entrance to continue.
           </p>
+          <Link
+            href="/architecture"
+            className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-orange hover:underline"
+          >
+            See how the solution actually works — data flow &amp; architecture →
+          </Link>
         </div>
       </section>
 

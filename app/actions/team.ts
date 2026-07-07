@@ -63,7 +63,7 @@ export async function addEmployee(input: {
     eventType: "team.employee_added",
     after: { email: input.email, hierarchy_level: input.hierarchy_level },
   });
-  revalidatePath("/employee");
+  revalidatePath("/employee/dashboard");
   return { ok: true, data: data as RosterEntry };
 }
 
@@ -104,6 +104,6 @@ export async function setHierarchy(
     eventType: "team.hierarchy_changed",
     after: { email, hierarchy_level: level },
   });
-  revalidatePath("/employee");
+  revalidatePath("/employee/dashboard");
   return { ok: true };
 }

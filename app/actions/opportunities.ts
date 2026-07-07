@@ -47,7 +47,7 @@ export async function createOpportunity(input: {
   if (intakeErr) return { ok: false, error: intakeErr.message };
 
   await withAudit("opportunity.created", opp.id, null, async () => opp);
-  revalidatePath("/employee");
+  revalidatePath("/employee/dashboard");
   return { ok: true, data: opp };
 }
 
@@ -81,7 +81,7 @@ export async function updateIntake(
   ).catch((e: Error) => e);
 
   if (result instanceof Error) return { ok: false, error: result.message };
-  revalidatePath("/employee");
+  revalidatePath("/employee/dashboard");
   return { ok: true, data: result };
 }
 

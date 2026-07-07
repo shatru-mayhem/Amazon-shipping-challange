@@ -30,6 +30,7 @@ import json
 import subprocess
 
 from fastapi import FastAPI, Header, HTTPException
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -69,6 +70,16 @@ class RetrieveRequest(BaseModel):
     opportunity_id: str
     table: str
     field: str | None = None
+
+
+class NlQueryRequest(BaseModel):
+    question: str
+
+
+class HistoricalAnalysisRequest(BaseModel):
+    clusters: int | None = None
+    save_model: bool | None = None
+    update_requirements_doc: bool | None = None
 
 
 def _check_auth(x_service_token: str | None):
@@ -133,3 +144,38 @@ def run_retrieve(req: RetrieveRequest, x_service_token: str | None = Header(defa
         args.append(str(req.field))
 
     return _run_python(args)
+
+
+@app.post("/nl_query")
+def run_nl_query(req: NlQueryRequest, x_service_token: str | None = Header(default=None)):
+    _check_auth(x_service_token)
+    if not req.question.strip():
+        raise HTTPException(400, "question is required.")
+
+    script = os.path.join(_ROOT, "nl_query_gemini.py")
+    return _run_python([script, "--json", req.question])
+
+
+@app.post("/historical_analysis")
+def run_historical_analysis(req: HistoricalAnalysisRequest, x_service_token: str | None = Header(default=None)):
+    _check_auth(x_service_token)
+
+    script = os.path.join(_ROOT, "skills", "exploration", "historical_archetypes.py")
+    args = [script, "--json"]
+    if req.clusters:
+        args.extend(["--clusters", str(req.clusters)])
+    if req.save_model:
+        args.append("--save-model")
+    if req.update_requirements_doc:
+        args.append("--update-requirements-doc")
+
+    return _run_python(args)
+
+
+@app.get("/historical_model")
+def get_historical_model(x_service_token: str | None = Header(default=None)):
+    _check_auth(x_service_token)
+    model_path = os.path.join(_ROOT, "skills", "exploration", "historical_archetypes_model.joblib")
+    if not os.path.exists(model_path):
+        raise HTTPException(404, "Model not found — run /historical_analysis with save_model=true first.")
+    return FileResponse(model_path, media_type="application/octet-stream", filename="historical_archetypes_model.joblib")

@@ -135,6 +135,6 @@ async function finishSignIn(
 
   return {
     ok: true,
-    data: { destination: isEmployee ? "/employee" : "/client" },
+    data: { destination: isEmployee ? "/architecture?next=employee" : "/client" },
   };
 }

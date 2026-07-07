@@ -13,8 +13,8 @@ export default function SoftwareAnalyticsPage() {
       <TopBar context="Software Analytics" />
       <div className="mx-auto max-w-6xl px-4 py-6">
         <div className="mb-6 flex items-center gap-3">
-          <Link href="/employee" className="text-sm text-link hover:underline">
-            ← Operations Dashboard
+          <Link href="/employee/dashboard" className="text-sm text-link hover:underline">
+            ← Unified Intelligence
           </Link>
         </div>
         <SoftwareAnalyticsDashboard />

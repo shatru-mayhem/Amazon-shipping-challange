@@ -69,3 +69,66 @@ export async function callRetrieve(
   const cliArgs = [scriptPath, opportunityId, table, ...(field ? [field] : [])];
   return JSON.parse(await runPythonLocal(cliArgs));
 }
+
+// nl_query_gemini.py lives at the project root (not under skills/) — it's
+// a standalone NL-to-SQL wrapper (Gemini writes SQL, runs read-only
+// against Supabase), not one of the dashboard skills. Same subprocess vs.
+// remote-service split as the calls above.
+export async function callNlQuery(question: string): Promise<unknown> {
+  if (SERVICE_URL) {
+    return callRemote("/nl_query", { question });
+  }
+  const scriptPath = path.join(process.cwd(), "nl_query_gemini.py");
+  return JSON.parse(await runPythonLocal([scriptPath, "--json", question]));
+}
+
+// skills/exploration/historical_archetypes.py: PCA + clustering over
+// core.historical_tenders, surfaced on the historical-insights page.
+// updateRequirementsDoc writes a real repo file (RETRIEVAL_REQUIREMENTS.md)
+// — fine for local dev and the long-running service container, but note
+// that on the remote service the write lands in that container's checkout,
+// not back in this Next.js deployment's source tree.
+export async function callHistoricalAnalysis(options: {
+  clusters?: number;
+  saveModel?: boolean;
+  updateRequirementsDoc?: boolean;
+}): Promise<unknown> {
+  const { clusters, saveModel, updateRequirementsDoc } = options;
+  if (SERVICE_URL) {
+    return callRemote("/historical_analysis", {
+      clusters,
+      save_model: saveModel,
+      update_requirements_doc: updateRequirementsDoc,
+    });
+  }
+  const scriptPath = path.join(process.cwd(), "skills", "exploration", "historical_archetypes.py");
+  const cliArgs = [
+    scriptPath,
+    "--json",
+    ...(clusters ? ["--clusters", String(clusters)] : []),
+    ...(saveModel ? ["--save-model"] : []),
+    ...(updateRequirementsDoc ? ["--update-requirements-doc"] : []),
+  ];
+  return JSON.parse(await runPythonLocal(cliArgs));
+}
+
+// Raw bytes of the serialized model — either read straight off disk
+// (local/service filesystem) or proxied from the remote service.
+export async function getHistoricalModelFile(): Promise<Buffer> {
+  if (SERVICE_URL) {
+    if (!SERVICE_TOKEN) {
+      throw new Error("PYTHON_SKILLS_SERVICE_TOKEN is not set — required alongside PYTHON_SKILLS_SERVICE_URL.");
+    }
+    const res = await fetch(`${SERVICE_URL}/historical_model`, {
+      headers: { "X-Service-Token": SERVICE_TOKEN },
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+    if (!res.ok) {
+      throw new Error(`Skills service returned ${res.status} fetching the model file`);
+    }
+    return Buffer.from(await res.arrayBuffer());
+  }
+  const fs = await import("fs/promises");
+  const modelPath = path.join(process.cwd(), "skills", "exploration", "historical_archetypes_model.joblib");
+  return fs.readFile(modelPath);
+}
