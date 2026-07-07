@@ -122,7 +122,7 @@ const SUGGESTED_QUESTIONS: Record<string, string[]> = {
   "Ingestion Pipeline": ["What's the current pipeline status?", "Any documents still queued?"],
 };
 
-type ChatMessage = { role: "user" | "assistant" | "error"; text: string };
+type ChatMessage = { role: "user" | "assistant" | "error"; text: string; sql?: string; rowCount?: number };
 
 function ChatPanel({ context }: { context: string }) {
   const [threads, setThreads] = useState<Record<string, ChatMessage[]>>({});
@@ -152,7 +152,7 @@ function ChatPanel({ context }: { context: string }) {
         });
         const json = await res.json();
         if (json.ok) {
-          reply = { role: "assistant", text: json.data.answer };
+          reply = { role: "assistant", text: json.data.answer, sql: json.data.sql, rowCount: json.data.row_count };
         } else {
           reply = { role: "error", text: json.error ?? "Could not get an answer." };
         }
@@ -201,6 +201,16 @@ function ChatPanel({ context }: { context: string }) {
               style={m.role === "user" ? { background: "#FFF3D0", color: C.ink } : {}}
             >
               {m.text}
+              {m.sql ? (
+                <details className="mt-2">
+                  <summary className="cursor-pointer text-xs font-medium select-none" style={{ color: C.link }}>
+                    Show sources ({m.rowCount ?? 0} row{m.rowCount === 1 ? "" : "s"})
+                  </summary>
+                  <pre className="mt-1 overflow-x-auto rounded p-2 text-xs text-gray-700 whitespace-pre-wrap" style={{ background: "rgba(0,0,0,0.04)" }}>
+                    {m.sql}
+                  </pre>
+                </details>
+              ) : null}
             </div>
           ))
         )}
