@@ -19,7 +19,7 @@ OLLAMA_PID=$!
 
 echo "Waiting for local Ollama to accept connections..."
 i=0
-until curl -sf http://localhost:11434/api/tags > /dev/null 2>&1; do
+until curl -sf http://127.0.0.1:11434/api/tags > /dev/null 2>&1; do
   i=$((i + 1))
   if [ "$i" -ge 60 ]; then
     echo "Ollama did not come up within 60s — exiting so Railway restarts the container instead of hanging forever." >&2
