@@ -16,6 +16,9 @@ __pycache__/
 # Local schema introspection cache (regenerated at runtime)
 .nl_query_schema_cache.json
 
+# Gemini key rotation cooldown record (regenerated at runtime)
+.gemini_key_status.json
+
 # Node
 node_modules/
 .next/

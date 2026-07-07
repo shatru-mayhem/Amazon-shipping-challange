@@ -44,6 +44,7 @@ import json
 import time
 import psycopg2
 import psycopg2.extras
+from datetime import datetime, timezone, timedelta
 
 
 def _load_dotenv_best_effort():
@@ -91,22 +92,106 @@ FORBIDDEN_KEYWORDS = [
 # GEMINI_API_KEY at all, and importing this module for that path should
 # never crash just because the Gemini key is absent. Only the natural-
 # language path (ask / generate_sql) actually needs the client.
-_client = None
+#
+# Key rotation: each `python nl_query_gemini.py ...` invocation is a
+# fresh process (Next.js/service/app.py spawn it per call — see
+# lib/skills-bridge.ts), so an in-memory "this key is exhausted" flag
+# would be forgotten the instant the process exits and be useless. The
+# free tier's daily quota (20 requests/day per key, as of writing) means
+# that matters: without persisting cooldown state somewhere durable,
+# every subsequent call would blindly retry the same already-exhausted
+# key first and waste a call finding that out. _KEY_STATUS_FILE persists
+# it as a small JSON file next to this script — durable within one
+# deployed container's filesystem (Railway) or one local dev checkout,
+# which is exactly the lifetime that matters here.
+_GEMINI_KEYS = [
+    (label, key) for label, key in [
+        ("primary", os.environ.get("GEMINI_API_KEY")),
+        ("secondary", os.environ.get("GEMINI_API_SECRET_PRIVATE")),
+    ] if key
+]
+_KEY_STATUS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".gemini_key_status.json")
+_clients_by_label = {}
 
 
-def _get_client():
-    global _client
-    if _client is None:
-        api_key = os.environ.get("GEMINI_API_KEY")
-        if not api_key:
-            raise RuntimeError(
-                "GEMINI_API_KEY is not set. It is only needed for natural-language "
-                "questions (ask / generate_sql). For direct SQL use run_sql(), which "
-                "needs SUPABASE_DB_URL but no Gemini key."
-            )
+def _load_key_status() -> dict:
+    """{"primary": "<iso timestamp this key becomes available again>", ...}
+    Best-effort: a missing/corrupt file just means "assume every key is
+    available", never a crash."""
+    try:
+        with open(_KEY_STATUS_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def _save_key_status(status: dict) -> None:
+    try:
+        with open(_KEY_STATUS_FILE, "w", encoding="utf-8") as f:
+            json.dump(status, f)
+    except OSError:
+        pass  # e.g. read-only filesystem — degrade to "no memory of cooldowns", not a crash
+
+
+def _mark_key_exhausted(label: str, retry_after_seconds: float) -> None:
+    status = _load_key_status()
+    status[label] = (datetime.now(timezone.utc) + timedelta(seconds=retry_after_seconds)).isoformat()
+    _save_key_status(status)
+
+
+def _mark_key_available(label: str) -> None:
+    status = _load_key_status()
+    if label in status:
+        del status[label]
+        _save_key_status(status)
+
+
+def _parse_retry_delay_seconds(error: Exception, default: float = 60.0) -> float:
+    """Gemini's 429 body includes RetryInfo.retryDelay ('59s') and the
+    same number in the human-readable message ('retry in 59.37...s') —
+    the client library doesn't parse either into a field, so regex the
+    message text, which is present in both the SDK's ClientError and any
+    bare RuntimeError wrapping it."""
+    m = re.search(r"retry in ([\d.]+)s", str(error))
+    return float(m.group(1)) + 1 if m else default
+
+
+def _keys_ordered_by_availability() -> list:
+    """Every configured key, soonest-available first — keys with no
+    recorded cooldown (or an expired one) sort first as "now"; still-
+    exhausted keys sort by how soon they free up. This is the "keep a
+    record of which ones will work soon" state, read fresh every call so
+    a key that recovers between calls gets used again automatically.
+
+    "secondary" (GEMINI_API_SECRET_PRIVATE) is a deliberate last resort,
+    not just a spare — the sort key's second element is each key's fixed
+    position in _GEMINI_KEYS, so among keys that are equally available
+    (the common case: neither is on cooldown) "primary" always wins the
+    tie rather than availability-sorting alone leaving that to chance."""
+    status = _load_key_status()
+    now = datetime.now(timezone.utc)
+
+    def available_at(label: str) -> datetime:
+        ts = status.get(label)
+        if not ts:
+            return now
+        try:
+            when = datetime.fromisoformat(ts)
+        except ValueError:
+            return now
+        return when if when > now else now
+
+    return sorted(
+        _GEMINI_KEYS,
+        key=lambda lk: (available_at(lk[0]), _GEMINI_KEYS.index(lk)),
+    )
+
+
+def _get_client_for_key(label: str, api_key: str):
+    if label not in _clients_by_label:
         from google import genai
-        _client = genai.Client(api_key=api_key)
-    return _client
+        _clients_by_label[label] = genai.Client(api_key=api_key)
+    return _clients_by_label[label]
 
 
 # ---------------------------------------------------------------------
@@ -464,20 +549,49 @@ Schema:
 
 def generate_sql(question: str, schema_context: str) -> dict:
     from google.genai import types
-    resp = _get_client().models.generate_content(
-        model=GEMINI_MODEL,
-        contents=question,
-        config=types.GenerateContentConfig(
-            system_instruction=SQL_SYSTEM_PROMPT.format(schema=schema_context, row_limit=DEFAULT_ROW_LIMIT),
-            response_mime_type="application/json",
-            temperature=0,
-        ),
+    from google.genai.errors import ClientError
+
+    if not _GEMINI_KEYS:
+        raise RuntimeError(
+            "No Gemini key is set (GEMINI_API_KEY / GEMINI_API_SECRET_PRIVATE). "
+            "Needed for natural-language questions (ask / generate_sql). For direct "
+            "SQL use run_sql(), which needs SUPABASE_DB_URL but no Gemini key."
+        )
+
+    config = types.GenerateContentConfig(
+        system_instruction=SQL_SYSTEM_PROMPT.format(schema=schema_context, row_limit=DEFAULT_ROW_LIMIT),
+        response_mime_type="application/json",
+        temperature=0,
     )
-    text = resp.text.strip()
-    try:
-        return json.loads(text)
-    except json.JSONDecodeError as e:
-        raise RuntimeError(f"Gemini did not return valid JSON: {text}") from e
+
+    ordered_keys = _keys_ordered_by_availability()
+    last_error = None
+    for label, api_key in ordered_keys:
+        try:
+            resp = _get_client_for_key(label, api_key).models.generate_content(
+                model=GEMINI_MODEL, contents=question, config=config,
+            )
+        except ClientError as e:
+            if e.code == 429 or "RESOURCE_EXHAUSTED" in str(e):
+                _mark_key_exhausted(label, _parse_retry_delay_seconds(e))
+                last_error = e
+                continue  # try the next key, if any
+            raise
+        _mark_key_available(label)  # this key just worked — clear any stale cooldown record
+        text = resp.text.strip()
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError as e:
+            raise RuntimeError(f"Gemini did not return valid JSON: {text}") from e
+
+    # Every configured key is currently rate-limited.
+    soonest_label, _ = ordered_keys[0]
+    status = _load_key_status()
+    raise RuntimeError(
+        f"All {len(ordered_keys)} Gemini key(s) are rate-limited right now. "
+        f"Soonest available: '{soonest_label}' at {status.get(soonest_label, 'unknown')}. "
+        f"Last error: {last_error}"
+    )
 
 
 # ---------------------------------------------------------------------
