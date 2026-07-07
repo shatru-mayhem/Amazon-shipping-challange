@@ -58,8 +58,9 @@ Without this, clients receive a link instead of the 6-digit code.
 ## How sign-in works now
 
 - **Head account:** Employee Portal → email + access code `654321` → lands
-  on /employee with the Team Management panel (add employees, assign
-  hierarchy: Executive / Manager / Associate).
+  on the Solution Architecture overview, then Unified Intelligence
+  (/employee/dashboard). Team Management (add employees, assign
+  hierarchy) lives under **Operations** (/employee/operations).
 - **Employees:** once added to the roster by the head, they sign in with
   "Email me a code" — the trigger gives them the Employee role + assigned
   hierarchy on first login.
