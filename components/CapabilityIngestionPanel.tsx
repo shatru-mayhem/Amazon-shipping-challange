@@ -35,16 +35,21 @@ const statusTone: Record<string, StatusTone> = {
   cannot_do: "danger",
 };
 
-async function callCapabilitySkill<T>(extraArgs: string[]): Promise<T | null> {
+async function callCapabilitySkill<T>(
+  extraArgs: string[],
+  onError?: (message: string) => void,
+): Promise<T | null> {
   try {
     const res = await fetch("/api/skill", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ skill: "capability_ingestion", extra_args: extraArgs }),
     });
-    const json = await res.json();
+    const json = await res.json().catch(() => ({ ok: false, error: res.status + " " + res.statusText }));
+    if (!json.ok) onError?.(json.error ?? "unknown error");
     return json.ok ? (json.data as T) : null;
-  } catch {
+  } catch (e) {
+    onError?.(e instanceof Error ? e.message : "network error");
     return null;
   }
 }
@@ -72,11 +77,18 @@ export default function CapabilityIngestionPanel() {
   function runDemoIngestion() {
     setMessage("");
     startTransition(async () => {
-      const result = await callCapabilitySkill<{ proposals_created: number; chunks_ingested: number }>(["run_demo"]);
-      if (!result) {
-        setMessage("Demo ingestion failed.");
-        return;
-      }
+      // Measured live: this step (a real LLM call) takes ~90-95s. Vercel's
+      // Hobby plan caps every serverless function at 60s regardless of
+      // maxDuration — so on Hobby this fails every time, not intermittently.
+      const result = await callCapabilitySkill<{ proposals_created: number; chunks_ingested: number }>(
+        ["run_demo"],
+        (errMsg) => setMessage(
+          `Demo ingestion failed: ${errMsg}. This step calls a real AI model and can take 60-95 `
+          + `seconds — longer than Vercel's Hobby plan allows per request (60s cap, regardless of our `
+          + `own timeout settings). This will keep failing until the app is upgraded to Vercel Pro.`,
+        ),
+      );
+      if (!result) return; // message already set above
       setMessage(`Demo memo ingested (${result.chunks_ingested} chunk(s)) — ${result.proposals_created} proposal(s) awaiting review.`);
       refreshPending();
     });

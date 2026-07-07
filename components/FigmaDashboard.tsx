@@ -1075,11 +1075,21 @@ function CapabilityIngestionCard() {
   function runDemo() {
     setBusy(true);
     setMessage(null);
+    // Measured live: this step (a real LLM call) takes ~90-95s. Vercel's
+    // Hobby plan caps every serverless function at 60s regardless of
+    // maxDuration — so on Hobby this fails every time, not intermittently.
     callSkill<{ proposals_created: number; chunks_ingested: number }>(
       "capability_ingestion", "", ["run_demo"],
+      (_skill, errMsg) => {
+        setMessage(
+          `Simulation failed: ${errMsg}. This step calls a real AI model and can take 60-95 `
+          + `seconds — longer than Vercel's Hobby plan allows per request (60s cap, regardless of `
+          + `our own timeout settings). This will keep failing until the app is upgraded to Vercel Pro.`,
+        );
+      },
     ).then((result) => {
       setBusy(false);
-      if (!result) { setMessage("Simulation failed."); return; }
+      if (!result) return; // message already set above
       setMessage(
         `Parsed the memo (${result.chunks_ingested} chunk(s)) — ${result.proposals_created} proposed `
         + `update(s) below, waiting for approval before they're written to the real table.`,
