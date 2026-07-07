@@ -53,8 +53,21 @@ export default function TenderUploadPanel() {
       formData.append("file", file);
       formData.append("opportunity_id", opportunityId);
 
+      // Vercel serverless caps request bodies at ~4.5 MB — reject early
+      // with a clear message instead of an opaque 413.
+      if (file.size > 4.4 * 1024 * 1024) {
+        setError(
+          "File is larger than the deployment's 4.5 MB upload limit (Vercel serverless). Split the document or compress the PDF.",
+        );
+        return;
+      }
       const httpRes = await fetch("/api/tender-upload", { method: "POST", body: formData });
-      const res = await httpRes.json();
+      let res: { ok?: boolean; error?: string; data?: { chunk_count?: number } };
+      try {
+        res = await httpRes.json();
+      } catch {
+        res = { ok: false, error: "Server returned " + httpRes.status + " " + httpRes.statusText + " (no details). Check Vercel function logs." };
+      }
       if (!res.ok || !res.data) {
         setError(res.error ?? "Upload failed.");
         return;
