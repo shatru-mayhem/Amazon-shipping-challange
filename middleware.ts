@@ -48,8 +48,10 @@ async function handleAuth(request: NextRequest, url: string, anonKey: string) {
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
+  const internalOnly =
+    path.startsWith("/analytics") || path.startsWith("/historical-insights");
   const isProtected =
-    path.startsWith("/client") || path.startsWith("/employee");
+    path.startsWith("/client") || path.startsWith("/employee") || internalOnly;
   if (!isProtected) return response;
 
   if (!user) {
@@ -69,6 +71,9 @@ async function handleAuth(request: NextRequest, url: string, anonKey: string) {
   const role = profile?.role ?? "Client";
   const isEmployee = role === "Employee" || role === "Admin";
 
+  if (internalOnly && !isEmployee) {
+    return NextResponse.redirect(new URL("/", request.url));
+  }
   if (path.startsWith("/employee") && !isEmployee) {
     return NextResponse.redirect(new URL("/client", request.url));
   }
@@ -79,5 +84,12 @@ async function handleAuth(request: NextRequest, url: string, anonKey: string) {
 }
 
 export const config = {
-  matcher: ["/client/:path*", "/employee/:path*", "/client", "/employee"],
+  matcher: [
+    "/client/:path*",
+    "/employee/:path*",
+    "/client",
+    "/employee",
+    "/analytics",
+    "/historical-insights",
+  ],
 };

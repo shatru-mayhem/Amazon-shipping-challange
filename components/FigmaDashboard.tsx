@@ -920,6 +920,13 @@ function DashboardTopBar({ mode, onModeChange }: { mode: "employee" | "executive
 
         <div className="ml-auto flex items-center gap-4">
           <Link
+            href="/employee/operations"
+            className="flex items-center gap-1.5 text-xs font-medium text-gray-300 hover:text-white"
+          >
+            <Inbox size={13} />
+            Operations
+          </Link>
+          <Link
             href="/architecture"
             className="flex items-center gap-1.5 text-xs font-medium text-gray-300 hover:text-white"
           >
