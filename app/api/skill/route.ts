@@ -9,6 +9,15 @@ import { callSkillByName } from "@/lib/skills-bridge";
 // reimplementing 8 scoring/synthesis scripts in TypeScript.
 
 export const runtime = "nodejs";
+// Vercel's own function timeout is separate from — and enforced before —
+// any timeout in our own code (lib/skills-bridge.ts's AbortSignal.timeout,
+// service/app.py's TIMEOUT_SECONDS). Without this, Vercel kills the
+// request on its own default (10s Hobby / 15s Pro) long before a real
+// LLM-backed skill call finishes — measured capability_ingestion's
+// run_demo at ~94s live. 300s is the Pro-plan ceiling; Hobby caps at 60s
+// regardless of what's declared here, so slow skills will still fail on
+// Hobby without upgrading.
+export const maxDuration = 300;
 
 // name -> script path, relative to skills/. Matches the 8 skills feeding
 // the executive dashboard, in flow.jpeg reading order.

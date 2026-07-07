@@ -12,6 +12,16 @@ import { callPersistOpportunity } from "@/lib/skills-bridge";
 // someone manually runs persist.py from the CLI.
 
 export const runtime = "nodejs";
+// See app/api/skill/route.ts's comment on maxDuration. 300s is the
+// Vercel Pro-plan ceiling (Hobby caps lower regardless of what's
+// declared) — note this is LESS than PERSIST_TIMEOUT_MS (600s) in
+// lib/skills-bridge.ts / service/app.py's PERSIST_TIMEOUT_SECONDS,
+// which assume persist.py may legitimately need up to 10 minutes for a
+// large document. Vercel will still kill this route at 300s even though
+// our own code would wait longer — a persist run past that genuinely
+// needs Vercel Enterprise (fluid compute, up to 800s) or triggering
+// persist.py out-of-band instead of through this route.
+export const maxDuration = 300;
 
 export async function POST(request: NextRequest) {
   const supabase = createSupabaseServer();

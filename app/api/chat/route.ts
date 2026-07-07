@@ -9,6 +9,8 @@ import { callNlQuery } from "@/lib/skills-bridge";
 // and app/api/retrieve/route.ts.
 
 export const runtime = "nodejs";
+// See app/api/skill/route.ts's comment on maxDuration.
+export const maxDuration = 300;
 
 export async function POST(request: NextRequest) {
   const supabase = createSupabaseServer();

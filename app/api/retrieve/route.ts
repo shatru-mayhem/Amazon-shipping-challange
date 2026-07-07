@@ -14,6 +14,10 @@ import { callRetrieve } from "@/lib/skills-bridge";
 // that here would be a second place for the same logic to drift.
 
 export const runtime = "nodejs";
+// See app/api/skill/route.ts's comment on maxDuration — Vercel's own
+// function timeout is enforced before any timeout in our own code, and
+// retrieval can involve real LLM calls.
+export const maxDuration = 300;
 
 // Must match skills/retrieval/retrieval.py's _TABLE_HANDLERS keys —
 // checked here too so a bad request 400s immediately instead of paying
