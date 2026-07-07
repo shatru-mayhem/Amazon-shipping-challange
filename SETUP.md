@@ -85,7 +85,11 @@ Uploads fail without this one-time setup:
 
 2. **Add the env var in Vercel** → Settings → Environment Variables:
 
-       APP_INGESTION_DB_URL=postgresql://app_ingestion:PICK-A-STRONG-PASSWORD@aws-0-<region>.pooler.supabase.com:6543/postgres?sslmode=require
+       APP_INGESTION_DB_URL=postgresql://app_ingestion.iehzlcsdzbrbeupdufcu:PICK-A-STRONG-PASSWORD@aws-0-<region>.pooler.supabase.com:6543/postgres?sslmode=require
+
+   ⚠ The username MUST be tenant-qualified for the shared pooler:
+   `app_ingestion.<project-ref>` — a bare `app_ingestion` fails with
+   "Tenant or user not found".
 
    Use the **pooler** host from Supabase → Settings → Database →
    Connection string → "Transaction pooler" (serverless functions need
@@ -98,3 +102,9 @@ Uploads fail without this one-time setup:
 4. **Size limit:** Vercel serverless caps request bodies at ~4.5 MB.
    Larger files are rejected client-side with a clear message. The 25 MB
    code limit only applies when self-hosting.
+
+5. **Run `supabase/fix_uploads.sql`** in the SQL Editor — storage policies
+   for the bucket, role search_path (pooler-safe), grants, audit table.
+
+6. **Node version:** Vercel → Settings → Node.js Version → 20.x or 22.x
+   (pdf-parse requires >=20.16; Node 18 crashes at import).
