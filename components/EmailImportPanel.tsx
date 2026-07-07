@@ -10,6 +10,7 @@ import type { CoreEmailThread } from "@/lib/db-types";
 // core.email_threads + core.email_messages (real live schema).
 export default function EmailImportPanel() {
   const [opps, setOpps] = useState<OpportunityOption[]>([]);
+  const [oppsError, setOppsError] = useState("");
   const [opportunityId, setOpportunityId] = useState("");
   const [threads, setThreads] = useState<CoreEmailThread[]>([]);
   const [file, setFile] = useState<File | null>(null);
@@ -22,7 +23,12 @@ export default function EmailImportPanel() {
       if (res.ok && res.data && res.data.length > 0) {
         setOpps(res.data);
         setOpportunityId(res.data[0].opportunity_id);
+        return;
       }
+      // A failed query (e.g. bad ingestion-DB credentials) previously
+      // looked identical to "no opportunities exist yet" — surface the
+      // real reason instead of silently rendering the empty-state copy.
+      if (!res.ok) setOppsError(res.error ?? "Could not load opportunities.");
     });
   }, []);
 
@@ -68,7 +74,9 @@ export default function EmailImportPanel() {
     <section>
       <h2 className="mb-3 text-base font-bold">Email / CRM Import</h2>
       <div className="rounded-sm border border-border bg-surface p-4">
-        {opps.length === 0 ? (
+        {oppsError ? (
+          <p className="mb-3 text-sm text-danger" role="alert">{oppsError}</p>
+        ) : opps.length === 0 ? (
           <p className="mb-3 text-sm text-gray-500">No opportunities found.</p>
         ) : (
           <div className="mb-3">
