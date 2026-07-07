@@ -10,11 +10,26 @@
 # Needs >=1GB RAM for nomic-embed-text comfortably — pick a host tier
 # accordingly (see service/README.md).
 
+# NOT `curl -fsSL https://ollama.com/install.sh | sh` — that script sets
+# up a systemd service and an `ollama` system user, which fails with a
+# non-zero exit inside a Docker build (no init system to register
+# against). And the raw GitHub release asset isn't just one binary
+# either — it's ~1.4GB bundled with CUDA/ROCm/Vulkan backends we don't
+# need for CPU-only nomic-embed-text embeddings, and the bare /bin/ollama
+# binary alone doesn't run without its matching backend libs. So: copy
+# exactly what the official image already assembled (binary + backend
+# libs) via a multi-stage build, and add the two system packages that
+# image installs at runtime (see ollama/ollama's own Dockerfile).
+FROM ollama/ollama:latest AS ollama
+
 FROM python:3.11-slim
 
-RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates \
-    && rm -rf /var/lib/apt/lists/* \
-    && curl -fsSL https://ollama.com/install.sh | sh
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      ca-certificates libvulkan1 libopenblas0 \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=ollama /usr/bin/ollama /usr/bin/ollama
+COPY --from=ollama /usr/lib/ollama /usr/lib/ollama
 
 WORKDIR /app
 
