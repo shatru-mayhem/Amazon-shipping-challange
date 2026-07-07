@@ -25,6 +25,19 @@ const ALLOWED_TYPES = SUPPORTED_MIME_TYPES;
 const CHUNK_MAX_CHARS = 2000;
 
 export async function POST(request: NextRequest) {
+  try {
+    return await handleUpload(request);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Unexpected server error.";
+    const hint = msg.includes("APP_INGESTION_DB_URL")
+      ? " (Deployment config: add APP_INGESTION_DB_URL in Vercel -> Settings -> Environment Variables, then redeploy. See SETUP.md.)"
+      : "";
+    console.error("[tender-upload]", msg);
+    return NextResponse.json({ ok: false, error: msg + hint }, { status: 500 });
+  }
+}
+
+async function handleUpload(request: NextRequest) {
   const formData = await request.formData();
   const file = formData.get("file");
   const opportunityId = String(formData.get("opportunity_id") ?? "");

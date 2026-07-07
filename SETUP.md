@@ -74,3 +74,27 @@ The standing access code is a Supabase password. Change it in
 Dashboard → Authentication → Users whenever needed. Consider rotating the
 anon key if the repo ever becomes public with keys committed (they are not
 committed by this project).
+
+## 5. Document upload on Vercel (tender / email import)
+
+Uploads fail without this one-time setup:
+
+1. **Set the ingestion DB password** — Supabase → SQL Editor:
+
+       alter role app_ingestion with password 'PICK-A-STRONG-PASSWORD';
+
+2. **Add the env var in Vercel** → Settings → Environment Variables:
+
+       APP_INGESTION_DB_URL=postgresql://app_ingestion:PICK-A-STRONG-PASSWORD@aws-0-<region>.pooler.supabase.com:6543/postgres?sslmode=require
+
+   Use the **pooler** host from Supabase → Settings → Database →
+   Connection string → "Transaction pooler" (serverless functions need
+   pooled connections), swapping user/password for app_ingestion.
+   Then **redeploy**.
+
+3. **Create the storage bucket** — Supabase → Storage → New bucket:
+   name `tender_documents`, **private**.
+
+4. **Size limit:** Vercel serverless caps request bodies at ~4.5 MB.
+   Larger files are rejected client-side with a clear message. The 25 MB
+   code limit only applies when self-hosting.

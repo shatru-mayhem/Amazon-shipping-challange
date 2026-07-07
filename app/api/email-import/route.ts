@@ -41,6 +41,19 @@ async function findOrCreateThread(
 }
 
 export async function POST(request: NextRequest) {
+  try {
+    return await handleImport(request);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Unexpected server error.";
+    const hint = msg.includes("APP_INGESTION_DB_URL")
+      ? " (Deployment config: add APP_INGESTION_DB_URL in Vercel -> Settings -> Environment Variables, then redeploy. See SETUP.md.)"
+      : "";
+    console.error("[email-import]", msg);
+    return NextResponse.json({ ok: false, error: msg + hint }, { status: 500 });
+  }
+}
+
+async function handleImport(request: NextRequest) {
   const formData = await request.formData();
   const file = formData.get("file");
   const opportunityId = String(formData.get("opportunity_id") ?? "");
