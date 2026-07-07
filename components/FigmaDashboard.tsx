@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { listOpportunitiesForIngestion, listTenderDocuments, type OpportunityOption } from "@/app/actions/tender_ingestion";
 import { listEmailThreads } from "@/app/actions/email_ingestion";
+import { getCurrentProfile } from "@/app/actions/auth";
 import type { CoreDocument, CoreEmailThread } from "@/lib/db-types";
 import type {
   Dashboard,
@@ -1033,6 +1034,145 @@ function IngestionUploadCard({
   );
 }
 
+// Simulates what happens when Amazon itself learns something new (e.g.
+// "we can now cover a region") — parsed from a sample memo, proposed,
+// and only written to the real amazon_capability_profile table (making
+// it usable by every future opportunity's checks) once approved. Same
+// backend as components/CapabilityIngestionPanel.tsx on the Operations
+// page — "Run Demo Ingestion" always processes a hardcoded, is_demo-
+// tagged memo, never a real upload, and every proposal sits in
+// amazon_capability_update_queue until an explicit Approve/Reject
+// (skills/capability_ingestion/capability_ingestion.py).
+interface CapabilityProposal {
+  update_id: string;
+  constraint_name: string;
+  proposed_capability_status: "can_do" | "cannot_do" | "can_do_with_conditions";
+  proposed_structured_value: Record<string, unknown> | null;
+  proposed_conditions_text: string | null;
+  confidence: string;
+  is_demo: boolean;
+  raw_text: string;
+}
+
+function CapabilityIngestionCard() {
+  const [pending, setPending] = useState<CapabilityProposal[]>([]);
+  const [message, setMessage] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [reviewerEmail, setReviewerEmail] = useState("employee");
+
+  useEffect(() => {
+    getCurrentProfile().then((p) => { if (p?.email) setReviewerEmail(p.email); });
+    refreshPending();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function refreshPending() {
+    callSkill<CapabilityProposal[]>("capability_ingestion", "", ["list_pending"]).then((res) => {
+      if (res) setPending(res);
+    });
+  }
+
+  function runDemo() {
+    setBusy(true);
+    setMessage(null);
+    callSkill<{ proposals_created: number; chunks_ingested: number }>(
+      "capability_ingestion", "", ["run_demo"],
+    ).then((result) => {
+      setBusy(false);
+      if (!result) { setMessage("Simulation failed."); return; }
+      setMessage(
+        `Parsed the memo (${result.chunks_ingested} chunk(s)) — ${result.proposals_created} proposed `
+        + `update(s) below, waiting for approval before they're written to the real table.`,
+      );
+      refreshPending();
+    });
+  }
+
+  function decide(updateId: string, action: "approve" | "reject") {
+    setBusy(true);
+    callSkill("capability_ingestion", "", [action, updateId, reviewerEmail]).then(() => {
+      setBusy(false);
+      refreshPending();
+    });
+  }
+
+  const statusTone: Record<string, Tone> = {
+    can_do: "success", can_do_with_conditions: "warning", cannot_do: "danger",
+  };
+  const hasPending = pending.length > 0;
+
+  return (
+    <div className="rounded-xl border-2 p-4" style={{ borderColor: hasPending ? C.orange : C.border, background: hasPending ? "#FFFBF0" : C.surface }}>
+      <div className="flex items-start gap-3">
+        <div className="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: "#F3F4F6" }}>
+          <Database size={18} style={{ color: C.muted }} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <span className="font-semibold text-base block mb-0.5" style={{ color: C.ink }}>
+            Capability Update Simulation
+          </span>
+          <p className="text-sm text-gray-500 mb-2">
+            See what happens when Amazon learns something new — parsed from a sample memo,
+            proposed below, and only written to the real capability table (so every future
+            opportunity can use it) once you approve it.
+          </p>
+
+          <button
+            onClick={runDemo}
+            disabled={busy}
+            className="text-sm font-semibold px-3 h-8 rounded-md disabled:opacity-50"
+            style={{ background: C.orange, color: C.ink }}
+          >
+            {busy ? "Working…" : "Simulate a new capability update"}
+          </button>
+          {message ? <p className="mt-2 text-sm text-gray-600">{message}</p> : null}
+
+          {hasPending ? (
+            <ul className="mt-3 space-y-2">
+              {pending.map((p) => (
+                <li key={p.update_id} className="rounded-md border p-2.5" style={{ borderColor: C.border, background: C.surface }}>
+                  <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                    <StatusBadge tone={statusTone[p.proposed_capability_status] ?? "neutral"}>
+                      {p.proposed_capability_status.replace(/_/g, " ")}
+                    </StatusBadge>
+                    <span className="text-sm font-medium" style={{ color: C.ink }}>{p.constraint_name}</span>
+                    {p.is_demo ? <StatusBadge tone="info">demo</StatusBadge> : null}
+                  </div>
+                  {p.proposed_conditions_text ? (
+                    <p className="text-xs text-gray-600 mb-1">{p.proposed_conditions_text}</p>
+                  ) : null}
+                  <details className="mb-1">
+                    <summary className="cursor-pointer text-xs" style={{ color: C.link }}>Source memo text</summary>
+                    <p className="mt-1 text-xs text-gray-500">{p.raw_text}</p>
+                  </details>
+                  <div className="flex gap-2 mt-1.5">
+                    <button
+                      onClick={() => decide(p.update_id, "approve")}
+                      disabled={busy}
+                      className="h-7 rounded px-2.5 text-xs font-medium text-white disabled:opacity-50"
+                      style={{ background: C.success }}
+                    >
+                      Approve → write to amazon_capability_profile
+                    </button>
+                    <button
+                      onClick={() => decide(p.update_id, "reject")}
+                      disabled={busy}
+                      className="h-7 rounded border px-2.5 text-xs font-medium disabled:opacity-50"
+                      style={{ borderColor: C.border, color: C.link }}
+                    >
+                      Reject
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function MergeConnector() {
   return (
     <div className="relative w-full" style={{ height: 56 }}>
@@ -1150,13 +1290,6 @@ function EmployeeMode() {
     status: "active",
     detail: [{ label: "Constraint extraction", status: "indexing" }],
   };
-  const capability: PipelineStepData = {
-    id: "capability", icon: <Database size={18} />, title: "Capability Ingestion", subtitle: "Internal solution registry",
-    status: "idle",
-    detail: [{ label: "Capability registry", status: "queued" }],
-    action: "Sync Capabilities",
-  };
-
   return (
     <div className="flex min-h-[calc(100vh-56px)] mt-14">
       <main className="flex-1 mr-72 p-6 overflow-y-auto" style={{ background: C.canvas }}>
@@ -1225,7 +1358,7 @@ function EmployeeMode() {
             <MergeConnector />
             <FlowCard step={retrieval} />
             <DownArrow />
-            <FlowCard step={capability} />
+            <CapabilityIngestionCard />
           </div>
         </div>
       </main>
