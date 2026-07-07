@@ -68,7 +68,10 @@ export interface PricingScenario {
 export interface PricingRecommendations {
   recommended_scenario: string;
   scenarios: PricingScenario[];
-  guardrails: string[];
+  // Omitted entirely by pricing_recommendations.py on an early-exit error
+  // (no volume captured, or no priced region for the stated geography) —
+  // not just an empty array, so callers must not assume it's always present.
+  guardrails?: string[];
   volume_packages_per_day: number | null;
   total_cost_per_package_eur?: number;
   region_multiplier_applied?: number;

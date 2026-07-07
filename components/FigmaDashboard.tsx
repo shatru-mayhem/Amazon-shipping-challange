@@ -19,7 +19,9 @@ import {
   AlertTriangle, CheckCircle, Loader2, AlertCircle, ArrowDown, CircleCheck,
   CircleDot, Circle, MessageCircle,
 } from "lucide-react";
-import { listOpportunitiesForIngestion, type OpportunityOption } from "@/app/actions/tender_ingestion";
+import { listOpportunitiesForIngestion, listTenderDocuments, type OpportunityOption } from "@/app/actions/tender_ingestion";
+import { listEmailThreads } from "@/app/actions/email_ingestion";
+import type { CoreDocument, CoreEmailThread } from "@/lib/db-types";
 import type {
   Dashboard,
   ExecutiveSummary,
@@ -297,8 +299,21 @@ function RiskAssessmentPanel({ data }: { data: RiskAssessment }) {
 function PricingPanel({ data }: { data: PricingRecommendations }) {
   return (
     <div className="space-y-4">
+      {data.error ? (
+        // pricing_recommendations.py returns this on an early exit (no
+        // volume captured, or — most commonly — the opportunity's stated
+        // geography has no region_multipliers row, e.g. anything outside
+        // Spanish Peninsula/Balearic Islands) and omits guardrails/
+        // scenarios entirely in that case, so this has to render before
+        // assuming either array is present.
+        <Card className="border-red-200 bg-red-50">
+          <p className="text-base text-danger">⚠ {data.error}</p>
+        </Card>
+      ) : null}
       {data.scenarios.length === 0 ? (
-        <Card><p className="text-gray-400 text-base">Not enough data to price this opportunity yet.</p></Card>
+        data.error ? null : (
+          <Card><p className="text-gray-400 text-base">Not enough data to price this opportunity yet.</p></Card>
+        )
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {data.scenarios.map((s) => {
@@ -322,7 +337,7 @@ function PricingPanel({ data }: { data: PricingRecommendations }) {
           })}
         </div>
       )}
-      {data.guardrails.map((note, i) => (
+      {(data.guardrails ?? []).map((note, i) => (
         <p key={i} className="text-sm" style={{ color: C.warning }}>⚠ {note}</p>
       ))}
     </div>
@@ -677,19 +692,28 @@ function ExecutiveMode() {
       <aside className="w-56 flex-shrink-0 fixed top-14 left-0 bottom-0 overflow-y-auto flex flex-col border-r" style={{ background: C.surface, borderColor: C.border }}>
         <div className="p-3 border-b" style={{ borderColor: C.border }}>
           <label className="text-sm font-semibold text-gray-500 block mb-1">Opportunity</label>
-          {oppsError ? (
+          {dashboard ? (
+            // Once a dashboard has been run for a document, the picker/button
+            // disappear rather than staying clickable — re-running requires
+            // reloading the page, not a second click here.
+            <p className="text-sm" style={{ color: C.ink }}>
+              {activeOpp ? `${activeOpp.customer_name} — ${activeOpp.title}` : "Loaded"}
+            </p>
+          ) : oppsError ? (
             <p className="text-xs text-danger">{oppsError}</p>
           ) : (
-            <div className="relative">
-              <select className="w-full text-sm border rounded px-2 py-1.5 pr-6 appearance-none focus:outline-none" style={{ borderColor: C.border, color: C.ink }} value={selectedOpp} onChange={(e) => setSelectedOpp(e.target.value)} disabled={loading}>
-                {opps.map((o) => <option key={o.opportunity_id} value={o.opportunity_id}>{o.customer_name} — {o.title}</option>)}
-              </select>
-              <ChevronDown size={12} className="absolute right-2 top-2.5 text-gray-400 pointer-events-none" />
-            </div>
+            <>
+              <div className="relative">
+                <select className="w-full text-sm border rounded px-2 py-1.5 pr-6 appearance-none focus:outline-none" style={{ borderColor: C.border, color: C.ink }} value={selectedOpp} onChange={(e) => setSelectedOpp(e.target.value)} disabled={loading}>
+                  {opps.map((o) => <option key={o.opportunity_id} value={o.opportunity_id}>{o.customer_name} — {o.title}</option>)}
+                </select>
+                <ChevronDown size={12} className="absolute right-2 top-2.5 text-gray-400 pointer-events-none" />
+              </div>
+              <button onClick={handleLoad} disabled={loading || !selectedOpp} className="mt-2 w-full h-10 rounded text-sm font-semibold transition-colors disabled:opacity-60" style={{ background: C.orange, color: C.ink }}>
+                {loading ? `Loading…` : "Load Dashboard"}
+              </button>
+            </>
           )}
-          <button onClick={handleLoad} disabled={loading || !selectedOpp} className="mt-2 w-full h-10 rounded text-sm font-semibold transition-colors disabled:opacity-60" style={{ background: C.orange, color: C.ink }}>
-            {loading ? `Loading…` : "Load Dashboard"}
-          </button>
         </div>
         <nav className="flex-1 py-2">
           {NAV_ITEMS.map((item) => {
@@ -785,6 +809,90 @@ function FlowCard({ step }: { step: PipelineStepData }) {
   );
 }
 
+// ─── Real upload card — same visual language as FlowCard, but backed by
+// an actual file input wired to the live /api/tender-upload or
+// /api/email-import routes (both already work against the real schema;
+// only the UI to reach them was missing). ─────────────────────────────
+type UploadCardProps = {
+  icon: React.ReactNode;
+  title: string;
+  subtitle: string;
+  accept: string;
+  actionLabel: string;
+  uploading: boolean;
+  message: string | null;
+  messageIsError: boolean;
+  items: { label: string; status: DetailStatus }[];
+  disabled: boolean;
+  disabledReason?: string;
+  onFile: (file: File) => void;
+};
+
+function IngestionUploadCard({
+  icon, title, subtitle, accept, actionLabel, uploading, message, messageIsError, items, disabled, disabledReason, onFile,
+}: UploadCardProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const status: StepStatus = uploading ? "active" : items.length > 0 ? "complete" : "idle";
+  const borderColor = status === "complete" ? C.success : status === "active" ? C.orange : C.border;
+  const bgColor = status === "complete" ? "#F0FDF4" : status === "active" ? "#FFFBF0" : C.surface;
+  const iconBg = status === "complete" ? "#DCFCE7" : status === "active" ? "#FFF3D0" : "#F3F4F6";
+  const iconColor = status === "complete" ? C.success : status === "active" ? C.orangeDark : C.muted;
+
+  return (
+    <div className="rounded-xl border-2 p-4 h-full" style={{ borderColor, background: bgColor }}>
+      <div className="flex items-start gap-3">
+        <div className="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: iconBg }}>
+          <span style={{ color: iconColor }}>{icon}</span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 mb-0.5">
+            <span className="font-semibold text-base" style={{ color: C.ink }}>{title}</span>
+            {statusIcon(status)}
+          </div>
+          <p className="text-sm text-gray-500 mb-2">{subtitle}</p>
+
+          {items.length > 0 ? (
+            <div className="space-y-1.5 mb-2">
+              {items.map((d, i) => (
+                <div key={i} className="flex items-center gap-1.5">
+                  <StatusBadge tone={statusDetailTone(d.status)}>{d.status}</StatusBadge>
+                  <span className="text-sm text-gray-600 truncate">{d.label}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-400 mb-2">Nothing uploaded yet.</p>
+          )}
+
+          <input
+            ref={inputRef}
+            type="file"
+            accept={accept}
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) onFile(file);
+              e.target.value = "";
+            }}
+          />
+          <button
+            onClick={() => inputRef.current?.click()}
+            disabled={disabled || uploading}
+            title={disabled ? disabledReason : undefined}
+            className="mt-1 text-sm font-semibold px-3 h-8 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ background: C.orange, color: C.ink }}
+          >
+            {uploading ? "Uploading…" : actionLabel}
+          </button>
+          {message ? (
+            <p className="mt-2 text-sm" style={{ color: messageIsError ? C.danger : C.success }}>{message}</p>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function MergeConnector() {
   return (
     <div className="relative w-full" style={{ height: 56 }}>
@@ -814,6 +922,16 @@ function EmployeeMode() {
   const [opps, setOpps] = useState<OpportunityOption[]>([]);
   const [selectedOpp, setSelectedOpp] = useState("");
 
+  const [tenderDocs, setTenderDocs] = useState<CoreDocument[]>([]);
+  const [tenderUploading, setTenderUploading] = useState(false);
+  const [tenderMessage, setTenderMessage] = useState<string | null>(null);
+  const [tenderMessageIsError, setTenderMessageIsError] = useState(false);
+
+  const [emailThreads, setEmailThreads] = useState<CoreEmailThread[]>([]);
+  const [crmUploading, setCrmUploading] = useState(false);
+  const [crmMessage, setCrmMessage] = useState<string | null>(null);
+  const [crmMessageIsError, setCrmMessageIsError] = useState(false);
+
   useEffect(() => {
     listOpportunitiesForIngestion().then((res) => {
       if (res.ok && res.data && res.data.length > 0) {
@@ -823,18 +941,70 @@ function EmployeeMode() {
     });
   }, []);
 
-  const tender: PipelineStepData = {
-    id: "tender", icon: <Upload size={18} />, title: "Tender Documents", subtitle: "RFP, appendices, bid docs",
-    status: "complete",
-    detail: [{ label: "Documents indexed", status: "indexed" }],
-    action: "Upload More",
-  };
-  const crm: PipelineStepData = {
-    id: "crm", icon: <Mail size={18} />, title: "CRM / Email Import", subtitle: "Discovery emails & notes",
-    status: "complete",
-    detail: [{ label: "Emails imported", status: "indexed" }],
-    action: "Sync CRM",
-  };
+  useEffect(() => {
+    if (!selectedOpp) return;
+    listTenderDocuments(selectedOpp).then((res) => { if (res.ok && res.data) setTenderDocs(res.data); });
+    listEmailThreads(selectedOpp).then((res) => { if (res.ok && res.data) setEmailThreads(res.data); });
+    setTenderMessage(null);
+    setCrmMessage(null);
+  }, [selectedOpp]);
+
+  async function uploadTenderFile(file: File) {
+    if (!selectedOpp) return;
+    setTenderUploading(true);
+    setTenderMessage(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("opportunity_id", selectedOpp);
+      const res = await fetch("/api/tender-upload", { method: "POST", body: fd });
+      const json = await res.json();
+      if (json.ok) {
+        setTenderMessageIsError(false);
+        setTenderMessage(`"${file.name}" indexed — ${json.data.chunk_count} chunk(s).`);
+        const docs = await listTenderDocuments(selectedOpp);
+        if (docs.ok && docs.data) setTenderDocs(docs.data);
+      } else {
+        setTenderMessageIsError(true);
+        setTenderMessage(json.error ?? "Upload failed.");
+      }
+    } catch {
+      setTenderMessageIsError(true);
+      setTenderMessage("Could not reach the server.");
+    }
+    setTenderUploading(false);
+  }
+
+  async function uploadCrmFile(file: File) {
+    if (!selectedOpp) return;
+    setCrmUploading(true);
+    setCrmMessage(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("opportunity_id", selectedOpp);
+      const res = await fetch("/api/email-import", { method: "POST", body: fd });
+      const json = await res.json();
+      if (json.ok) {
+        setCrmMessageIsError(false);
+        setCrmMessage(
+          json.data.messages_imported > 0
+            ? `"${file.name}" imported — ${json.data.messages_imported} message(s).`
+            : `"${file.name}" imported as CRM notes (${json.data.crm_notes_chunk_count} chunk(s)).`,
+        );
+        const threads = await listEmailThreads(selectedOpp);
+        if (threads.ok && threads.data) setEmailThreads(threads.data);
+      } else {
+        setCrmMessageIsError(true);
+        setCrmMessage(json.error ?? "Import failed.");
+      }
+    } catch {
+      setCrmMessageIsError(true);
+      setCrmMessage("Could not reach the server.");
+    }
+    setCrmUploading(false);
+  }
+
   const retrieval: PipelineStepData = {
     id: "retrieval", icon: <RefreshCw size={18} />, title: "Retrieval & Indexing", subtitle: "Embedding pipeline",
     status: "active",
@@ -879,8 +1049,38 @@ function EmployeeMode() {
 
           <div className="flex flex-col items-stretch">
             <div className="flex gap-4">
-              <div className="flex-1"><FlowCard step={tender} /></div>
-              <div className="flex-1"><FlowCard step={crm} /></div>
+              <div className="flex-1">
+                <IngestionUploadCard
+                  icon={<Upload size={18} />}
+                  title="Tender Documents"
+                  subtitle="RFP, appendices, bid docs"
+                  accept=".txt,.csv,.md,.pdf,.docx"
+                  actionLabel="Upload document"
+                  uploading={tenderUploading}
+                  message={tenderMessage}
+                  messageIsError={tenderMessageIsError}
+                  items={tenderDocs.map((d) => ({ label: d.filename, status: "indexed" as DetailStatus }))}
+                  disabled={!selectedOpp}
+                  disabledReason="Select an opportunity first."
+                  onFile={uploadTenderFile}
+                />
+              </div>
+              <div className="flex-1">
+                <IngestionUploadCard
+                  icon={<Mail size={18} />}
+                  title="CRM / Email Import"
+                  subtitle="Discovery emails & notes"
+                  accept=".txt,.csv,.md,.pdf,.docx"
+                  actionLabel="Import file"
+                  uploading={crmUploading}
+                  message={crmMessage}
+                  messageIsError={crmMessageIsError}
+                  items={emailThreads.map((t) => ({ label: t.subject ?? "General correspondence", status: "indexed" as DetailStatus }))}
+                  disabled={!selectedOpp}
+                  disabledReason="Select an opportunity first."
+                  onFile={uploadCrmFile}
+                />
+              </div>
             </div>
             <MergeConnector />
             <FlowCard step={retrieval} />
