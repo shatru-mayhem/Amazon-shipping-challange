@@ -1,12 +1,10 @@
 # Python skills bridge — deployment
 
 Why this exists: Vercel's Node.js serverless functions can't run
-`skills/*.py` (no Python interpreter, no psycopg2/faiss/numpy). This is a
-small FastAPI service — `app.py` — that runs those same scripts as
-subprocesses on a host that has all of that, and the Vercel app talks to
-it over HTTP (see `lib/skills-bridge.ts`). Embeddings and generation both
-run on cloud APIs (Gemini and Ollama's cloud API respectively), so this
-container itself only needs Python — no local model server.
+`skills/*.py` (no Python interpreter, no psycopg2/faiss/numpy, no path to
+a local Ollama server). This is a small FastAPI service — `app.py` — that
+runs those same scripts as subprocesses on a host that has all of that,
+and the Vercel app talks to it over HTTP (see `lib/skills-bridge.ts`).
 
 Tested locally: `uvicorn service.app:app --port 8010` + a real `/skill`
 call round-tripped correctly against the live DB.
@@ -14,7 +12,8 @@ call round-tripped correctly against the live DB.
 ## 1. Deploy the service (Railway recommended)
 
 Railway auto-builds from a `Dockerfile` and gives you a public HTTPS URL
-with zero extra config.
+with zero extra config — good fit here since the container needs both
+Python and a local Ollama server (see `entrypoint.sh`).
 
 1. https://railway.app → New Project → **Deploy from GitHub repo** → pick
    this repo.
@@ -24,8 +23,8 @@ with zero extra config.
    just `service/`, since it needs `skills/` and `nl_query_gemini.py`
    alongside it).
 3. Add the environment variables below in Railway's **Variables** tab.
-4. Deploy — no local model to pull, so first boot is a normal Python
-   container build.
+4. Deploy. First boot is slow (~2-5 min) — it's pulling the Ollama binary
+   and the `nomic-embed-text` model (~275MB) inside the container.
 5. Once healthy, Railway gives you a public URL like
    `https://<service>.up.railway.app`. Confirm it: `curl
    https://<service>.up.railway.app/healthz` → `{"ok":true}`.
@@ -42,11 +41,15 @@ git-ignored — so these must be added in Railway's dashboard by hand):
 |---|---|
 | `SUPABASE_DB_URL` | read-only DB connection (`nl_query_readonly` role) — `skills/_db.py` |
 | `APP_INGESTION_DB_URL` | write-capable DB connection (`app_ingestion` role) — `skills/_ingestion_db.py` |
-| `GEMINI_API_KEY` | Google AI Studio key, for `embed()`/`embed_batch()` (`gemini-embedding-001`) and `nl_query_gemini.py` |
+| `GEMINI_API_KEY` | Google AI Studio key, for `nl_query_gemini.py`'s chat feature |
 | `OLLAMA_API_KEY` | ollama.com cloud API key, for `generate_json()` (gpt-oss:20b-cloud) |
 | `OLLAMA_USE_CLOUD` | `true` (recommended — see `_llm.py`'s own latency comparison notes) |
 | `SKILLS_SERVICE_TOKEN` | **pick a new random secret** — this is the shared auth token between Vercel and this service; do not reuse another credential |
 | `FOLLOWUP_EMAIL_TO`, `ZAPIER_FOLLOWUP_WEBHOOK_URL` | only if you use `follow_up_actions`' send-draft feature |
+
+Do **not** set `OLLAMA_HOST` — leave it at the default so `embed()` talks
+to the Ollama server running inside this same container (`entrypoint.sh`
+starts it on `localhost:11434` before the API).
 
 ## 2. Point Vercel at it
 
@@ -68,6 +71,6 @@ no code change needed, and local dev is unaffected when it's unset.
 
 ## Sizing
 
-Both embeddings (Gemini) and generation (`gpt-oss:20b-cloud`) run on
-their providers' servers, not this container — it only runs FastAPI and
-the skill subprocesses, so a small/default host tier is enough.
+`nomic-embed-text` is small but Ollama itself wants headroom — pick a
+tier with **at least 1GB RAM**. `gpt-oss:20b-cloud` runs on ollama.com's
+servers, not this container, so it doesn't add to this host's footprint.

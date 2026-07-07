@@ -17,7 +17,14 @@ function getPool(): Pool {
         "APP_INGESTION_DB_URL is not set — see supabase/schema_hardening.sql §2 and SETUP.md.",
       );
     }
-    pool = new Pool({ connectionString, max: 5 });
+    // Supabase's pooler requires SSL; without an explicit ssl option, pg
+    // doesn't negotiate it at all and the pooler rejects the connection
+    // with a misleading "password authentication failed" instead of a
+    // real SSL/TLS error — the actual credentials were never the problem.
+    // rejectUnauthorized: false because the pooler's cert chain isn't in
+    // Node's default trust store (same as the discrete-field connection
+    // that proved this out), not because we don't want encryption.
+    pool = new Pool({ connectionString, max: 5, ssl: { rejectUnauthorized: false } });
   }
   return pool;
 }
