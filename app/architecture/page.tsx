@@ -31,7 +31,12 @@ function ArchitecturePageContent() {
 
   return (
     <main className="min-h-screen">
-      <TopBar context="Solution Architecture" showBack={!!nextHref} />
+      {/* showBack intentionally omitted here: when nextHref is set (fresh
+          post-login stop) the header used to show "Sign out" -> "/", which
+          is actively wrong messaging for someone who just signed in — the
+          "Try it out ->" CTA below already handles onward navigation. The
+          standalone-visit case has its own "<- Back" link in the body. */}
+      <TopBar context="Solution Architecture" />
       <div className="mx-auto max-w-6xl px-4 py-6">
         <div className="mb-6">
           {nextHref ? null : (

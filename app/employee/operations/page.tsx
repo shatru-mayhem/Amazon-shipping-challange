@@ -18,7 +18,7 @@ import RetrievalStatusPanel from "@/components/RetrievalStatusPanel";
 export default function OperationsPage() {
   return (
     <main className="min-h-screen">
-      <TopBar context="Operations" showBack />
+      <TopBar context="Operations" showBack backHref="/employee/dashboard" backLabel="← Unified Intelligence" />
       <div className="mx-auto max-w-7xl px-4 py-6">
         <h1 className="mb-6 text-lg font-bold">Operations &amp; Administration</h1>
         <div className="grid gap-8 lg:grid-cols-2">

@@ -122,7 +122,7 @@ export default function HistoricalInsightsDashboard() {
       <div className="flex flex-wrap items-end gap-3 rounded-md border border-border bg-surface p-4">
         <div>
           <label htmlFor="clusters" className="mb-1 block text-xs font-medium text-gray-500">
-            Number of archetypes (clusters)
+            Number of opportunity groups
           </label>
           <input
             id="clusters"
@@ -133,6 +133,11 @@ export default function HistoricalInsightsDashboard() {
             onChange={(e) => setClusters(Number(e.target.value))}
             className="h-11 w-24 rounded-sm border border-border bg-surface px-2 text-sm"
           />
+          <p className="mt-1 max-w-xs text-xs text-gray-500">
+            How many groups to sort the 360 past deals into, based on how similar they
+            are (industry, size, region, etc.). More groups = more specific patterns;
+            fewer = broader trends. 2–8.
+          </p>
         </div>
         <button
           onClick={runAnalysis}
@@ -160,8 +165,9 @@ export default function HistoricalInsightsDashboard() {
 
       {!data && !loading && !error ? (
         <p className="text-sm text-gray-500">
-          Run the analysis to see feature correlations, PCA-driven opportunity archetypes,
-          and actionable insights from the 360 historical tenders.
+          Run the analysis to see which factors tend to move together, what types of
+          opportunities we&rsquo;ve won and lost, and actionable takeaways from the 360
+          historical tenders.
         </p>
       ) : null}
 
@@ -185,12 +191,17 @@ export default function HistoricalInsightsDashboard() {
             </ul>
           </Section>
 
-          <Section title="Opportunity archetypes (KMeans clusters)">
+          <Section title="Types of opportunities we've won and lost">
+            <p className="text-xs text-gray-500 mb-1">
+              Past deals grouped by how similar they are — each group below is a
+              recurring pattern, not a single deal, so you can see which kinds of
+              opportunities tend to close and which tend to fall through.
+            </p>
             <div className="grid gap-3 md:grid-cols-2">
               {data.archetypes.map((a) => (
                 <div key={a.cluster} className="rounded-sm border border-border p-3">
                   <div className="mb-1 flex items-center justify-between">
-                    <span className="font-medium text-ink">Archetype {a.cluster}</span>
+                    <span className="font-medium text-ink">Group {a.cluster}</span>
                     <StatusBadge
                       tone={a.win_rate >= 0.55 ? "success" : a.win_rate >= 0.4 ? "warning" : "danger"}
                       label={`${Math.round(a.win_rate * 100)}% win rate`}
@@ -213,16 +224,21 @@ export default function HistoricalInsightsDashboard() {
             </div>
           </Section>
 
-          <Section title="Feature correlations (|r| ≥ 0.3)">
+          <Section title="Which factors tend to move together">
+            <p className="text-xs text-gray-500 mb-1">
+              When one of these goes up, the other tends to move with it — &ldquo;+&rdquo;
+              means they rise together, &ldquo;−&rdquo; means one rises as the other falls.
+              Stronger link = closer to +1 or −1.
+            </p>
             {data.correlations.length === 0 ? (
-              <p className="text-gray-400">No pairs at this threshold — features are largely independent.</p>
+              <p className="text-gray-400">No strongly-linked pairs found — these factors move mostly independently of each other.</p>
             ) : (
               <table className="w-full border-collapse text-sm">
                 <thead>
                   <tr className="border-b border-border text-left text-xs uppercase text-gray-500">
-                    <th className="py-1 pr-2">Feature A</th>
-                    <th className="py-1 pr-2">Feature B</th>
-                    <th className="py-1">r</th>
+                    <th className="py-1 pr-2">Factor A</th>
+                    <th className="py-1 pr-2">Factor B</th>
+                    <th className="py-1">Link strength</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -238,16 +254,18 @@ export default function HistoricalInsightsDashboard() {
             )}
           </Section>
 
-          <Section title="PCA — which features drive variance">
+          <Section title="Which factors matter most">
             <p className="text-xs text-gray-500">
-              Cumulative variance explained by {data.pca_summary.components.length} components:{" "}
-              {Math.round(data.pca_summary.cumulative_variance * 100)}%
+              We grouped related factors into {data.pca_summary.components.length} underlying
+              patterns — together they account for {Math.round(data.pca_summary.cumulative_variance * 100)}%
+              of what makes one deal different from another. Larger numbers below mean that
+              factor matters more to the pattern.
             </p>
             <div className="grid gap-3 md:grid-cols-3">
               {data.pca_summary.components.map((c) => (
                 <div key={c.pc} className="rounded-sm border border-border p-3">
                   <p className="mb-1 text-xs font-medium text-gray-500">
-                    PC{c.pc} ({Math.round(data.pca_summary.explained_variance_ratio[c.pc - 1] * 100)}% variance)
+                    Pattern {c.pc} (explains {Math.round(data.pca_summary.explained_variance_ratio[c.pc - 1] * 100)}% of the difference between deals)
                   </p>
                   <ul className="space-y-0.5 text-xs">
                     {c.top_loadings.map((l) => (

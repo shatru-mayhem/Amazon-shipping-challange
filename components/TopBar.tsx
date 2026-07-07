@@ -3,9 +3,25 @@ import Link from "next/link";
 interface TopBarProps {
   context?: string;
   showBack?: boolean;
+  // Where "back" actually goes and what it's labeled — defaults to the
+  // old "Sign out" -> "/" behavior (right for the Client Portal, which
+  // has nowhere else internal to go back to). Pages reached FROM the
+  // employee dashboard (Analytics, Historical Insights, Operations, the
+  // post-login Architecture stop) should pass "/employee/dashboard" so
+  // "back" actually returns to the dashboard instead of the public
+  // landing page — landing there while already signed in looks
+  // identical to being logged out, even though the session is still
+  // valid.
+  backHref?: string;
+  backLabel?: string;
 }
 
-export default function TopBar({ context, showBack = false }: TopBarProps) {
+export default function TopBar({
+  context,
+  showBack = false,
+  backHref = "/",
+  backLabel = "Sign out",
+}: TopBarProps) {
   return (
     <header className="bg-ink text-white">
       <div className="mx-auto flex h-14 max-w-7xl items-center gap-4 px-4">
@@ -24,10 +40,10 @@ export default function TopBar({ context, showBack = false }: TopBarProps) {
         <div className="ml-auto flex items-center gap-4 text-sm">
           {showBack ? (
             <Link
-              href="/"
+              href={backHref}
               className="text-gray-300 underline-offset-2 hover:text-white hover:underline"
             >
-              Sign out
+              {backLabel}
             </Link>
           ) : (
             <span className="text-xs text-gray-400">

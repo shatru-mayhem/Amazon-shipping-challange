@@ -687,6 +687,11 @@ function ExecutiveMode() {
   const [opps, setOpps] = useState<OpportunityOption[]>([]);
   const [oppsError, setOppsError] = useState<string | null>(null);
   const [selectedOpp, setSelectedOpp] = useState("");
+  // Which opportunity `dashboard` actually holds data for — tracked
+  // separately from selectedOpp so switching the dropdown before
+  // clicking Load doesn't make the "Viewing X" label lie about what's
+  // currently on screen.
+  const [loadedOppId, setLoadedOppId] = useState("");
   const [activeId, setActiveId] = useState("executive_summary");
   const [skillError, setSkillError] = useState("");
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
@@ -710,6 +715,7 @@ function ExecutiveMode() {
     setDashboard(null);
     setSkillError("");
     setLoading(true);
+    setLoadedOppId(selectedOpp);
     (async () => {
       const results: Record<string, unknown> = {};
       const errors: string[] = [];
@@ -760,7 +766,10 @@ function ExecutiveMode() {
   }
 
   const activeNav = NAV_ITEMS.find((n) => n.id === activeId)!;
-  const activeOpp = opps.find((o) => o.opportunity_id === selectedOpp);
+  // What `dashboard` actually holds data for — NOT selectedOpp, which is
+  // just the dropdown's current pick and can differ from this the moment
+  // someone changes the selection before clicking Load/Reload.
+  const activeOpp = opps.find((o) => o.opportunity_id === loadedOppId);
 
   const getBadge = (id: string) => {
     if (!dashboard) return null;
@@ -819,17 +828,15 @@ function ExecutiveMode() {
       <aside className="w-56 flex-shrink-0 fixed top-14 left-0 bottom-0 overflow-y-auto flex flex-col border-r" style={{ background: C.surface, borderColor: C.border }}>
         <div className="p-3 border-b" style={{ borderColor: C.border }}>
           <label className="text-sm font-semibold text-gray-500 block mb-1">Opportunity</label>
-          {dashboard ? (
-            // Once a dashboard has been run for a document, the picker/button
-            // disappear rather than staying clickable — re-running requires
-            // reloading the page, not a second click here.
-            <p className="text-sm" style={{ color: C.ink }}>
-              {activeOpp ? `${activeOpp.customer_name} — ${activeOpp.title}` : "Loaded"}
-            </p>
-          ) : oppsError ? (
+          {oppsError ? (
             <p className="text-xs text-danger">{oppsError}</p>
           ) : (
             <>
+              {dashboard && activeOpp ? (
+                <p className="text-xs text-gray-500 mb-1.5">
+                  Viewing <span style={{ color: C.ink }}>{activeOpp.customer_name} — {activeOpp.title}</span>
+                </p>
+              ) : null}
               <div className="relative">
                 <select className="w-full text-sm border rounded px-2 py-1.5 pr-6 appearance-none focus:outline-none" style={{ borderColor: C.border, color: C.ink }} value={selectedOpp} onChange={(e) => setSelectedOpp(e.target.value)} disabled={loading}>
                   {opps.map((o) => <option key={o.opportunity_id} value={o.opportunity_id}>{o.customer_name} — {o.title}</option>)}
@@ -837,7 +844,7 @@ function ExecutiveMode() {
                 <ChevronDown size={12} className="absolute right-2 top-2.5 text-gray-400 pointer-events-none" />
               </div>
               <button onClick={handleLoad} disabled={loading || !selectedOpp} className="mt-2 w-full h-10 rounded text-sm font-semibold transition-colors disabled:opacity-60" style={{ background: C.orange, color: C.ink }}>
-                {loading ? `Loading…` : "Load Dashboard"}
+                {loading ? "Loading…" : dashboard && selectedOpp === loadedOppId ? "Reload" : "Load Dashboard"}
               </button>
             </>
           )}

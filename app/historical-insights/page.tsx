@@ -11,7 +11,7 @@ import HistoricalInsightsDashboard from "@/components/HistoricalInsightsDashboar
 export default function HistoricalInsightsPage() {
   return (
     <main className="min-h-screen">
-      <TopBar context="Historical Insights" showBack />
+      <TopBar context="Historical Insights" showBack backHref="/employee/dashboard" backLabel="← Unified Intelligence" />
       <div className="mx-auto max-w-6xl px-4 py-6">
         <div className="mb-6">
           <Link href="/employee/dashboard" className="text-sm text-link hover:underline">
@@ -19,9 +19,9 @@ export default function HistoricalInsightsPage() {
           </Link>
           <h1 className="mt-2 text-xl font-bold text-ink">Historical Tender Analysis</h1>
           <p className="mt-1 max-w-2xl text-sm text-gray-600">
-            PCA and clustering over 360 historical tenders to find which features
-            actually drive win rate, group opportunities into archetypes, and flag
-            which fields matter most for retrieval accuracy.
+            A look back at 360 past tenders to find what actually separates a won deal
+            from a lost one — which factors matter most, and what types of opportunities
+            tend to come up again and again.
           </p>
         </div>
         <HistoricalInsightsDashboard />

@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import TopBar from "@/components/TopBar";
 import LoginModal, { type PortalKind } from "@/components/LoginModal";
+import { getCurrentProfile } from "@/app/actions/auth";
 
 const clientFeatures = [
   "Digital Twin Pipeline with approval points and issue flags",
@@ -23,6 +25,27 @@ const employeeFeatures = [
 
 export default function LandingPage() {
   const [portal, setPortal] = useState<PortalKind | null>(null);
+  const router = useRouter();
+
+  // This page is public (not gated by middleware.ts), so it always
+  // rendered the portal-chooser + login modal even for someone who was
+  // already signed in — clicking the logo/"back" from any internal page
+  // landed here and looked exactly like being logged out, even though
+  // the session cookie was still perfectly valid. Render normally (so a
+  // fresh, unauthenticated visitor never waits on this check), but skip
+  // straight to the right portal the moment an existing session is
+  // confirmed instead of making them click through sign-in again.
+  useEffect(() => {
+    let cancelled = false;
+    getCurrentProfile().then((profile) => {
+      if (cancelled || !profile) return;
+      const isEmployee = profile.role === "Employee" || profile.role === "Admin";
+      router.replace(isEmployee ? "/employee/dashboard" : "/client");
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
   return (
     <main className="min-h-screen">
